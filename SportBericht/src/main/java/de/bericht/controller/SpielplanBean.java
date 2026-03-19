@@ -39,6 +39,8 @@ public class SpielplanBean implements Serializable {
 	private Date berichtDatumCal;
 	private String vereinnr;
 	private String passwort;
+	private String liga;
+	private String url;
 	ConfigManager config;
 	List<BerichtText> meineBerichtTexte = new ArrayList<>();
 
@@ -49,8 +51,8 @@ public class SpielplanBean implements Serializable {
 		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 		System.out.println("Das kommt an " + request.getParameter("v"));
 		vereinnr = BerichtHelper.bestimmenVereinnr(request.getParameter("v"));
-
-		String url = request.getParameter("url");
+		liga = request.getParameter("liga");
+		url = request.getParameter("url");
 		passwort = request.getParameter("p");
 
 		if (vereinnr == null) {
@@ -205,6 +207,10 @@ public class SpielplanBean implements Serializable {
 		this.vereinnr = vereinnr;
 	}
 
+	public String getLiga() {
+		return liga;
+	}
+
 	public boolean hasBild(String ergebnisLink) {
 		return BerichtHelper.hasBild(vereinnr, ergebnisLink);
 	}
@@ -252,5 +258,13 @@ public class SpielplanBean implements Serializable {
 
 		return false;
 
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 }

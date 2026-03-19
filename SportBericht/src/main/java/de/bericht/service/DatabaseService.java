@@ -598,6 +598,63 @@ public class DatabaseService {
 		}
 	}
 
+	public List<FreigegebeneSpiele> freigegebeneSpiele(String vereinnr) {
+		String sql = "SELECT vereinnr, timestamp, ergebnisLink, heim, gast, datum, matches, name, gruppe "
+				+ "FROM freigegeben " + "WHERE vereinnr = ? AND timestamp >= NOW() - INTERVAL 14 DAY "
+				+ "ORDER BY timestamp DESC";
+
+		List<FreigegebeneSpiele> spiele = new ArrayList<>();
+
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+			pstmt.setString(1, vereinnr);
+			ResultSet rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				String ergebnisLink = rs.getString("ergebnisLink");
+				String heim = rs.getString("heim");
+				String gast = rs.getString("gast");
+				String datum = rs.getString("datum"); // oder ggf. aus timestamp berechnen
+				String matches = rs.getString("matches");
+				String name = rs.getString("name");
+				String gruppe = rs.getString("gruppe");
+
+				// Du kannst weitere Felder ergänzen, je nachdem, wie dein Spiel-Konstruktor
+				// aussieht.
+				FreigegebeneSpiele spiel = new FreigegebeneSpiele(vereinnr, ergebnisLink, heim, gast, datum, matches,
+						name, gruppe);
+
+				spiele.add(spiel);
+			}
+			rs.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return spiele;
+	}
+
+	public void insertFreigegebeneSpiele(FreigegebeneSpiele freigegebeneSpiele) {
+		String sql = "INSERT INTO freigegeben "
+				+ "(vereinnr, ergebnisLink, heim, gast, datum, matches, name, liga, timestamp) "
+				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
+
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+			pstmt.setString(1, freigegebeneSpiele.getVereinnr());
+			pstmt.setString(2, freigegebeneSpiele.getErgebnisLink());
+			pstmt.setString(3, freigegebeneSpiele.getHeim());
+			pstmt.setString(4, freigegebeneSpiele.getGast());
+			pstmt.setString(5, freigegebeneSpiele.getDatum()); // z. B. "2025-07-19" im Format CHAR(10)
+			pstmt.setString(6, freigegebeneSpiele.getMatches());
+			pstmt.setString(7, freigegebeneSpiele.getName());
+			pstmt.setString(8, freigegebeneSpiele.getLiga());
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void saveLogData(String vereinnr, String ergebnisLink, String name, String aktion, String mailErfolgreich,
 			String info) {
 		String sql = "INSERT INTO log_tabelle (vereinnr, ergebnisLink, timestamp, name, aktion, mailErfolgreich, info) VALUES (?, ?, ?, ?, ?, ? ,?)";

@@ -109,7 +109,8 @@
 							<f:param name="datum" value="#{spiel.datum}" />
 							<f:param name="ergebnis" value="#{spiel.ergebnis}" />
 							<f:param name="ergebnisLink" value="#{spiel.ergebnisLink}" />
-							<f:param name="liga" value="#{spiel.liga}" />
+							<f:param name="liga"
+								value="#{empty spiel.liga ? spielplanBean.liga : spiel.liga}" />
 						</p:commandButton>
 						<p:commandButton value="Veröffentlichen" action="zusammen.xhtml"
 							rendered="#{not empty spiel.ergebnis and spielplanBean.hasFreigabe(spiel.ergebnisLink)}"
@@ -120,7 +121,9 @@
 							<f:param name="datum" value="#{spiel.datum}" />
 							<f:param name="ergebnis" value="#{spiel.ergebnis}" />
 							<f:param name="ergebnisLink" value="#{spiel.ergebnisLink}" />
-							<f:param name="liga" value="#{spiel.liga}" />
+							<f:param name="url" value="#{spielplanBean.url}" />
+							<f:param name="liga"
+								value="#{empty spiel.liga ? spielplanBean.liga : spiel.liga}" />
 						</p:commandButton>
 						<p:commandButton value="Aufstellung" action="aufstellung.xhtml"
 							rendered="#{empty spiel.ergebnis and spielplanBean.passwortOK}"

@@ -85,11 +85,13 @@ public class ZusammenBean implements Serializable {
 	private Boolean mitSpielberichte;
 	private SpielplanProvider provider;
 	private List<Spiel> spiele;
+	private String url;
 
 	private String freierText;
 
 	public ZusammenBean() throws UnsupportedEncodingException {
 		Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
+		url = params.get("url");
 		vereinnr = params.get("vereinnr");
 		datum = params.get("datum");
 		liga = params.get("liga");
@@ -123,7 +125,13 @@ public class ZusammenBean implements Serializable {
 			spiele = dbService.listeFreieBerichte(vereinnr);
 		} else {
 			try {
-				provider = SpielplanFactory.create(vereinnr);
+				if (url == null) {
+					provider = SpielplanFactory.create(vereinnr);
+					url = provider.getFallbackSourceUrl();
+				} else {
+					System.out.println(url);
+					provider = SpielplanFactory.create(vereinnr, url);
+				}
 			} catch (Exception e) {
 				spieleFreigegeben = new ArrayList<>();
 			}
@@ -437,6 +445,7 @@ public class ZusammenBean implements Serializable {
 
 	public void freigabeAufheben() {
 		dbService.deleteLogData(vereinnr, ergebnisLink, "Freigegeben");
+		dbService.deleteFreigabe(vereinnr, ergebnisLink);
 		logEntries = dbService.getLogEntries(vereinnr, ergebnisLink);
 	}
 
@@ -777,7 +786,7 @@ public class ZusammenBean implements Serializable {
 
 	public String getBerichtWerbung() {
 		StringBuilder text = new StringBuilder();
-		if (!liga.isBlank()) {
+		if (liga != null && !liga.isBlank()) {
 			String textLiga = BerichtHelper.getLigaJugend(liga);
 
 			if (!textLiga.isBlank()) {

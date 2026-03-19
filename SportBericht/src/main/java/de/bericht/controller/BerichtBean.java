@@ -31,6 +31,7 @@ import de.bericht.provider.SpielergebnisFactory;
 import de.bericht.provider.SpielergebnisProvider;
 import de.bericht.service.DatabaseService;
 import de.bericht.service.EmailService;
+import de.bericht.service.FreigegebeneSpiele;
 import de.bericht.service.LogEntry;
 import de.bericht.service.TelegrammService;
 import de.bericht.util.ApiKIChatGPT;
@@ -810,6 +811,8 @@ public class BerichtBean implements Serializable {
 	// Bild löschen-Methode
 	public void freigabe() {
 		dbService.saveLogData(vereinnr, ergebnisLink, name, "Freigegeben", "");
+		dbService.insertFreigegebeneSpiele(
+				new FreigegebeneSpiele(vereinnr, ergebnisLink, heim, gast, datum, ergebnis, name, liga));
 		logEntries = dbService.getLogEntries(vereinnr, ergebnisLink);
 		ErgebnisCache.setze(vereinnr, "Freigabe", dbService, ergebnisLink, "");
 	}
