@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -268,15 +269,50 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 
 	private String[] splitDoppelAusZelle(Element spielerZelle, String vereinnr, NamensSpeicher ns,
 			boolean verschluesseln) {
-		Elements links = spielerZelle.select("a");
-		if (links.size() >= 2) {
-			String erster = normalisiereSpielername(vereinnr, ns, verschluesseln, links.get(0).text());
-			String zweiter = normalisiereSpielername(vereinnr, ns, verschluesseln, links.get(1).text());
-			return new String[] { erster, zweiter };
+		String[] ausHtml = extrahiereDoppelSpielerMitMetadaten(spielerZelle, vereinnr, ns, verschluesseln);
+		if (!ausHtml[0].isBlank() && !ausHtml[1].isBlank()) {
+			return ausHtml;
+
 		}
 
 		String normalisiert = normalisiereSpielername(vereinnr, ns, verschluesseln, spielerZelle.text());
 		return splitDoppel(normalisiert);
+	}
+
+	private String[] extrahiereDoppelSpielerMitMetadaten(Element spielerZelle, String vereinnr, NamensSpeicher ns,
+			boolean verschluesseln) {
+		if (spielerZelle == null) {
+			return new String[] { "", "" };
+		}
+
+		String[] teile = spielerZelle.html().split("(?i)<br\\s*/?>");
+		List<String> spieler = new ArrayList<>();
+		for (String teil : teile) {
+			String text = Jsoup.parse(teil).text();
+			if (text == null) {
+				continue;
+			}
+			String bereinigt = text.replace('\u00A0', ' ').trim();
+			if (bereinigt.isBlank() || bereinigt.toLowerCase().contains("quersumme")) {
+				continue;
+			}
+			if (!enthaeltSpielerNamen(bereinigt)) {
+				continue;
+			}
+			spieler.add(normalisiereSpielername(vereinnr, ns, verschluesseln, bereinigt));
+			if (spieler.size() == 2) {
+				break;
+			}
+		}
+
+		if (spieler.size() >= 2) {
+			return new String[] { spieler.get(0), spieler.get(1) };
+		}
+		return new String[] { "", "" };
+	}
+
+	private boolean enthaeltSpielerNamen(String text) {
+		return text != null && text.matches(".*\\p{L}{2,}.*");
 	}
 
 	private List<String> extrahiereKompakteSpieler(String text) {

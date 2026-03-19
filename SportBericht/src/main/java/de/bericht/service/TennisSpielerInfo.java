@@ -7,8 +7,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TennisSpielerInfo {
 
-	private static final Pattern TENNIS_SPIELER_PATTERN = Pattern
-			.compile("^\\s*(\\d+)\\s*(.*?)\\s*(\\d+)\\s*[·.]?\\s*LK\\s*(\\d+)\\s*$");
+	private static final Pattern LK_PATTERN = Pattern.compile("\\bLK\\s*(\\d{1,3})\\b", Pattern.CASE_INSENSITIVE);
+	private static final Pattern POSITION_PATTERN = Pattern.compile("^\\s*(\\d{1,2})\\b");
+	private static final Pattern MELDELISTE_PATTERN = Pattern.compile("(\\d{1,3})\\s*$");
 
 	@JsonProperty("position")
 	private final String position;
@@ -34,17 +35,40 @@ public class TennisSpielerInfo {
 			return new TennisSpielerInfo("", "", "", "");
 		}
 
-		String normalized = text.replace('\u00A0', ' ').trim();
-		Matcher m = TENNIS_SPIELER_PATTERN.matcher(normalized);
-		if (m.matches()) {
-			String position = m.group(1);
-			String name = normalisiereName(m.group(2));
-			String meldeliste = m.group(3);
-			String lk = "LK " + m.group(4);
-			return new TennisSpielerInfo(position, name, meldeliste, lk);
+		String normalized = text.replace('\u00A0', ' ').replaceAll("\\s+", " ").trim();
+		String working = normalized;
+
+		String position = "";
+		String meldeliste = "";
+		String lk = "";
+
+		Matcher lkMatcher = LK_PATTERN.matcher(working);
+		if (lkMatcher.find()) {
+			lk = "LK " + lkMatcher.group(1);
+			working = lkMatcher.replaceFirst("").trim();
 		}
 
-		return new TennisSpielerInfo("", normalisiereName(normalized), "", "");
+		Matcher positionMatcher = POSITION_PATTERN.matcher(working);
+		if (positionMatcher.find()) {
+			position = positionMatcher.group(1);
+			working = working.substring(positionMatcher.end()).trim();
+
+		}
+
+		working = working.replaceAll("^[·.\\-\\s]+|[·.\\-\\s]+$", "").trim();
+
+		Matcher meldelisteMatcher = MELDELISTE_PATTERN.matcher(working);
+		if (meldelisteMatcher.find()) {
+			meldeliste = meldelisteMatcher.group(1);
+			working = working.substring(0, meldelisteMatcher.start()).trim();
+		}
+
+		String name = normalisiereName(working);
+		if (name.isBlank()) {
+			name = normalisiereName(normalized);
+		}
+		return new TennisSpielerInfo(position, name, meldeliste, lk);
+
 	}
 
 	private static String normalisiereName(String raw) {
