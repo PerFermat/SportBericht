@@ -2,6 +2,7 @@ package de.bericht.filter;
 
 import java.io.IOException;
 
+import de.bericht.service.DatabaseSchemaInitializer;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import jakarta.servlet.Filter;
@@ -43,7 +44,7 @@ public class IndexForwardFilter implements Filter {
 		if (vereinnr == null) {
 			vereinnr = "13014";
 		}
-
+		DatabaseSchemaInitializer.initializeIfNeeded();
 		String url = ConfigManager.getSpielplanURL(vereinnr);
 
 		if (url == null || !url.contains("wtb-tennis")) {

@@ -10,20 +10,20 @@ public class FreigegebeneSpiele {
 	private String heim;
 	private String gast;
 	private String datum;
-	private String matches;
+	private String ergebnis;
 	private String name;
 	private String liga;
 	private boolean wahl = true;
 
 	public FreigegebeneSpiele(String vereinnr, String ergebnisLink, String heim, String gast, String datum,
-			String matches, String name, String liga) {
+			String ergebnis, String name, String liga) {
 		super();
 		this.vereinnr = vereinnr;
 		this.ergebnisLink = ergebnisLink;
 		this.heim = heim;
 		this.gast = gast;
 		this.datum = datum;
-		this.matches = matches;
+		this.ergebnis = ergebnis;
 		this.name = name;
 		this.liga = liga;
 	}
@@ -68,12 +68,12 @@ public class FreigegebeneSpiele {
 		this.datum = datum;
 	}
 
-	public String getMatches() {
-		return matches;
+	public String getErgebnis() {
+		return ergebnis;
 	}
 
-	public void setMatches(String matches) {
-		this.matches = matches;
+	public void setErgebnis(String ergebnis) {
+		this.ergebnis = ergebnis;
 	}
 
 	public String getName() {
@@ -97,8 +97,8 @@ public class FreigegebeneSpiele {
 	@Override
 	public String toString() {
 		return "FreigegebeneSpiele{" + "vereinnr='" + vereinnr + '\'' + ", ergebnisLink='" + ergebnisLink + '\''
-				+ ", heim='" + heim + '\'' + ", gast='" + gast + '\'' + ", datum='" + datum + '\'' + ", matches='"
-				+ matches + '\'' + ", name='" + name + '\'' + ", liga='" + liga + '\'' + '}';
+				+ ", heim='" + heim + '\'' + ", gast='" + gast + '\'' + ", datum='" + datum + '\'' + ", ergebnis='"
+				+ ergebnis + '\'' + ", name='" + name + '\'' + ", liga='" + liga + '\'' + '}';
 	}
 
 	public boolean isWahl() {

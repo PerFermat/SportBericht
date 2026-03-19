@@ -599,7 +599,7 @@ public class DatabaseService {
 	}
 
 	public List<FreigegebeneSpiele> freigegebeneSpiele(String vereinnr) {
-		String sql = "SELECT vereinnr, timestamp, ergebnisLink, heim, gast, datum, matches, name, gruppe "
+		String sql = "SELECT vereinnr, timestamp, ergebnisLink, heim, gast, datum, ergebnis, name, gruppe "
 				+ "FROM freigegeben " + "WHERE vereinnr = ? AND timestamp >= NOW() - INTERVAL 14 DAY "
 				+ "ORDER BY timestamp DESC";
 
@@ -615,13 +615,13 @@ public class DatabaseService {
 				String heim = rs.getString("heim");
 				String gast = rs.getString("gast");
 				String datum = rs.getString("datum"); // oder ggf. aus timestamp berechnen
-				String matches = rs.getString("matches");
+				String ergebnis = rs.getString("ergebnis");
 				String name = rs.getString("name");
 				String gruppe = rs.getString("gruppe");
 
 				// Du kannst weitere Felder ergänzen, je nachdem, wie dein Spiel-Konstruktor
 				// aussieht.
-				FreigegebeneSpiele spiel = new FreigegebeneSpiele(vereinnr, ergebnisLink, heim, gast, datum, matches,
+				FreigegebeneSpiele spiel = new FreigegebeneSpiele(vereinnr, ergebnisLink, heim, gast, datum, ergebnis,
 						name, gruppe);
 
 				spiele.add(spiel);
@@ -636,7 +636,7 @@ public class DatabaseService {
 
 	public void insertFreigegebeneSpiele(FreigegebeneSpiele freigegebeneSpiele) {
 		String sql = "INSERT INTO freigegeben "
-				+ "(vereinnr, ergebnisLink, heim, gast, datum, matches, name, liga, timestamp) "
+				+ "(vereinnr, ergebnisLink, heim, gast, datum, ergebnis, name, liga, timestamp) "
 				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
 
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -646,7 +646,7 @@ public class DatabaseService {
 			pstmt.setString(3, freigegebeneSpiele.getHeim());
 			pstmt.setString(4, freigegebeneSpiele.getGast());
 			pstmt.setString(5, freigegebeneSpiele.getDatum()); // z. B. "2025-07-19" im Format CHAR(10)
-			pstmt.setString(6, freigegebeneSpiele.getMatches());
+			pstmt.setString(6, freigegebeneSpiele.getErgebnis());
 			pstmt.setString(7, freigegebeneSpiele.getName());
 			pstmt.setString(8, freigegebeneSpiele.getLiga());
 			pstmt.executeUpdate();

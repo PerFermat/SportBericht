@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import de.bericht.provider.SpielplanFactory;
 import de.bericht.provider.SpielplanProvider;
 import de.bericht.service.BerichtText;
-import de.bericht.service.DatabaseSchemaInitializer;
 import de.bericht.service.DatabaseService;
 import de.bericht.service.Spiel;
 import de.bericht.util.BerichtHelper;
@@ -62,9 +61,6 @@ public class SpielplanBean implements Serializable {
 			vereinnr = "13014";
 		}
 		int i = 0;
-		System.out.println("Anfang" + vereinnr);
-		DatabaseSchemaInitializer.initializeIfNeeded();
-		System.out.println("Anfang" + i++ + vereinnr);
 
 		SpielplanProvider provider;
 		System.out.println("Anfang " + url + i++ + vereinnr);
