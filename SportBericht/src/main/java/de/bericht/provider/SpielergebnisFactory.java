@@ -1,0 +1,54 @@
+package de.bericht.provider;
+
+import de.bericht.service.SpielergebnisClickTTService;
+import de.bericht.service.SpielergebnisService;
+import de.bericht.util.NamensSpeicher;
+
+public class SpielergebnisFactory {
+
+	public static SpielergebnisProvider create(String vereinnr, String url, NamensSpeicher ns) {
+		return create(vereinnr, url, ns, true);
+	}
+
+	public static SpielergebnisProvider create(String vereinnr, String url, NamensSpeicher ns, Boolean verschluesseln) {
+		if (url == null || url.isBlank()) {
+			throw new IllegalArgumentException("URL is missing for Verein: " + vereinnr);
+		}
+
+		String urllow = url.toLowerCase();
+
+		SpielergebnisProvider provider;
+
+		if (urllow.contains("click-tt.de")) {
+			provider = new SpielergebnisClickTTService(vereinnr, url, ns, verschluesseln);
+		} else {
+			provider = new SpielergebnisService(vereinnr, url, ns, verschluesseln);
+		}
+
+		return provider;
+	}
+
+	public static SpielergebnisProvider create(String vereinnr, String berichtMannschaft, String url,
+			NamensSpeicher ns) {
+		return create(vereinnr, berichtMannschaft, url, ns, true);
+	}
+
+	public static SpielergebnisProvider create(String vereinnr, String berichtMannschaft, String url, NamensSpeicher ns,
+			Boolean verschluesseln) {
+		if (url == null || url.isBlank()) {
+			throw new IllegalArgumentException("URL is missing for Verein: " + vereinnr);
+		}
+
+		String urllow = url.toLowerCase();
+
+		SpielergebnisProvider provider;
+
+		if (urllow.contains("click-tt.de")) {
+			provider = new SpielergebnisClickTTService(vereinnr, berichtMannschaft, url, ns, verschluesseln);
+		} else {
+			provider = new SpielergebnisService(vereinnr, berichtMannschaft, url, ns, verschluesseln);
+		}
+
+		return provider;
+	}
+}

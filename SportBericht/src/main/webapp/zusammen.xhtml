@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>Veröffentlichen Spielberichte</title>
+	<!-- Einbinden des externen Stylesheets -->
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{zusammenBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet library="css" name="styles.css" />
+	<!-- Einbinden des externen Skripts -->
+	<link rel="icon" type="image/ico" href="resources/images/favicon.ico" />
+</h:head>
+
+<h:body>
+	<h:form>
+		<div class="tabheader-area">
+			<h:outputLink value="#{zusammenBean.vereinHomepage}" target="_blank">
+				<img src="#{zusammenBean.bestimmenIcon}"
+					style="vertical-align: middle;" width="50" />
+			</h:outputLink>
+			<h2>Veröffentlichen Spielbereichte - Einzeln</h2>
+			<p:commandButton value="Zurück" action="index.xhtml" immediate="true">
+				<f:param name="vereinnr" value="#{zusammenBean.vereinnr}" />
+			</p:commandButton>
+		</div>
+	</h:form>
+	<h:form id="myForm">
+		<!-- Dialog-Definition -->
+		<p:dialog id="freigabeDialog" widgetVar="freigabeDialogWidget"
+			header="Hinweis" modal="true" closable="false" closeOnEscape="false"
+			draggable="false" resizable="false">
+
+			<h:outputText value="Die Freigabe ist bereits erfolgt." />
+
+			<br />
+			<br />
+
+			<!-- Schließen-Button -->
+			<p:commandButton value="Schließen"
+				onclick="PF('freigabeDialogWidget').hide();" type="button"
+				styleClass="ui-button-secondary" />
+		</p:dialog>
+		<p:remoteCommand name="openDialog"
+			action="#{zusammenBean.resetFreigabe}" autoRun="true"
+			onstart="PF('freigabeDialogWidget').show();"
+			rendered="#{zusammenBean.bereitsFreigegeben}" />
+
+
+		<div style="text-align: left;">
+			<p:toggleSwitch value="#{zusammenBean.freigegebeneBerichte}">
+				<p:ajax update=":tabForm label" />
+			</p:toggleSwitch>
+
+			<h:outputText id="label"
+				value="#{zusammenBean.freigegebeneBerichte 
+            ? '  Freigegebene Berichte' 
+            : '  Alle Berichte'}" />
+
+		</div>
+		<div style="text-align: center;">
+			<p:selectOneMenu value="#{zusammenBean.name}">
+				<p:ajax event="change" process="@this" update="mainForm" />
+
+				<f:selectItem itemLabel="Homepage auswählen"
+					itemValue="#{zusammenBean.itemValue}" noSelectionOption="false" />
+				<f:selectItems value="#{zusammenBean.homepages}" />
+			</p:selectOneMenu>
+		</div>
+	</h:form>
+	<div class="tabellen-container">
+		<h:form id="tabForm">
+			<p:dataTable value="#{zusammenBean.spieleFreigegeben}" var="spiel"
+				border="1" styleClass="tabelle">
+
+				<p:column headerText="Datum" styleClass="col-datum">
+					<h:outputText value="#{spiel.datum}" />
+				</p:column>
+
+				<p:column headerText="Liga" styleClass="col-liga">
+					<h:outputText value="#{spiel.liga}" />
+				</p:column>
+
+				<p:column headerText="Heimmannschaft" styleClass="col-heim">
+					<h:outputText value="#{spiel.heim}" />
+				</p:column>
+
+				<p:column headerText="Gastmannschaft" styleClass="col-gast">
+					<h:outputText value="#{spiel.gast}" />
+				</p:column>
+
+				<p:column headerText="Erg." styleClass="col-ergebnis">
+					<h:outputText value="#{spiel.ergebnis}" />
+				</p:column>
+
+				<p:column headerText="" styleClass="col-bilder">
+					<h:graphicImage library="images" name="bericht.png"
+						rendered="#{zusammenBean.hasBericht(spiel.ergebnisLink)}"
+						style="vertical-align:middle; margin-left:5px;" width="15"
+						title="Bericht vorhanden" />
+
+					<h:graphicImage library="images" name="bild.png"
+						rendered="#{zusammenBean.hasBild(spiel.ergebnisLink)}"
+						style="vertical-align:middle; margin-left:10px;" width="15"
+						title="Bild vorhanden" />
+
+					<h:graphicImage library="images" name="freigabe.png"
+						rendered="#{zusammenBean.hasFreigabe(spiel.ergebnisLink)}"
+						style="vertical-align:middle; margin-left:10px;" width="15"
+						title="Freigegeben" />
+
+					<h:graphicImage library="images" name="veröffentlicht.jpg"
+						rendered="#{zusammenBean.hasHomepage(spiel.ergebnisLink)}"
+						style="vertical-align:middle; margin-left:10px;" width="15"
+						title="Veröffentlicht" />
+
+					<h:graphicImage library="images" name="blaettle.png"
+						rendered="#{zusammenBean.hasBlaettle(spiel.ergebnisLink)}"
+						style="vertical-align:middle; margin-left:10px;" width="15"
+						title="Im s'Blättle Veröffentlicht" />
+				</p:column>
+
+				<p:column headerText="Bericht" styleClass="col-bericht">
+					<div class="buttontab-container">
+						<p:commandButton value="Veröffentlichen"
+							actionListener="#{zusammenBean.ladeIframe(spiel)}"
+							update="mainForm mainFormbutton" process="@this"
+							styleClass="myButton" />
+					</div>
+				</p:column>
+
+			</p:dataTable>
+		</h:form>
+	</div>
+	<h:form id="mainFormbutton" enctype="multipart/form-data">
+		<div class="button-container">
+			<p:commandButton value="In Zwischenablage kopieren" type="button"
+				onclick="kopiereHtmlBericht();"
+				disabled="#{empty zusammenBean.name}" />
+			<p:commandButton value="Download Bild"
+				rendered="#{not empty zusammenBean.bildUrl}"
+				actionListener="#{zusammenBean.prepareDownloadBild}"
+				immediate="true" ajax="false" disabled="#{empty zusammenBean.name}">
+				<p:fileDownload value="#{zusammenBean.downloadBild}" />
+			</p:commandButton>
+			<p:commandButton value="'s Blättle veröffentlicht"
+				actionListener="#{zusammenBean.blaettle}" immediate="true"
+				disabled="#{empty zusammenBean.name}">
+			</p:commandButton>
+			<p:commandButton value="Freigabe aufheben"
+				actionListener="#{zusammenBean.freigabeAufheben}" immediate="true"
+				disabled="#{empty zusammenBean.name}">
+			</p:commandButton>
+			<h:outputLink value="https://godruck.srl.24hoster.com/login"
+				target="_blank">
+				<h:graphicImage library="images" name="Go.png"
+					alt="Online-Redaktionssystem" style="border: none;" />
+			</h:outputLink>
+		</div>
+	</h:form>
+	<div class="responsive-container">
+		<!-- Linker Bereich: iframe mit veröffentlichen.xhtml -->
+		<div class="text-input">
+			<h:form id="mainForm" enctype="multipart/form-data">
+				<!-- Container, der Eingabefeld und Fehlerbereich sowie die jeweiligen Buttons enthält -->
+				<!-- Linker Bereich: Texteingabefeld und Button "Bericht generieren" -->
+				<div class="text-container">
+					<p:outputLabel id="bereichsText"
+						value="#{zusammenBean.berichtAnzeige}" escape="false" />
+					<h:inputHidden id="berichtHidden"
+						value="#{zusammenBean.berichtWerbungBlaettle}" />
+					<h:panelGroup rendered="#{not empty zusammenBean.bildUrl}">
+						<h:graphicImage value="#{zusammenBean.bildUrl}" width="300" />
+					</h:panelGroup>
+					<p:outputLabel id="bildUnterschrift"
+						value="#{zusammenBean.bildUnterschrift}" escape="false" />
+				</div>
+				<div class="text-container">
+					<h:panelGroup id="meinInhaltsBereich"
+						rendered="#{zusammenBean.domain != null}">
+						<div class="text-container">
+							<!-- Eingabefelder für Username und Passwort -->
+							<p:panelGrid columns="2" cellpadding="5">
+								<h:outputLabel for="username" value="Username:" />
+								<h:inputText id="username" value="#{zusammenBean.username}" />
+
+								<h:outputLabel for="password" value="Password:" />
+								<h:inputSecret id="password" value="#{zusammenBean.password}"
+									redisplay="true" />
+							</p:panelGrid>
+							<br /> <br />
+							<!-- Login-Button: Speichert die Eingaben in der Bean, ohne zu navigieren -->
+							<p:commandButton value="Login" action="#{zusammenBean.login}"
+								update="@form" />
+
+							<h:outputText value="Gewünschte Kategorien auswählen: " />
+							<p:selectManyMenu value="#{zusammenBean.selectKategorie}">
+								<f:selectItem itemLabel="" itemValue="" noSelectionOption="true" />
+								<f:selectItems value="#{zusammenBean.kategorie}" />
+							</p:selectManyMenu>
+						</div>
+						<h:panelGroup id="updateMitSpielberichte"
+							rendered="#{not empty zusammenBean.ergebnisLink and not zusammenBean.ergebnisLink.startsWith('http')}">
+
+							<h:outputText
+								value="Bericht soll zusammen mit Spielberichte veröffentlicht werden: " />
+							<p:selectBooleanCheckbox value="#{zusammenBean.mitSpielberichte}">
+								<p:ajax event="change"
+									listener="#{zusammenBean.updateMitSpielberichte}"
+									update="updateMitSpielberichte" />
+							</p:selectBooleanCheckbox>
+						</h:panelGroup>
+						<p:outputPanel id="veroeffentlichtHinweis" layout="block">
+							<h:panelGroup rendered="#{zusammenBean.anzahlWordpress >= 1}">
+								<div class="red-container">
+									<div class="text-input2">
+										<h:outputText
+											value="Achtung: Bericht wurde bereits veröffentlicht" />
+										<br />
+										<h:outputLink value="#{zusammenBean.link}" target="_blank">
+						Anzeige Bericht auf der Homepage
+					</h:outputLink>
+										<br />
+									</div>
+								</div>
+							</h:panelGroup>
+						</p:outputPanel>
+					</h:panelGroup>
+				</div>
+				<br />
+				<br /> Veröffentlichen auf
+					<h:outputLink value="#{zusammenBean.domain}" target="_blank">
+   						 #{zusammenBean.domain}
+				</h:outputLink>
+				<br />
+				<br />
+				<div class="button-container">
+					<p:commandButton value="Veröffentlichen"
+						action="#{zusammenBean.veroeffentlichen}"
+						update="veroeffentlichtHinweis logPanel :growl" />
+				</div>
+				<br />
+				<div class="text-container">
+					<h:panelGroup id="logPanel"
+						rendered="#{not empty zusammenBean.logEntries}">
+						<p:panel header="Änderungshistorie" toggleable="true"
+							collapsed="true" widgetVar="logPanelWidget">
+							<p:dataTable id="logTable" value="#{zusammenBean.logEntries}"
+								var="log" rowKey="#{log.ergebnisLink}-#{log.timestamp.time}">
+								<p:column headerText="Datum">
+									<h:outputText value="#{log.timestamp}">
+										<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Name">
+									<h:outputText value="#{log.name}" />
+								</p:column>
+								<p:column headerText="Aktion">
+									<h:outputText value="#{log.mail}" />
+								</p:column>
+								<p:column headerText="Mailversand erfolgreich">
+									<h:outputText value="#{log.mailErfolgreich}" />
+								</p:column>
+								<p:column headerText="Info">
+									<h:outputText value="#{log.info}" />
+								</p:column>
+								<p:rowExpansion>
+									<h:panelGrid columns="1">
+										<h:outputText value="ErgebnisLink: #{log.ergebnisLink}" />
+									</h:panelGrid>
+								</p:rowExpansion>
+							</p:dataTable>
+						</p:panel>
+					</h:panelGroup>
+				</div>
+			</h:form>
+		</div>
+		<div class="error-table">
+			<!-- Rechter Bereich: externe Seite -->
+			<h:form id="mainFormZeitung" enctype="multipart/form-data">
+				<iframe src="#{zusammenBean.zeitung}" width="100%" height="1900"
+					frameborder="0">
+					<p>Ihr Browser unterstützt keine Iframes.</p>
+				</iframe>
+			</h:form>
+		</div>
+	</div>
+	<h:form prependId="false">
+		<p:growl id="growl" showDetail="true" life="6000" />
+	</h:form>
+</h:body>
+</html>

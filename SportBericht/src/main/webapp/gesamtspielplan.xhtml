@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>Gesamtspielplan – #{gesamtspielplanBean.verein}</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{gesamtspielplanBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet name="css/styles.css" />
+</h:head>
+
+<h:body>
+	<div class="tabheader-area">
+		<h2>Gesamtspielplan – #{gesamtspielplanBean.verein}</h2>
+	</div>
+
+	<h:form id="controlsForm" styleClass="controls controls-centered">
+		<span class="field">Runde: <p:selectOneMenu
+				value="#{gesamtspielplanBean.halbserie}">
+				<p:ajax listener="#{gesamtspielplanBean.ladeGesamtspielplan}"
+					update=":gesamtspielplanForm :controlsForm" process="@this" />
+				<f:selectItem itemLabel="Vorrunde" itemValue="Vorrunde" />
+				<f:selectItem itemLabel="Rückrunde" itemValue="Rückrunde" />
+			</p:selectOneMenu>
+		</span>
+		<div class="button-container">
+			<p:commandButton value="PDF herunterladen"
+				actionListener="#{gesamtspielplanBean.prepareDownloadPdf}"
+				process="@this" immediate="true" ajax="false">
+				<p:fileDownload value="#{gesamtspielplanBean.downloadPdf}" />
+			</p:commandButton>
+			<p:commandButton value="Excel herunterladen"
+				actionListener="#{gesamtspielplanBean.prepareDownloadExcel}"
+				process="@this" immediate="true" ajax="false">
+				<p:fileDownload value="#{gesamtspielplanBean.downloadExcel}" />
+			</p:commandButton>
+		</div>
+	</h:form>
+
+	<div class="gesamtspielplan-wrapper">
+		<h:form id="gesamtspielplanForm">
+			<div class="gesamtspielplan-scroll">
+				<table class="gesamtspielplan">
+					<thead>
+						<tr>
+							<th class="headline"
+								colspan="#{gesamtspielplanBean.gesamtColspanOhneBetreuer}">Gesamtspielplan</th>
+						</tr>
+						<tr>
+							<th class="subheadline date-col"></th>
+							<ui:repeat value="#{gesamtspielplanBean.spalten}" var="spalte">
+								<th class="column-group-title column-group-title-nav" colspan="1">
+									<div class="column-group-title-content">#{spalte.mannschaft}
+										<br /> #{spalte.liga}
+									</div>
+									<p:commandButton styleClass="column-header-nav-button" ajax="false"
+										action="verfuegbar.xhtml" process="@this"
+										title="Verfügbarkeit für #{spalte.mannschaft} öffnen">
+										<f:param name="sp" value="#{spalte.key}" />
+										<f:param name="vereinnr" value="#{gesamtspielplanBean.vereinnr}" />
+										<f:param name="runde" value="#{gesamtspielplanBean.halbserie}" />
+										<f:param name="ruecksprung" value="gesamtspielplan.xhtml" />
+									</p:commandButton>
+								</th>
+							</ui:repeat>
+						</tr>
+						<tr>
+							<th class="column-sub-title">Datum</th>
+							<ui:repeat value="#{gesamtspielplanBean.spalten}" var="spalte">
+								<th class="column-sub-title spiel-col">Uhrzeit/Gegner</th>
+							</ui:repeat>
+						</tr>
+					</thead>
+					<tbody>
+						<ui:repeat value="#{gesamtspielplanBean.datumsListe}" var="datum"
+							varStatus="status">
+							<tr
+								class="#{gesamtspielplanBean.isNeueWoche(status.index) ? 'week-separator' : ''}">
+								<td class="date-col">#{gesamtspielplanBean.getDatumMitWochentag(datum)}</td>
+								<ui:repeat value="#{gesamtspielplanBean.spalten}" var="spalte">
+									<td class="spiel-col"><ui:repeat
+											value="#{gesamtspielplanBean.getEintraege(datum, spalte)}"
+											var="eintrag">
+											<div
+												class="match-block #{eintrag.ergebnisFarbeClass} #{spalte.jugend ? 'youth-match' : ''}"
+												title="#{spalte.jugend ? (empty eintrag.betreuer ? 'Kein Betreuer hinterlegt' : 'Betreuer: '.concat(eintrag.betreuer)) : ''}">
+												<div class="match-head-row">
+													<span class="head-left">#{eintrag.zeit}</span> <span
+														class="head-right">#{eintrag.heimOderAuswaerts}</span>
+												</div>
+												<div class="opponent-row">
+													<span
+														class="#{not empty eintrag.ergebnis ? 'head-left' : ''}">
+														#{eintrag.gegner} </span>
+
+													<h:panelGroup rendered="#{not empty eintrag.ergebnis}">
+														<span class="head-right">#{eintrag.ergebnis}</span>
+													</h:panelGroup>
+													<h:panelGroup
+														rendered="#{empty eintrag.ergebnis and not spalte.jugend and eintrag.zukunftsspiel and eintrag.rueckmeldungen }">
+														<span class="head-right verfuegbarkeit-counts"><span
+															class="count-yes">#{eintrag.verfuegbarJaAnzahl}</span>/<span
+															class="count-no">#{eintrag.verfuegbarNeinAnzahl}</span></span>
+													</h:panelGroup>
+													<h:panelGroup
+														rendered="#{empty eintrag.ergebnis and (spalte.jugend or not eintrag.zukunftsspiel)}">
+														<span class="head-right #{eintrag.betreuerStatusClass}">#{eintrag.betreuerInitialen}</span>
+													</h:panelGroup>
+												</div>
+												<ui:fragment rendered="#{spalte.jugend}">
+													<p:commandLink styleClass="youth-match-overlay"
+														title="#{empty eintrag.betreuer ? 'Kein Betreuer hinterlegt' : 'Betreuer: '.concat(eintrag.betreuer)}"
+														actionListener="#{gesamtspielplanBean.openBetreuerDialog(eintrag)}"
+														process="@this"
+														update=":gesamtspielplanForm:betreuerDialogContent"
+														oncomplete="PF('betreuerDialog').show();" />
+												</ui:fragment>
+												<ui:fragment
+													rendered="#{not spalte.jugend and eintrag.zukunftsspiel}">
+													<p:commandLink styleClass="adult-match-overlay"
+														actionListener="#{gesamtspielplanBean.openVerfuegbarkeitDialog(eintrag)}"
+														process="@this"
+														update=":gesamtspielplanForm:verfuegbarkeitDialogContent"
+														oncomplete="PF('verfuegbarkeitDialog').show();" />
+												</ui:fragment>
+											</div>
+										</ui:repeat></td>
+								</ui:repeat>
+							</tr>
+						</ui:repeat>
+					</tbody>
+				</table>
+				<p:dialog widgetVar="betreuerDialog" header="Betreuer bearbeiten"
+					modal="true" resizable="false" appendTo="@form">
+					<h:panelGroup id="betreuerDialogContent" layout="block">
+						<br />
+						<p:autoComplete id="betreuerInput"
+							value="#{gesamtspielplanBean.selectedBetreuer}"
+							completeMethod="#{gesamtspielplanBean.completeBetreuer}"
+							forceSelection="false" dropdown="true" />
+						<br />
+						<br />
+						<div class="betreuer-status-info">
+							<strong>Bestätigung:</strong>
+							<h:outputText
+								value="#{gesamtspielplanBean.selectedEintrag == null ? 'Offen' : (gesamtspielplanBean.selectedEintrag.bestaetigt == null ? 'Offen' : (gesamtspielplanBean.selectedEintrag.bestaetigt ? 'Zugesagt' : 'Abgesagt'))}" />
+						</div>
+						<br />
+						<div class="betreuer-status-info">
+							<strong>Kommentar:</strong>
+							<h:outputText
+								value="#{empty gesamtspielplanBean.selectedEintrag.kommentar ? '-' : gesamtspielplanBean.selectedEintrag.kommentar}" />
+						</div>
+
+						<br />
+						<div class="dialog-footer-buttons" style="margin-top: 10px;">
+							<p:commandButton value="Speichern"
+								action="#{gesamtspielplanBean.saveSelectedBetreuer}"
+								process=":gesamtspielplanForm:betreuerDialogContent"
+								update=":gesamtspielplanForm"
+								oncomplete="PF('betreuerDialog').hide();" />
+							<p:commandButton value="Abbrechen"
+								oncomplete="PF('betreuerDialog').hide();" />
+						</div>
+					</h:panelGroup>
+				</p:dialog>
+				<p:dialog widgetVar="verfuegbarkeitDialog"
+					header="Spieler-Verfügbarkeit" modal="true" resizable="false"
+					appendTo="@form" width="620">
+					<h:panelGroup id="verfuegbarkeitDialogContent" layout="block">
+						<h:panelGroup
+							rendered="#{gesamtspielplanBean.selectedVerfuegbarkeitEintrag != null}">
+							<div class="verf-dialog-title">#{gesamtspielplanBean.selectedVerfuegbarkeitEintrag.datum}
+								#{gesamtspielplanBean.selectedVerfuegbarkeitEintrag.zeit} -
+								#{gesamtspielplanBean.selectedVerfuegbarkeitEintrag.gegner}</div>
+						</h:panelGroup>
+
+						<p:panel header="Zugesagt" toggleable="false"
+							styleClass="verf-panel-zugesagt">
+							<ui:repeat value="#{gesamtspielplanBean.zugesagtSpieler}"
+								var="spieler">
+								<div class="verf-row">
+									<strong>#{spieler.name}</strong><span class="verf-status">
+										– #{spieler.verfuegbarkeit}</span>
+									<h:panelGroup rendered="#{not empty spieler.kommentar}">
+										<span class="verf-comment-inline"> –
+											#{spieler.kommentar}</span>
+									</h:panelGroup>
+								</div>
+							</ui:repeat>
+							<h:panelGroup
+								rendered="#{empty gesamtspielplanBean.zugesagtSpieler}">Keine Zusagen.</h:panelGroup>
+						</p:panel>
+
+						<p:panel header="Abgesagt" toggleable="true" collapsed="true"
+							styleClass="verf-panel-abgesagt">
+							<ui:repeat value="#{gesamtspielplanBean.abgesagtSpieler}"
+								var="spieler">
+								<div class="verf-row">
+									<strong>#{spieler.name}</strong><span class="verf-status">
+										– #{spieler.verfuegbarkeit}</span>
+									<h:panelGroup rendered="#{not empty spieler.kommentar}">
+										<span class="verf-comment-inline"> –
+											#{spieler.kommentar}</span>
+									</h:panelGroup>
+								</div>
+							</ui:repeat>
+							<h:panelGroup
+								rendered="#{empty gesamtspielplanBean.abgesagtSpieler}">Keine Absagen.</h:panelGroup>
+						</p:panel>
+
+					<p:panel rendered="#{not empty gesamtspielplanBean.zusatzZugesagtSpieler}"
+							header="Zusagen aus unteren Mannschaften" toggleable="true" collapsed="true"
+							styleClass="verf-panel-zusatz-zugesagt">
+							<ui:repeat value="#{gesamtspielplanBean.zusatzZugesagtSpieler}"
+								var="spieler">
+								<div class="verf-row">
+									<strong>#{spieler.name}</strong> <span class="verf-rang">(#{spieler.rang})</span><span
+										class="verf-status"> – #{spieler.verfuegbarkeit}</span>
+									<h:panelGroup rendered="#{not empty spieler.kommentar}">
+										<span class="verf-comment-inline"> –
+											#{spieler.kommentar}</span>
+									</h:panelGroup>
+								</div>
+							</ui:repeat>
+						</p:panel>
+
+						<p:panel header="Noch keine Rückmeldung" toggleable="true"
+							collapsed="true" styleClass="verf-panel-offen">
+							<ui:repeat value="#{gesamtspielplanBean.offeneSpieler}"
+								var="spieler">
+								<div class="verf-row">
+									<strong>#{spieler.name}</strong> <span class="verf-rang">(#{spieler.rang})</span>
+								</div>
+							</ui:repeat>
+							<h:panelGroup
+								rendered="#{empty gesamtspielplanBean.offeneSpieler}">Alle Spieler haben geantwortet.</h:panelGroup>
+						</p:panel>
+						<div class="verf-dialog-footer-link">
+							<p:commandButton value="Verfügbarkeit bearbeiten" ajax="false"
+								action="verfuegbar.xhtml"
+								rendered="#{not empty gesamtspielplanBean.selectedVerfuegbarkeitSpalteKey}">
+								<f:param name="sp"
+									value="#{gesamtspielplanBean.selectedVerfuegbarkeitSpalteKey}" />
+								<f:param name="vereinnr" value="#{gesamtspielplanBean.vereinnr}" />
+								<f:param name="runde" value="#{gesamtspielplanBean.halbserie}" />
+								<f:param name="ruecksprung" value="gesamtspielplan.xhtml" />
+							</p:commandButton>
+						</div>						
+					</h:panelGroup>
+				</p:dialog>
+			</div>
+		</h:form>
+		<h:form id="configForm">
+			<div class="button4-container">
+				<p:commandButton value="Impressum" action="impressum.xhtml">
+					<f:param name="vereinnr" value="#{gesamtspielplanBean.vereinnr}" />
+				</p:commandButton>
+			</div>
+		</h:form>
+	</div>
+
+	<h:outputScript target="body">
+		(function() {
+			function sendHeightToParent() {
+				if (window.parent === window) {
+					return;
+				}
+
+				var body = document.body;
+				var html = document.documentElement;
+				var height = Math.max(
+					body ? body.scrollHeight : 0,
+					body ? body.offsetHeight : 0,
+					html ? html.clientHeight : 0,
+					html ? html.scrollHeight : 0,
+					html ? html.offsetHeight : 0
+				);
+
+				window.parent.postMessage(height, "*");
+			}
+
+			var debouncedTimer;
+			function scheduleHeightUpdate() {
+				window.clearTimeout(debouncedTimer);
+				debouncedTimer = window.setTimeout(sendHeightToParent, 100);
+			}
+
+			document.addEventListener("DOMContentLoaded", scheduleHeightUpdate);
+			window.addEventListener("load", scheduleHeightUpdate);
+			window.addEventListener("resize", scheduleHeightUpdate);
+
+			if (window.PrimeFaces &amp;&amp; PrimeFaces.ajax) {
+				PrimeFaces.ajax.Queue.addOnComplete(scheduleHeightUpdate);
+			}
+
+			if (window.MutationObserver) {
+				var observer = new MutationObserver(scheduleHeightUpdate);
+				observer.observe(document.body, {
+					childList: true,
+					subtree: true,
+					attributes: true,
+					characterData: true
+				});
+			}
+
+			scheduleHeightUpdate();
+		})();
+	</h:outputScript>
+</h:body>
+</html>

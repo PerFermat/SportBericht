@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>Betreuer-Bestätigung</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{bestaetigungBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet name="css/styles.css" />
+	<style>
+.bestaetigung-container {
+	width: 100%;
+	max-width: 1000px;
+	margin: 0 auto;
+}
+</style>
+</h:head>
+<h:body>
+	<div class="bestaetigung-container">
+		<div class="tabheader-area">
+			<h2>Rückmeldung zur Betreuung</h2>
+		</div>
+		<h:form id="bestaetigungForm" styleClass="controls"
+			rendered="#{not empty bestaetigungBean.eintrag}">
+			<h:panelGroup rendered="#{bestaetigungBean.mailGesendetHinweis}">
+				<div style="margin-bottom:10px; color:#2e7d32; font-weight:bold;">Jugendleiter wurde per Mail informiert!</div>
+			</h:panelGroup>
+			<p:panel header="Spielinformationen">
+				<p>
+					<strong>Datum:</strong> #{bestaetigungBean.eintrag.datum}
+				</p>
+				<p>
+					<strong>Uhrzeit:</strong> #{bestaetigungBean.eintrag.zeit}
+				</p>
+				<p>
+					<strong>Heim/Auswärts:</strong>
+					#{bestaetigungBean.heimOderAuswaerts}
+				</p>
+				<p>
+					<strong>Gegner:</strong> #{bestaetigungBean.gegner}
+				</p>
+				<p>
+					<strong>Betreuer:</strong> #{empty
+					bestaetigungBean.eintrag.betreuer ? '-' :
+					bestaetigungBean.eintrag.betreuer}
+				</p>
+			</p:panel>
+
+			<br />
+			<p:panel header="Rückmeldung" style="margin-top: 12px;">
+				<h:panelGroup
+					rendered="#{not bestaetigungBean.rueckmeldungGesendet}">
+					<p:inputTextarea value="#{bestaetigungBean.zusatzKommentar}"
+						rows="4" autoResize="false" style="width:100%;"
+						placeholder="Sonstiges Eingabefeld" />
+					<div class="button-container"
+						style="margin-top: 12px; display: flex; flex-direction: column; gap: 10px;">
+						<p:commandButton value="#{bestaetigungBean.bestaetigenText}"
+							action="#{bestaetigungBean.bestaetigen}"
+							update=":bestaetigungForm" />
+						<p:commandButton value="#{bestaetigungBean.ablehnenMitErsatzText}"
+							action="#{bestaetigungBean.ablehnenMitErsatz}"
+							update=":bestaetigungForm" />
+						<p:commandButton
+							value="#{bestaetigungBean.ablehnenOhneErsatzText}"
+							action="#{bestaetigungBean.ablehnenOhneErsatz}"
+							update=":bestaetigungForm" />
+					</div>
+				</h:panelGroup>
+				<h:panelGroup rendered="#{bestaetigungBean.rueckmeldungGesendet}">
+					<h3>Danke für die Rückmeldung</h3>
+					<p>
+						<strong>Gespeicherter Kommentar:</strong> #{empty
+						bestaetigungBean.eintrag.kommentar ? '-' :
+						bestaetigungBean.eintrag.kommentar}
+					</p>
+					<br />
+					<br />
+					<h:panelGroup rendered="#{bestaetigungBean.abgelehnt}">
+						<p>Bitte den neuen Betreuer eingeben:</p>
+						<p:autoComplete id="betreuerRueckmeldung"
+							value="#{bestaetigungBean.selectedBetreuer}"
+							completeMethod="#{bestaetigungBean.completeBetreuer}"
+							forceSelection="false" dropdown="true"
+							placeholder="Betreuer auswählen"
+							style="width:100%; margin-bottom: 10px;">
+							<p:ajax event="itemSelect" process="@this"
+								listener="#{bestaetigungBean.aktualisiereTauschSpiele}"
+								update=":bestaetigungForm" />
+							<p:ajax event="change" process="@this"
+								listener="#{bestaetigungBean.aktualisiereTauschSpiele}"
+								update=":bestaetigungForm" />
+						</p:autoComplete>
+						<h:panelGroup id="tauschSpieleListe"
+							rendered="#{not empty bestaetigungBean.tauschSpiele}">
+							<ui:repeat value="#{bestaetigungBean.tauschSpiele}"
+								var="tauschSpiel">
+								<div
+									style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+									<p:commandButton value="Tauschen"
+										action="#{bestaetigungBean.tauschen}" process="@this"
+										update=":bestaetigungForm">
+										<f:setPropertyActionListener
+											target="#{bestaetigungBean.selectedTauschSpielUniqueKey}"
+											value="#{tauschSpiel.uniqueKey}" />
+									</p:commandButton>
+									<h:outputText
+										value="#{bestaetigungBean.formatTauschSpielText(tauschSpiel)}" />
+								</div>
+							</ui:repeat>
+						</h:panelGroup>
+						<h:outputText rendered="#{empty bestaetigungBean.tauschSpiele}"
+							value="Keine zukünftigen Spiele zum Tauschen gefunden."
+							style="display:block; margin-bottom: 10px;" />
+					</h:panelGroup>
+					<p:commandButton id="rueckmeldungAktionButton"
+						value="#{bestaetigungBean.rueckmeldungButtonText}"
+						action="#{bestaetigungBean.rueckmeldungZuruecknehmenOderSpeichern}"
+						update=":bestaetigungForm" style="margin-bottom: 10px;" />
+
+				</h:panelGroup>
+			</p:panel>
+		</h:form>
+		<h:panelGroup rendered="#{empty bestaetigungBean.eintrag}">
+			<div class="controls">Ungültiger oder unbekannter UUID-Link.</div>
+		</h:panelGroup>
+	</div>
+</h:body>
+</html>

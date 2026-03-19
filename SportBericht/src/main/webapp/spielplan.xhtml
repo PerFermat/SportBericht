@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>Spielauswahl – #{spielplanBean.verein}</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{spielplanBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet name="css/styles.css" />
+	<h:outputScript library="js" name="script.js" target="head" />
+	<link rel="icon" type="image/ico" href="resources/images/favicon.ico" />
+</h:head>
+
+<h:body>
+	<h:form id="messagesForm">
+		<p:growl id="messages" showDetail="true" life="30000" />
+	</h:form>
+
+	<div class="tabheader-area">
+		<h:outputLink value="#{spielplanBean.vereinHomepage}" target="_blank">
+			<img src="#{spielplanBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
+		<h:form>
+			<p:commandButton type="button" value="Handbuch"
+				onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
+		</h:form>
+
+		<h2>Spielauswahl – #{spielplanBean.verein}</h2>
+		<h:form>
+			<p:commandButton value="Veröffentlichen"
+				action="zusammenGesamt.xhtml">
+				<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+			</p:commandButton>
+		</h:form>
+	</div>
+
+	<!-- Bestehende Tabelle -->
+	<div class="tabellen-container">
+		<h:form>
+			<p:dataTable value="#{spielplanBean.spiele}" var="spiel" border="1"
+				styleClass="tabelle">
+
+				<p:column headerText="Datum" styleClass="col-datum">
+					<h:outputText value="#{spiel.datum} " />
+				</p:column>
+
+				<p:column headerText="Liga" styleClass="col-liga">
+					<h:outputText value="#{spiel.liga}" />
+				</p:column>
+
+				<p:column headerText="Heimmannschaft" styleClass="col-heim">
+					<h:outputText value="#{spiel.heim}" />
+				</p:column>
+
+				<p:column headerText="Gastmannschaft" styleClass="col-gast">
+					<h:outputText value="#{spiel.gast}" />
+				</p:column>
+
+				<p:column headerText="Erg." styleClass="col-ergebnis">
+					<h:outputText value="#{spiel.ergebnis}" />
+				</p:column>
+
+				<p:column headerText="" styleClass="col-bilder">
+					<!-- Anzeige von bericht.png, falls ein Bericht vorhanden ist -->
+					<br />
+					<div class="image-flex-container">
+						<h:graphicImage library="images" name="bericht.png"
+							rendered="#{not empty spiel.ergebnis and spielplanBean.hasBericht(spiel.ergebnisLink)}"
+							style="vertical-align:middle; margin-left:5px;" width="15"
+							title="Bericht vorhanden" />
+
+						<!-- Anzeige von bild.png, falls ein Bild vorhanden ist -->
+						<h:graphicImage library="images" name="bild.png"
+							rendered="#{not empty spiel.ergebnis and spielplanBean.hasBild(spiel.ergebnisLink)}"
+							style="vertical-align:middle; margin-left:2px;" width="15"
+							title="Bild vorhanden" />
+						<h:graphicImage library="images" name="freigabe.png"
+							rendered="#{not empty spiel.ergebnis and spielplanBean.hasFreigabe(spiel.ergebnisLink)}"
+							style="vertical-align:middle; margin-left:2px;" width="15"
+							title="Freigegeben" />
+						<!-- Anzeige von bild.png, falls ein Bild vorhanden ist -->
+						<h:graphicImage library="images" name="veröffentlicht.jpg"
+							rendered="#{not empty spiel.ergebnis and spielplanBean.hasHomepage(spiel.ergebnisLink)}"
+							style="vertical-align:middle; margin-left:2px;" width="15"
+							title="Veröffentlicht" />
+						<h:graphicImage library="images" name="blaettle.png"
+							rendered="#{not empty spiel.ergebnis and spielplanBean.hasBlaettle(spiel.ergebnisLink)}"
+							style="vertical-align:middle; margin-left:2px;" width="15"
+							title="Im s'Blättle Veröffentlicht" />
+					</div>
+				</p:column>
+				<p:column headerText="Bericht" styleClass="col-bericht">
+					<div class="buttontab-container">
+						<!-- Button "Bericht" wird nur angezeigt, wenn in der Ergebnis-Spalte ein Wert steht -->
+						<p:commandButton value="Bericht" action="bericht.xhtml"
+							actionListener="#{spiel.bericht}"
+							rendered="#{not empty spiel.ergebnis and not spielplanBean.hasFreigabe(spiel.ergebnisLink)}"
+							styleClass="myButton">
+							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+							<f:param name="heim" value="#{spiel.heimEncoded}" />
+							<f:param name="gast" value="#{spiel.gastEncoded}" />
+							<f:param name="datum" value="#{spiel.datum}" />
+							<f:param name="ergebnis" value="#{spiel.ergebnis}" />
+							<f:param name="ergebnisLink" value="#{spiel.ergebnisLink}" />
+							<f:param name="liga" value="#{spiel.liga}" />
+						</p:commandButton>
+						<p:commandButton value="Veröffentlichen" action="zusammen.xhtml"
+							rendered="#{not empty spiel.ergebnis and spielplanBean.hasFreigabe(spiel.ergebnisLink)}"
+							styleClass="myButton">
+							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+							<f:param name="heim" value="#{spiel.heimEncoded}" />
+							<f:param name="gast" value="#{spiel.gastEncoded}" />
+							<f:param name="datum" value="#{spiel.datum}" />
+							<f:param name="ergebnis" value="#{spiel.ergebnis}" />
+							<f:param name="ergebnisLink" value="#{spiel.ergebnisLink}" />
+							<f:param name="liga" value="#{spiel.liga}" />
+						</p:commandButton>
+						<p:commandButton value="Aufstellung" action="aufstellung.xhtml"
+							rendered="#{empty spiel.ergebnis and spielplanBean.passwortOK}"
+							styleClass="myButtonLight">
+							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+							<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
+							<f:param name="ruecksprung" value="index.xhtml" />
+						</p:commandButton>
+					</div>
+				</p:column>
+
+			</p:dataTable>
+		</h:form>
+		<!-- Neue feste Zeile über der Tabelle -->
+		<h:form id="berichtForm">
+			<p:panel header="Freier Bericht eingeben" toggleable="true">
+				<h:outputText value="Datum:" />
+				<p:calendar id="berichtDatumCal"
+					value="#{spielplanBean.berichtDatumCal}" pattern="dd.MM.yyyy"
+					styleClass="berichtDatumCal" locale="de"
+					converterMessage="Ungültiges Datum">
+					<p:ajax event="dateSelect" listener="#{spielplanBean.onDateSelect}"
+						update="@form" />
+				</p:calendar>
+				<br />
+				<br />
+				<h:outputText value="Turnier:" />
+				<p:inputText id="freierText" value="#{spielplanBean.freierText}"
+					styleClass="col-turnier" placeholder="zb. Turniername eingeben ...">
+					<p:ajax update="@form" />
+				</p:inputText>
+				<br />
+				<br />
+				<div class="button4-container button-container-panel-bg">
+					<p:commandButton value="Setzen"
+						rendered="#{empty spielplanBean.berichtDatum or
+                             empty spielplanBean.freierText }">
+						<p:ajax update="@form" />
+					</p:commandButton>
+					<p:commandButton value="Liste der vorhandenen freien Berichte"
+						action="freieBerichte.xhtml" immediate="true"
+						rendered="#{empty spielplanBean.berichtDatum or
+                             empty spielplanBean.freierText }">
+						<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+					</p:commandButton>
+					<p:commandButton value="Bericht" action="bericht.xhtml"
+						rendered="#{not empty spielplanBean.berichtDatum and
+                             not empty spielplanBean.freierText and
+                             not spielplanBean.hasFreigabe(spielplanBean.freierLink)}"
+						styleClass="myButtonfrei">
+						<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+						<f:param name="heim" value="#{spielplanBean.freierText}" />
+						<f:param name="gast" value="#{spielplanBean.berichtDatum} " />
+						<f:param name="datum" value="" />
+						<f:param name="ergebnis" value="" />
+						<f:param name="liga" value="" />
+						<f:param name="ergebnisLink"
+							value="#{spielplanBean.berichtDatum}-#{spielplanBean.freierText}" />
+					</p:commandButton>
+					<p:commandButton value="Veröffentlichen" action="zusammen.xhtml"
+						rendered="#{not empty spielplanBean.berichtDatum and
+                             not empty spielplanBean.freierText and
+                             spielplanBean.hasFreigabe(spielplanBean.freierLink)}"
+						styleClass="myButtonfrei">
+						<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+						<f:param name="heim" value="#{spielplanBean.freierText}" />
+						<f:param name="gast" value="" />
+						<f:param name="datum" value="" />
+						<f:param name="ergebnis" value="" />
+						<f:param name="liga" value="" />
+						<f:param name="ergebnisLink" value="#{spielplanBean.freierLink}" />
+					</p:commandButton>
+				</div>
+			</p:panel>
+
+		</h:form>
+		<h:form id="configForm">
+			<div class="button4-container">
+				<p:commandButton value="Config ändern" action="config.xhtml">
+					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+				</p:commandButton>
+				<br />
+				<p:commandButton value="Cache löschen"
+					action="#{spielplanBean.updConfig}" update="output" />
+				<h:outputText id="output" value="#{spielplanBean.updConfig}" />
+				<br />
+				<p:commandButton value="Impressum" action="impressum.xhtml">
+					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+				</p:commandButton>
+			</div>
+		</h:form>
+	</div>
+
+</h:body>
+</html>

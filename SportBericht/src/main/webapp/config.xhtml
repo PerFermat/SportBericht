@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<title>Konfiguration</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{configBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet library="css" name="styles.css" />
+	<h:outputScript library="js" name="script.js" target="head" />
+</h:head>
+
+<h:body>
+	<div class="tabheader-area">
+		<h:outputLink value="#{configBean.vereinHomepage}" target="_blank">
+			<img src="#{configBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
+		<h:form>
+			<p:commandButton type="button" value="Handbuch"
+				onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
+		</h:form>
+		<h2>Programmkonfiguration – #{configBean.verein}</h2>
+		<h:form>
+			<p:commandButton value="Zurück" action="index.xhtml" immediate="true">
+				<f:param name="vereinnr" value="#{configBean.vereinnr}" />
+			</p:commandButton>
+		</h:form>
+	</div>
+	<!-- Container, der Eingabefeld und Fehlerbereich sowie die jeweiligen Buttons enthält -->
+	<div class="text-container">
+		<h:form style="text-align: center;">
+			<h2>Passwort-Verschlüsselung</h2>
+			<p>
+				Bitte geben Sie Ihr echtes Passwort unten ein.<br /> Nach dem Klick
+				auf „Verschlüsseln“ erhalten Sie einen geheimen Schlüssel
+				(secretKey),<br /> den Sie in der Konfigurationsseite unter dem
+				Eintrag <strong>password</strong> einfügen müssen.
+			</p>
+
+			<h:outputLabel for="emailPass" value="Passwort:" />
+			<h:inputSecret id="emailPass" value="#{configBean.emailPassword}"
+				required="true" />
+			<br />
+			<br />
+
+			<p:commandButton value="Verschlüsseln" action="#{configBean.encrypt}"
+				update="berichtForm">
+			</p:commandButton>
+			<br />
+			<br />
+		</h:form>
+		<h:form id="berichtForm" enctype="multipart/form-data"
+			style="text-align: center;">
+			<h2>SecretKey für Config:</h2>
+			<h:outputText value="#{configBean.encryptedPassword}"
+				style="display:block; font-weight:bold; color:green; margin-top:5px" />
+
+		</h:form>
+	</div>
+	<h:form style="text-align: center;">
+		<h2>Config-Einstellungen</h2>
+	</h:form>
+	<h:form id="configTabelle">
+		<p:panel header="Konfiguration">
+			<p:dataTable id="configTable" value="#{configBean.configEintraege}"
+				var="eintrag" editable="true" styleClass="config-table"
+				style="width: 100%">
+
+				<p:column headerText="Key" style="width: 30%;">
+					<h:outputText value="#{eintrag.eintrag}" />
+				</p:column>
+
+				<p:column headerText="Wert">
+					<ui:fragment rendered="#{eintrag.farbe}">
+						<h:panelGrid columns="3" cellpadding="5"
+							style="border: 0; border-collapse: collapse;">
+							<h:inputText id="hueInput_#{configTable.rowIndex}"
+								value="#{eintrag.wert}" size="4"
+								style="border: 0; outline: none;" />
+
+							<p:slider for="hueInput_#{configTable.rowIndex}" minValue="0"
+								maxValue="360" step="1" style="border: 0;"
+								onSlide="updatePreview('previewBox_#{configTable.rowIndex}', ui.value)" />
+
+							<h:panelGroup layout="block"
+								style="width: 50px; height: 30px; border: 0; background-color: hsl(#{empty eintrag.wert ? 0 : eintrag.wert}, 90%, 50%);"
+								styleClass="previewBox_#{configTable.rowIndex}" />
+
+
+						</h:panelGrid>
+					</ui:fragment>
+					<ui:fragment rendered="#{not eintrag.farbe}">
+						<p:inputTextarea value="#{eintrag.wert}" rows="2"
+							autoResize="true" style="width: 100%;" />
+					</ui:fragment>
+				</p:column>
+
+
+			</p:dataTable>
+
+			<div class="button4-container">
+				<p:commandButton value="Speichern" action="#{configBean.speichern}"
+					update="configTable" />
+				<p:commandButton value="Aktuallisieren Homepage-Configs-Einträge"
+					action="#{configBean.insertHomepage}" update="configTable" />
+				<p:commandButton value="Zurück" action="index.xhtml">
+					<f:param name="vereinnr" value="#{configBean.vereinnr}" />
+				</p:commandButton>
+			</div>
+
+		</p:panel>
+	</h:form>
+</h:body>
+</html>
+

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>Impressum</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{impressumBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet name="css/styles.css" />
+	<h:outputScript library="js" name="script.js"/>
+	<link rel="icon" type="image/ico" href="resources/images/favicon.ico" />
+</h:head>
+<h:body>
+	<div class="tabheader-area">
+		<h:outputLink value="#{impressumBean.vereinHomepage}" target="_blank">
+			<img src="#{impressumBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
+		<h:form>
+			<p:commandButton type="button" value="Handbuch"
+				onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
+		</h:form>
+
+		<h2>Impressum</h2>
+		<h:form>
+			<div class="button-container">
+				<p:commandButton value="Zurück" action="index.xhtml">
+					<f:param name="vereinnr" value="#{impressumBean.vereinnr}" />
+				</p:commandButton>
+			</div>
+		</h:form>
+	</div>
+
+	<p>
+		<strong>Angaben gemäß § 5 TMG:</strong>
+	</p>
+	<address>
+		Michael Spahr<br /> Beim Fasanengarten 44<br /> 70499 Stuttgart<br />
+		Deutschland<br /> <br /> <strong>Kontakt:</strong><br /> E-Mail: <a
+			href="mailto:michael.spahr@web.de">michael.spahr@web.de</a>
+	</address>
+
+	<p>
+		<strong>Hinweis:</strong><br /> Dies ist eine private,
+		nicht-kommerzielle Webanwendung, erstellt zu Lern- und
+		Demonstrationszwecken. Für den Inhalt der Website bin ich als
+		Privatperson verantwortlich.
+	</p>
+
+	<p>
+		<strong>Haftungsausschluss:</strong><br /> Trotz sorgfältiger
+		inhaltlicher Kontrolle übernehme ich keine Haftung für die Inhalte
+		externer Links. Für den Inhalt der verlinkten Seiten sind
+		ausschließlich deren Betreiber verantwortlich.
+	</p>
+
+</h:body>
+</html>

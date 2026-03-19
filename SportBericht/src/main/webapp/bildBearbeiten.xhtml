@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<title>Bild Zuschneiden</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{imageBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet library="css" name="styles.css" />
+	<h:outputScript library="js" name="script.js" target="head" />
+
+</h:head>
+
+<h:body>
+	<div class="header-area">
+		<h2>Bild zuschneiden</h2>
+	</div>
+	<h:form id="berichtForm" enctype="multipart/form-data">
+		<div class="responsive-container">
+			<div class="text-input">
+				<p>Um ein Bild zuzuschneiden, gehe bitte wie folgt vor:</p>
+				<ol>
+					<li>Halte die <strong>mittlere Maustaste</strong> gedrückt und
+						ziehe mit gedrückter Taste einen Rahmen vom <strong>linken
+							oberen</strong> zum <strong>rechten unteren</strong> Bereich, den du
+						ausschneiden möchtest.
+					</li>
+					<li>Während des Ziehens erscheint ein <span
+						style="color: red;">roter Kasten</span>, der den ausgewählten
+						Bereich markiert.
+					</li>
+					<li>Nach dem Auswählen klicke auf den Button <strong>"Zuschneiden"</strong>,
+						um den Zuschnitt auszuführen.
+					</li>
+					<li><strong>Achtung:</strong> Das geänderte Bild wird <em>sofort
+							gespeichert</em>.</li>
+				</ol>
+			</div>
+		</div>
+	</h:form>
+
+	<h:form id="myForm">
+		<div class="responsive-container">
+			<div class="text-input">
+				<div id="imageContainer"
+					style="position: relative; display: inline-block;">
+					<h:graphicImage id="image" value="#{imageBean.imagePath}"
+						style="border: 1px solid black; cursor: crosshair; display:block;"
+						onmousedown="startSelection(event)"
+						onmousemove="duringSelection(event)"
+						onmouseup="endSelection(event);" />
+					<div id="selectionRectangle"
+						style="position: absolute; border: 2px solid red; pointer-events: none; display: none;"></div>
+				</div>
+				<br />
+
+				<h:panelGrid columns="2">
+					<h:outputText value="X-Koordinate:" />
+					<h:outputText id="cropXOutput" value="#{imageBean.cropX}" />
+
+					<h:outputText value="Y-Koordinate:" />
+					<h:outputText id="cropYOutput" value="#{imageBean.cropY}" />
+
+					<h:outputText value="Breite:" />
+					<h:outputText id="cropWidthOutput" value="#{imageBean.cropWidth}" />
+
+					<h:outputText value="Höhe:" />
+					<h:outputText id="cropHeightOutput" value="#{imageBean.cropHeight}" />
+				</h:panelGrid>
+
+				<!-- hidden Inputs, werden von JS gefüllt! -->
+				<h:inputHidden id="cropXHidden" value="#{imageBean.cropX}" />
+				<h:inputHidden id="cropYHidden" value="#{imageBean.cropY}" />
+				<h:inputHidden id="cropWidthHidden" value="#{imageBean.cropWidth}" />
+				<h:inputHidden id="cropHeightHidden" value="#{imageBean.cropHeight}" />
+
+				<p:commandButton value="Zuschneiden" action="#{imageBean.cropImage}"
+					update="@form"
+					onclick="document.getElementById('selectionRectangle').style.display='none';" />
+
+				<p:remoteCommand name="sendCoordinatesToServer" update="@form"
+					immediate="true" actionListener="#{imageBean.coordinateSelected}" />
+
+				<!-- deine übrigen Buttons -->
+				<p:commandButton value="Zurück" action="bericht.xhtml"
+					actionListener="#{imageBean.zurueck}" immediate="true">
+					<f:param name="vereinnr" value="#{imageBean.vereinnr}" />
+					<f:param name="heim" value="#{imageBean.heim}" />
+					<f:param name="gast" value="#{imageBean.gast}" />
+					<f:param name="datum" value="#{imageBean.datum}" />
+					<f:param name="ergebnis" value="#{imageBean.ergebnis}" />
+					<f:param name="ergebnisLink" value="#{imageBean.ergebnisLink}" />
+					<f:param name="liga" value="#{imageBean.liga}" />
+					<f:param name="uuid" value="#{imageBean.uuid}" />
+				</p:commandButton>
+			</div>
+		</div>
+		<p:poll interval="2" listener="#{imageBean.updBearbeitung}" />
+	</h:form>
+
+</h:body>
+</html>

@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>Spielplan</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{zusammenGesamtBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet name="css/styles.css" />
+	<h:outputScript name="js/script.js" />
+</h:head>
+
+<h:body>
+	<h:form>
+		<div class="tabheader-area">
+			<h:outputLink value="#{zusammenGesamtBean.vereinHomepage}"
+				target="_blank">
+				<img src="#{zusammenGesamtBean.bestimmenIcon}"
+					style="vertical-align: middle;" width="50" />
+			</h:outputLink>
+			<h2>Veröffentlichen Spielbereichte - Gesamt</h2>
+			<p:commandButton value="Zurück" action="index.xhtml" immediate="true"
+				rendered="#{not zusammenGesamtBean.freieBerichte}">
+				<f:param name="vereinnr" value="#{zusammenGesamtBean.vereinnr}" />
+			</p:commandButton>
+			<p:commandButton value="Zurück" action="freieBerichte.xhtml"
+				immediate="true" rendered="#{zusammenGesamtBean.freieBerichte}">
+				<f:param name="vereinnr" value="#{zusammenGesamtBean.vereinnr}" />
+			</p:commandButton>
+		</div>
+	</h:form>
+	<br />
+	<h:form id="myForm">
+		<div style="text-align: left;">
+
+			<p:toggleSwitch value="#{zusammenGesamtBean.freigegebeneBerichte}">
+				<p:ajax update=":liste label" />
+			</p:toggleSwitch>
+			<h:outputText  id="label" 
+				value="#{zusammenGesamtBean.freigegebeneBerichte 
+            ? '  Freigegebene Berichte' 
+            : '  Alle Berichte'}" />
+		</div>
+		<div style="text-align: center;">
+			<p:selectOneMenu value="#{zusammenGesamtBean.name}">
+				<p:ajax event="change" process="@this" update="meinFormular" />
+
+				<f:selectItem itemLabel="Homepage auswählen"
+					itemValue="#{zusammenGesamtBean.itemValue}"
+					noSelectionOption="false" />
+				<f:selectItems value="#{zusammenGesamtBean.homepages}" />
+			</p:selectOneMenu>
+		</div>
+	</h:form>
+	<!-- Bestehende Tabelle -->
+	<div class="tabellen-container">
+		<h:form id="liste">
+			<p:dataTable value="#{zusammenGesamtBean.spieleFreigegeben}"
+				var="spiel" border="1" styleClass="tabelle">
+				<p:column styleClass="col-bilder" style="text-align: center;">
+					<p:commandButton icon="pi pi-arrow-up"
+						title="Nach oben verschieben"
+						actionListener="#{zusammenGesamtBean.moveUp(spiel)}"
+						update="@form" rendered="#{!zusammenGesamtBean.isFirst(spiel)}"
+						styleClass="p-button-sm p-button-text" />
+
+					<p:commandButton icon="pi pi-arrow-down"
+						title="Nach unten verschieben"
+						actionListener="#{zusammenGesamtBean.moveDown(spiel)}"
+						update="@form" rendered="#{!zusammenGesamtBean.isLast(spiel)}"
+						styleClass="p-button-sm p-button-text" />
+				</p:column>
+				<p:column headerText="Datum" styleClass="col-datum">
+					<h:outputText value="#{spiel.datum} " />
+				</p:column>
+
+				<p:column headerText="Liga" styleClass="col-liga">
+					<h:outputText value="#{spiel.liga}" />
+				</p:column>
+
+				<p:column headerText="Heimmannschaft" styleClass="col-heim">
+					<h:outputText value="#{spiel.heim}" />
+				</p:column>
+
+				<p:column headerText="Gastmannschaft" styleClass="col-gast">
+					<h:outputText value="#{spiel.gast}" />
+				</p:column>
+
+				<p:column headerText="Erg." styleClass="col-ergebnis">
+					<h:outputText value="#{spiel.ergebnis}" />
+				</p:column>
+				<p:column headerText="Bild" styleClass="col-datum">
+					<h:panelGroup layout="block"
+						style="position: relative; display: inline-block;"
+						rendered="#{spiel.bildUrl!=null}">
+
+						<!-- Bild normal anzeigen -->
+						<h:graphicImage value="#{spiel.bildUrl}" width="50" />
+
+						<!-- Download-Button -->
+						<p:commandButton icon="pi pi-download" title="Bild herunterladen"
+							styleClass="dark-mode-download-button"
+							actionListener="#{zusammenGesamtBean.prepareDownloadBild(spiel.ergebnisLink, spiel)}"
+							ajax="false">
+							<p:fileDownload value="#{zusammenGesamtBean.downloadBild}" />
+						</p:commandButton>
+
+					</h:panelGroup>
+				</p:column>
+				<p:column headerText="" styleClass="col-bilder">
+					<!-- Anzeige von bericht.png, falls ein Bericht vorhanden ist -->
+					<h:graphicImage library="images" name="bericht.png"
+						rendered="#{zusammenGesamtBean.hasBericht(spiel.ergebnisLink)}"
+						style="vertical-align:middle; margin-left:5px;" width="15"
+						title="Bericht vorhanden" />
+
+					<!-- Anzeige von bild.png, falls ein Bild vorhanden ist -->
+					<h:graphicImage library="images" name="bild.png"
+						rendered="#{zusammenGesamtBean.hasBild(spiel.ergebnisLink)}"
+						style="vertical-align:middle; margin-left:10px;" width="15"
+						title="Bild vorhanden" />
+					<h:graphicImage library="images" name="freigabe.png"
+						rendered="#{zusammenGesamtBean.hasFreigabe(spiel.ergebnisLink)}"
+						style="vertical-align:middle; margin-left:10px;" width="15"
+						title="Freigegeben" />
+					<!-- Anzeige von bild.png, falls ein Bild vorhanden ist -->
+					<h:graphicImage library="images" name="veröffentlicht.jpg"
+						rendered="#{zusammenGesamtBean.hasHomepage(spiel.ergebnisLink)}"
+						style="vertical-align:middle; margin-left:10px;" width="15"
+						title="Veröffentlicht" />
+				</p:column>
+				<p:column headerText="Auswählen" styleClass="col-bericht">
+					<p:selectBooleanCheckbox value="#{spiel.wahl}">
+						<p:ajax process="@this" />
+					</p:selectBooleanCheckbox>
+				</p:column>
+
+			</p:dataTable>
+		</h:form>
+		<h:form id="meinFormular">
+			<div class="button-container">
+				<p:commandButton value="Berichte zusammenfassen"
+					action="#{zusammenGesamtBean.berichtupd}" update="@form" />
+			</div>
+			<div class="responsive-container">
+				<div class="text-input">
+					<div class="button-container">
+						<p:commandButton value="In Zwischenablage kopieren" type="button"
+							onclick="kopiereHtmlBerichtZusammen();" />
+					</div>
+					<div class="text-container">
+						<h:inputText id="ueberschrift"
+							value="#{zusammenGesamtBean.ueberschrift}"
+							style="font-size: 1.5em;">
+							<p:ajax process="@this" update="@form" />
+						</h:inputText>
+						<h:graphicImage value="#{zusammenGesamtBean.bildLink}" width="300" />
+						<p:outputLabel id="bildUnterschrift"
+							value="#{zusammenGesamtBean.bildUnterschrift}" escape="false" />
+						<p:outputLabel id="bereichsText"
+							value="#{zusammenGesamtBean.berichteAnzeige}" escape="false" />
+						<h:inputHidden id="berichtHidden"
+							value="#{zusammenGesamtBean.berichteUeberschrift}" />
+					</div>
+					<div class="text-container">
+
+						<!-- Eingabefelder für Username und Passwort -->
+						<p:panelGrid columns="2" cellpadding="5">
+							<h:outputLabel for="username" value="Username:" />
+							<h:inputText id="username" value="#{zusammenGesamtBean.username}" />
+
+							<h:outputLabel for="password" value="Password:" />
+							<h:inputSecret id="password"
+								value="#{zusammenGesamtBean.password}" redisplay="true" />
+						</p:panelGrid>
+
+						<!-- Login-Button: Speichert die Eingaben in der Bean, ohne zu navigieren -->
+						<p:commandButton value="Login"
+							action="#{zusammenGesamtBean.login}" update="@form" />
+
+						<br /> <br />
+						<h:outputText value="Gewünschte Kategorien auswählen: " />
+						<p:selectManyMenu value="#{zusammenGesamtBean.selectKategorie}">
+							<f:selectItem itemLabel="" itemValue="" noSelectionOption="true" />
+							<f:selectItems value="#{zusammenGesamtBean.kategorie}" />
+						</p:selectManyMenu>
+					</div>
+					Veröffentlichen auf
+					<h:outputLink value="#{zusammenGesamtBean.domain}" target="_blank">
+   						 #{zusammenGesamtBean.domain}
+					</h:outputLink>
+					<br />
+					<div class="button-container">
+						<p:commandButton value="Veröffentlichen"
+							action="#{zusammenGesamtBean.veroeffentlichen}"
+							update="@form :growl" />
+						<p:commandButton value="Hauptseite anzeigen"
+							action="#{zusammenGesamtBean.domain}" update="@form" />
+						<p:commandButton value="Beitrag aufrufen"
+							rendered="#{zusammenGesamtBean.postid > 0}"
+							action="#{zusammenGesamtBean.link}" update="@form" />
+					</div>
+				</div>
+				<!-- Rechter Bereich: externe Seite -->
+				<div class="error-table">
+					<iframe src="#{zusammenGesamtBean.domain}" width="100%"
+						height="2900" frameborder="0">
+						<p>Ihr Browser unterstützt keine Iframes.</p>
+					</iframe>
+				</div>
+			</div>
+		</h:form>
+
+
+	</div>
+	<h:form prependId="false">
+		<p:growl id="growl" showDetail="true" life="6000" />
+	</h:form>
+</h:body>
+</html>

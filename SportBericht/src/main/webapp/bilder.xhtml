@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<title>Bilder</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{bilderBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet name="css/styles.css" />
+	<style>
+.image-page {
+	padding: 1rem;
+	min-height: 100vh;
+	box-sizing: border-box;
+}
+
+.image-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1rem;
+}
+
+.image-card {
+	position: relative;
+	width: 100%;
+	height: calc(( 100vh - 4rem - 2rem)/2);
+	display: block;
+	overflow: hidden;
+	border-radius: 30px;
+	background-color: #000;
+	border: 2px solid #000;
+}
+
+.image-card img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	display: block;
+	border-style: solid;
+	border-color: #000;
+	border-width: 25px 10px 25px 10px;
+	transition: transform 0.25s ease;
+}
+
+.image-card:hover img {
+	transform: scale(1.05);
+}
+
+.image-overlay-top, .image-overlay-bottom {
+	position: absolute;
+	left: 0;
+	right: 0;
+	padding: 0.75rem;
+	color: #fff;
+	z-index: 1
+}
+
+.image-overlay-top {
+	top: 0;
+	background: linear-gradient(rgba(0, 0, 0, 1.88), transparent);
+}
+
+.image-overlay-bottom {
+	bottom: 0;
+	background: linear-gradient(transparent, rgba(0, 0, 0, 1.88)); .
+}
+
+.overlay-title {
+	font-weight: bold;
+	display: block;
+}
+
+.section-title {
+	margin: 1.5rem calc(50% - 50vw) 1rem;
+	padding: 1rem 1.5rem;
+	width: 100vw;
+	background-color: #002b6b;
+	color: #fff;
+	text-align: center;
+	font-size: clamp(2rem, 4vw, 3rem);
+	font-weight: 700;
+	letter-spacing: 0.04em;
+}
+
+@media ( max-width : 1200px) {
+	.image-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media ( max-width : 768px) {
+	.image-grid {
+		grid-template-columns: 1fr;
+	}
+	.image-card {
+		height: 40vh;
+	}
+}
+</style>
+</h:head>
+
+<h:body>
+	<div class="image-page">
+		<div class="tabheader-area">
+			<h:outputLink value="#{bilderBean.vereinHomepage}" target="_blank">
+				<img src="#{bilderBean.bestimmenIcon}"
+					style="vertical-align: middle;" width="50" />
+			</h:outputLink>
+			<h:form>
+				<p:commandButton type="button" value="Handbuch"
+					onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
+			</h:form>
+
+			<h2>Spieltagsbilder – #{bilderBean.verein}</h2>
+		</div>
+		<br />
+		<h:form>
+			<ui:repeat value="#{bilderBean.bilderGruppen}" var="gruppe">
+				<h3 class="section-title">#{gruppe.titel}</h3>
+				<div class="image-grid">
+					<ui:repeat value="#{gruppe.bilder}" var="bild">
+						<p:commandLink styleClass="image-card" ajax="false"
+							actionListener="#{bilderBean.prepareDownloadBild(bild)}"
+							title="Zum Herunterladen klicken">
+							<h:graphicImage value="#{bild.bildUrl}" />
+							<div class="image-overlay-top">
+								<span class="overlay-title">#{bild.ueberschrift}</span>
+							</div>
+							<div class="image-overlay-bottom">
+								<span>#{bild.bildUnterschrift}</span>
+							</div>
+							<p:fileDownload value="#{bilderBean.downloadBild}" />
+						</p:commandLink>
+					</ui:repeat>
+				</div>
+			</ui:repeat>
+		</h:form>
+	</div>
+</h:body>
+</html>

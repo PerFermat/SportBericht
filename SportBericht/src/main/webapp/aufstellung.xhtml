@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>Aufstellung – #{aufstellungBean.verein}</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{aufstellungBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet name="css/styles.css" />
+	<style>
+.tabellen-container {
+	width: 100%;
+	max-width: 1000px;
+	margin: 0 auto;
+}
+
+.spieler-zeile {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0.5rem;
+}
+
+.spieler-name {
+	min-width: 260px;
+	font-weight: 500;
+}
+
+.spieler-verfuegbarkeit {
+	font-size: 0.8rem;
+	color: #666;
+}
+
+
+@media ( min-width : 992px) {
+	.spieler-kommentar {
+		margin-left: auto;
+	}
+}
+</style>
+</h:head>
+
+<h:body>
+	<h:form>
+		<div class="tabheader-area">
+			<h:outputLink value="#{aufstellungBean.vereinHomepage}"
+				target="_blank">
+				<img src="#{aufstellungBean.bestimmenIcon}"
+					style="vertical-align: middle;" width="50" />
+			</h:outputLink>
+			<h2>Planung der Aufstellung</h2>
+			<p:commandButton value="Zurück" action="#{aufstellungBean.ruecksprung}" immediate="true"
+				rendered="#{not empty aufstellungBean.ruecksprung}">
+				<f:param name="vereinnr" value="#{aufstellungBean.vereinnr}" />
+			</p:commandButton>
+		</div>
+	</h:form>
+
+	<div class="tabellen-container">
+		<p:growl id="msgs" showDetail="true" life="3000" />
+
+		<h:panelGroup rendered="#{not empty aufstellungBean.spielInfo}">
+			<p:panel header="Spieldaten">
+				<h:panelGrid columns="2" columnClasses="label,value" cellpadding="5">
+					<h:outputText value="Datum:" />
+					<h:outputText
+						value="#{aufstellungBean.spielInfo.wochentag} #{aufstellungBean.spielInfo.datum} #{aufstellungBean.spielInfo.zeit}" />
+					<h:outputText value="Liga:" />
+					<h:outputText value="#{aufstellungBean.spielInfo.liga}" />
+					<h:outputText value="Spiel:" />
+					<h:outputText
+						value="#{aufstellungBean.spielInfo.heim} - #{aufstellungBean.spielInfo.gast}" />
+				</h:panelGrid>
+			</p:panel>
+
+			<p:panel header="Betreuer / Rückmeldung" style="margin-top:1rem;"
+				rendered="#{not empty aufstellungBean.betreuer}">
+				<h:panelGrid columns="2" columnClasses="label,value" cellpadding="5">
+					<h:outputText value="Betreuer:" />
+					<h:outputText value="#{aufstellungBean.betreuer}" />
+					<h:outputText value="Status:" />
+					<h:outputText value="#{aufstellungBean.rueckmeldeStatus}" />
+				</h:panelGrid>
+			</p:panel>
+		</h:panelGroup>
+
+		<h:form id="aufstellungForm" style="margin-top:1rem;">
+			<p:panel
+				header="Spielberechtigte Spieler (Mannschaft #{aufstellungBean.liga})">
+				<h:panelGrid columns="1" cellpadding="5"
+					style="width:100%; margin-bottom: 1rem;">
+					<h:outputText value="Zusätzliche Information zum Spiel:"
+						style="font-weight:bold;" />
+					<p:inputTextarea value="#{aufstellungBean.spielKommentar}"
+						autoResize="false" rows="3" style="width:100%;"
+						placeholder="Zusätzliche Info:">
+						<p:ajax event="change" listener="#{aufstellungBean.speichernAutomatisch}" process="@this" update=":msgs" />
+					</p:inputTextarea>
+				</h:panelGrid>
+				<div class="spieler-zeile">
+					<h:outputText value="Spielt" style="font-weight:bold;" />
+				</div>
+
+				<h:panelGroup layout="block"
+					rendered="#{not empty aufstellungBean.spielerListe}">
+					<ui:repeat value="#{aufstellungBean.spielerListe}" var="spieler">
+						<div class="spieler-zeile">
+							<p:selectBooleanCheckbox
+								value="#{aufstellungBean.spielerAusgewaehlt[spieler.key]}">
+								<p:ajax event="change" listener="#{aufstellungBean.speichernAutomatisch}" process="@this" update=":msgs" />
+							</p:selectBooleanCheckbox>
+							<h:outputText styleClass="spieler-name"
+								value="#{spieler.anzeigeText}" />
+							<h:outputText styleClass="spieler-verfuegbarkeit"
+								rendered="#{not empty aufstellungBean.spielerVerfuegbarkeitHinweis(spieler.key)}"
+								value="#{aufstellungBean.spielerVerfuegbarkeitHinweis(spieler.key)}" />								
+							<p:inputText
+								value="#{aufstellungBean.spielerKommentare[spieler.key]}"
+								placeholder="Zusätzliche Info" styleClass="spieler-kommentar">
+								<p:ajax event="change" listener="#{aufstellungBean.speichernAutomatisch}" process="@this" update=":msgs" />
+							</p:inputText>
+						</div>
+					</ui:repeat>
+				</h:panelGroup>
+
+				<h:outputText rendered="#{empty aufstellungBean.spielerListe}"
+					value="Keine spielberechtigten Spieler zur Mannschaft #{aufstellungBean.liga} gefunden." />
+
+
+			</p:panel>
+		</h:form>
+	</div>
+</h:body>
+</html>

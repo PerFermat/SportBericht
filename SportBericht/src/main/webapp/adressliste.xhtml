@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>Abteilungsliste – #{adresslisteBean.verein}</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{adresslisteBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet name="css/styles.css" />
+</h:head>
+
+<h:body>
+	<h:form id="adresslisteForm">
+		<p:growl id="messages" showDetail="false" />
+
+		<div class="header-area">
+			<h2>Abteilungsliste #{adresslisteBean.verein}</h2>
+		</div>
+
+		<div class="button-container adress-toolbar">
+			<div class="adress-toolbar-left"></div>
+			<div class="adress-toolbar-center">
+				<p:commandButton value="Exportiere in PDF"
+					actionListener="#{adresslisteBean.prepareDownloadPdf}"
+					process="@this" immediate="true" ajax="false">
+					<p:fileDownload value="#{adresslisteBean.downloadPdf}" />
+				</p:commandButton>
+				<p:commandButton value="Exportiere in Excel"
+					actionListener="#{adresslisteBean.prepareDownloadExcel}"
+					process="@this" immediate="true" ajax="false">
+					<p:fileDownload value="#{adresslisteBean.downloadExcel}" />
+				</p:commandButton>
+			</div>
+			<div class="adress-toolbar-right">
+				<p:commandButton type="button" value="Spalten" icon="pi pi-table"
+					styleClass="ui-button-secondary" />
+				<p:overlayPanel for="@previous" showEffect="fade" hideEffect="fade"
+					style="min-width:280px;">
+					<h:panelGroup layout="block" style="padding:6px;">
+						<h:outputText value="Sichtbare Spalten" style="font-weight:600;" />
+						<ui:repeat value="#{adresslisteBean.spaltenDefinitionen}"
+							var="spalte">
+							<div
+								style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+								<p:selectBooleanCheckbox
+									value="#{adresslisteBean.sichtbareSpalten[spalte.key]}">
+									<p:ajax update=":adresslisteForm:tabelle" />
+								</p:selectBooleanCheckbox>
+								<h:outputText value="#{spalte.label}" />
+							</div>
+						</ui:repeat>
+					</h:panelGroup>
+				</p:overlayPanel>
+			</div>
+		</div>
+		<div class="adressliste-table-scroll">
+			<p:dataTable id="tabelle" widgetVar="adresslisteTable"
+				value="#{adresslisteBean.eintraege}" var="eintrag"
+				filteredValue="#{adresslisteBean.gefilterteEintraege}"
+				rowKey="#{eintrag.id}" sortMode="single"
+				emptyMessage="Keine Datensätze gefunden" reflow="true"
+				styleClass="adressliste-table" globalFilter=""
+				globalFilterOnly="true">
+
+				<f:facet name="header">
+					<div class="adressliste-global-filter">
+						<span class="ui-input-icon-left"> <i class="pi pi-search" />
+							<p:inputText id="globalFilter"
+								placeholder="Suche in allen Feldern"
+								onkeyup="PF('adresslisteTable').filter(); if (window.scheduleAdresslisteHeightUpdate) { window.scheduleAdresslisteHeightUpdate(); }" />
+						</span>
+					</div>
+				</f:facet>
+
+				<p:column headerText="" styleClass="adress-info-column"
+					headerStyle="width:2.1rem;min-width:2.1rem;max-width:2.1rem;"
+					style="width:2.1rem;min-width:2.1rem;max-width:2.1rem;">
+					<p:commandButton type="button" icon="pi pi-info-circle"
+						styleClass="info-popup-trigger" />
+					<p:overlayPanel for="@previous" showEffect="fade" hideEffect="fade"
+						styleClass="adress-info-popup"
+						style="max-width:900px;  width: auto;">
+						<div class="adress-info-popup-card">
+							<div class="adress-info-popup-header">
+								<h:outputText value="#{eintrag.vorname} #{eintrag.name}" />
+								<br />
+								<h:panelGroup rendered="#{not empty eintrag.geburtstag}">
+									<h:outputText value="Geb-Dat.: " />
+									<h:outputText value="#{eintrag.geburtstag}">
+										<f:convertDateTime pattern="dd.MM.yyyy" type="localDate" />
+									</h:outputText>
+								</h:panelGroup>
+							</div>
+							<div class="adress-info-popup-body">
+								<p:tabView>
+									<p:tab title="Details">
+										<h:outputLink
+											value="#{adresslisteBean.googleMapsLink(eintrag)}"
+											target="_blank" title="In Google Maps öffnen"
+											rendered="#{not empty eintrag.strasse and not empty eintrag.plz and not empty eintrag.wohnort}"
+											style="margin-left:8px;">
+											<i class="pi pi-map-marker" aria-hidden="true"></i>
+										</h:outputLink>
+										<h:outputText value="#{eintrag.strasse}" />
+										<br />
+										<h:outputText value="#{eintrag.plz} #{eintrag.wohnort}" />
+										<br />
+										<h:outputText value="Mobil: #{eintrag.telefonMobil}"
+											rendered="#{not empty eintrag.telefonMobil}" />
+										<div class="adress-info-popup-grid">
+											<div>
+												<h:outputText value="Privat"
+													styleClass="adress-info-popup-label" />
+												<br />
+												<h:outputText value="#{eintrag.telefonPrivat}" />
+												<br />
+												<h:outputText value="#{eintrag.emailPrivat}" />
+											</div>
+											<div>
+												<h:outputText value="Geschäftlich"
+													styleClass="adress-info-popup-label" />
+												<br />
+												<h:outputText value="#{eintrag.telefonGesch}" />
+												<br />
+												<h:outputText value="#{eintrag.emailGesch}" />
+											</div>
+										</div>
+										<div class="adress-info-popup-note">
+											<br />
+											<h:outputText value="Bemerkung"
+												styleClass="adress-info-popup-label" />
+											<h:outputText value="#{eintrag.bemerkung}" />
+										</div>
+									</p:tab>
+									<p:tab title="QR-Code">
+										<div style="text-align: center; padding: 1rem;">
+											<h:graphicImage
+												value="#{adresslisteBean.infoQrCodeDataUrl(eintrag)}"
+												style="max-width:100vw;max-height:100vh;" />
+										</div>
+									</p:tab>
+								</p:tabView>
+							</div>
+							<h:panelGroup layout="block"
+								styleClass="adress-info-popup-actions">
+								<div class="adress-info-popup-actions">
+									<p:commandButton value="Ändern" icon="pi pi-pencil"
+										actionListener="#{adresslisteBean.vorbereitenBearbeiten(eintrag)}"
+										oncomplete="PF('editDialog').show()" process="@this"
+										update=":editDialogForm" />
+								</div>
+							</h:panelGroup>
+						</div>
+					</p:overlayPanel>
+				</p:column>
+				<p:column headerText="Nachname" sortBy="#{eintrag.name}"
+					rendered="#{adresslisteBean.spalteSichtbar('name')}"
+					filterBy="#{eintrag.name}" filterMatchMode="contains">
+					<h:outputText value="#{eintrag.name}" />
+				</p:column>
+				<p:column headerText="Vorname" sortBy="#{eintrag.vorname}"
+					rendered="#{adresslisteBean.spalteSichtbar('vorname')}"
+					filterBy="#{eintrag.vorname}" filterMatchMode="contains">
+					<h:outputText value="#{eintrag.vorname}" />
+				</p:column>
+				<p:column headerText="Geburtstag" sortBy="#{eintrag.geburtstag}"
+					rendered="#{adresslisteBean.spalteSichtbar('geburtstag')}"
+					filterBy="#{eintrag.geburtstag}" filterMatchMode="contains">
+					<h:outputText value="#{eintrag.geburtstag}">
+						<f:convertDateTime pattern="dd.MM.yyyy" type="localDate" />
+					</h:outputText>
+				</p:column>
+				<p:column headerText="Straße" sortBy="#{eintrag.strasse}"
+					rendered="#{adresslisteBean.spalteSichtbar('strasse')}"
+					filterBy="#{eintrag.strasse}" filterMatchMode="contains">
+					<h:outputText value="#{eintrag.strasse}" />
+				</p:column>
+				<p:column headerText="PLZ" sortBy="#{eintrag.plz}"
+					styleClass="adress-col-plz"
+					rendered="#{adresslisteBean.spalteSichtbar('plz')}"
+					filterBy="#{eintrag.plz}" filterMatchMode="contains">
+					<h:outputText value="#{eintrag.plz}" />
+				</p:column>
+				<p:column headerText="Wohnort" sortBy="#{eintrag.wohnort}"
+					rendered="#{adresslisteBean.spalteSichtbar('wohnort')}"
+					filterBy="#{eintrag.wohnort}" filterMatchMode="contains">
+					<h:outputText value="#{eintrag.wohnort}" />
+				</p:column>
+				<p:column headerText="Telefon privat"
+					rendered="#{adresslisteBean.spalteSichtbar('telefonPrivat')}"
+					filterBy="#{eintrag.telefonPrivat}" filterMatchMode="contains">
+					<h:outputText value="#{eintrag.telefonPrivat}" />
+				</p:column>
+				<p:column headerText="Telefon gesch."
+					rendered="#{adresslisteBean.spalteSichtbar('telefonGesch')}"
+					filterBy="#{eintrag.telefonGesch}" filterMatchMode="contains">
+					<h:outputText value="#{eintrag.telefonGesch}" />
+				</p:column>
+				<p:column headerText="Telefon mobil"
+					sortBy="#{eintrag.telefonMobil}"
+					rendered="#{adresslisteBean.spalteSichtbar('telefonMobil')}"
+					filterBy="#{eintrag.telefonMobil}" filterMatchMode="contains">
+					<h:outputText value="#{eintrag.telefonMobil}" />
+				</p:column>
+				<p:column headerText="E-Mail privat" sortBy="#{eintrag.emailPrivat}"
+					styleClass="adress-col-email"
+					rendered="#{adresslisteBean.spalteSichtbar('emailPrivat')}"
+					filterBy="#{eintrag.emailPrivat}" filterMatchMode="contains">
+					<h:outputText value="#{eintrag.emailPrivat}" />
+				</p:column>
+				<p:column headerText="E-Mail gesch." styleClass="adress-col-email"
+					rendered="#{adresslisteBean.spalteSichtbar('emailGesch')}"
+					filterBy="#{eintrag.emailGesch}" filterMatchMode="contains">
+					<h:outputText value="#{eintrag.emailGesch}" />
+				</p:column>
+				<p:column headerText="Bemerkung" sortBy="#{eintrag.bemerkung}"
+					rendered="#{adresslisteBean.spalteSichtbar('bemerkung')}"
+					filterBy="#{eintrag.bemerkung}" filterMatchMode="contains">
+					<h:outputText value="#{eintrag.bemerkung}" />
+				</p:column>
+				<f:facet name="footer">
+					<p:commandButton value="Neuer Person hinzufügen"
+						actionListener="#{adresslisteBean.vorbereitenNeu}"
+						oncomplete="PF('newDialog').show()" process="@this"
+						update=":newDialogForm" />
+				</f:facet>
+			</p:dataTable>
+		</div>
+		<div style="margin-top: 12px;">
+			<p:commandButton value="Cache löschen"
+				actionListener="#{adresslisteBean.refreshAdressCache}"
+				icon="pi pi-refresh" process="@this"
+				update=":adresslisteForm:tabelle :adresslisteForm:messages" />
+		</div>
+		<h:outputScript target="body">
+		function applyAdresslisteMobileTitles() {
+			const dataTableBody = document.getElementById('adresslisteForm:tabelle_data');
+			const dataTable = document.getElementById('adresslisteForm:tabelle');
+			if (!dataTableBody) {
+				return;
+			}
+
+			const isMobile = window.matchMedia('(max-width: 768px)').matches;
+			const headerLabels = dataTable ? Array.from(dataTable.querySelectorAll('thead th')).map(function(headerCell) {
+				return headerCell.textContent ? headerCell.textContent.trim() : '';
+			}) : [];
+
+			dataTableBody.querySelectorAll('tr').forEach(function(row) {
+				Array.from(row.children).forEach(function(cell, index) {
+				const labelFromData = cell.getAttribute('data-label');
+				const fallbackLabel = headerLabels[index] || '';
+				const label = labelFromData || fallbackLabel;
+
+				if (label &amp;&amp; isMobile) {
+					cell.setAttribute('title', label);
+				} else {
+					cell.removeAttribute('title');
+				}
+				});
+			});
+		}
+
+		document.addEventListener('DOMContentLoaded', function() {
+			applyAdresslisteMobileTitles();
+
+			const dataTableBody = document.getElementById('adresslisteForm:tabelle_data');
+			if (!dataTableBody || !window.MutationObserver) {
+				return;
+			}
+
+			const observer = new MutationObserver(function() {
+				applyAdresslisteMobileTitles();
+			});
+
+			observer.observe(dataTableBody, {
+				childList: true,
+				subtree: true
+			});
+		});
+	</h:outputScript>
+	</h:form>
+
+	<p:dialog id="editDialog" widgetVar="editDialog" modal="true"
+		header="Person ändern" width="700" resizable="false" responsive="true"
+		fitViewport="true" contentStyle="max-height:60vh;overflow-y:auto;">
+		<h:form id="editDialogForm">
+			<div class="ui-fluid"
+				style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;">
+				<p:inputText id="vornameEdit" placeholder="Vorname"
+					value="#{adresslisteBean.bearbeiteterEintrag.vorname}" />
+				<p:inputText id="nameEdit" placeholder="Nachname"
+					value="#{adresslisteBean.bearbeiteterEintrag.name}" />
+				<p:inputText id="strasseEdit" placeholder="Straße"
+					value="#{adresslisteBean.bearbeiteterEintrag.strasse}"
+					style="grid-column:1 / -1;" />
+				<p:inputText id="plzEdit" placeholder="PLZ"
+					value="#{adresslisteBean.bearbeiteterEintrag.plz}" />
+				<p:inputText id="wohnortEdit" placeholder="Ort"
+					value="#{adresslisteBean.bearbeiteterEintrag.wohnort}" />
+				<p:inputText id="telPrivatEdit" placeholder="Telefon privat"
+					value="#{adresslisteBean.bearbeiteterEintrag.telefonPrivat}" />
+				<p:inputText id="telGeschEdit" placeholder="Telefon gesch."
+					value="#{adresslisteBean.bearbeiteterEintrag.telefonGesch}" />
+				<p:inputText id="telMobilEdit" placeholder="Handy"
+					value="#{adresslisteBean.bearbeiteterEintrag.telefonMobil}"
+					style="grid-column:1 / -1;" />
+				<p:inputText id="mailPrivatEdit" placeholder="E-Mail privat"
+					value="#{adresslisteBean.bearbeiteterEintrag.emailPrivat}" />
+				<p:inputText id="mailGeschEdit" placeholder="E-Mail gesch."
+					value="#{adresslisteBean.bearbeiteterEintrag.emailGesch}" />
+				<p:datePicker id="geburtstagEdit"
+					value="#{adresslisteBean.bearbeiteterEintrag.geburtstag}"
+					pattern="dd.MM.yyyy" placeholder="Geburtstag"
+					style="grid-column:1 / -1;" />
+				<p:inputTextarea id="bemerkungEdit" autoResize="false"
+					value="#{adresslisteBean.bearbeiteterEintrag.bemerkung}" rows="3"
+					placeholder="Bemerkung" style="grid-column:1 / -1;" />
+			</div>
+			<div class="button-container">
+				<h:panelGroup rendered="#{!adresslisteBean.schreibzugriff}">
+					<p:inputText id="editOtp" placeholder="Einmalpasswort"
+						value="#{adresslisteBean.editEinmalpasswortEingabe}" />
+					<p:commandButton value="Passwort prüfen"
+						actionListener="#{adresslisteBean.pruefeEditEinmalpasswort}"
+						update=":editDialogForm" />
+				</h:panelGroup>
+				<p:commandButton value="Speichern"
+					actionListener="#{adresslisteBean.speichernBearbeiten}"
+					disabled="#{!adresslisteBean.schreibzugriff and !adresslisteBean.editAktionenFreigeschaltet}"
+					update=":adresslisteForm :editDialogForm"
+					oncomplete="PF('editDialog').hide()" />
+				<p:commandButton value="Löschen" styleClass="ui-button-danger"
+					actionListener="#{adresslisteBean.loeschen}"
+					disabled="#{!adresslisteBean.schreibzugriff and !adresslisteBean.editAktionenFreigeschaltet}"
+					update=":adresslisteForm :editDialogForm"
+					oncomplete="PF('editDialog').hide()" />
+				<p:commandButton value="Abbrechen" type="button"
+					onclick="PF('editDialog').hide()" />
+			</div>
+		</h:form>
+	</p:dialog>
+
+	<p:dialog id="newDialog" widgetVar="newDialog" modal="true"
+		header="Neue Person hinzufügen" width="700" resizable="false"
+		responsive="true" fitViewport="true"
+		contentStyle="max-height:60vh;overflow-y:auto;">
+		<h:form id="newDialogForm">
+			<div class="ui-fluid"
+				style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;">
+				<p:inputText id="vornameNew" placeholder="Vorname"
+					value="#{adresslisteBean.neuerEintrag.vorname}" />
+				<p:inputText id="nameNew" placeholder="Nachname"
+					value="#{adresslisteBean.neuerEintrag.name}" />
+				<p:inputText id="strasseNew" placeholder="Straße"
+					value="#{adresslisteBean.neuerEintrag.strasse}"
+					style="grid-column:1 / -1;" />
+				<p:inputText id="plzNew" placeholder="PLZ"
+					value="#{adresslisteBean.neuerEintrag.plz}" />
+				<p:inputText id="wohnortNew" placeholder="Ort"
+					value="#{adresslisteBean.neuerEintrag.wohnort}" />
+				<p:inputText id="telPrivatNew" placeholder="Telefon privat"
+					value="#{adresslisteBean.neuerEintrag.telefonPrivat}" />
+				<p:inputText id="telGeschNew" placeholder="Telefon gesch."
+					value="#{adresslisteBean.neuerEintrag.telefonGesch}" />
+				<p:inputText id="telMobilNew" placeholder="Handy"
+					value="#{adresslisteBean.neuerEintrag.telefonMobil}"
+					style="grid-column:1 / -1;" />
+				<p:inputText id="mailPrivatNew" placeholder="E-Mail privat"
+					value="#{adresslisteBean.neuerEintrag.emailPrivat}" />
+				<p:inputText id="mailGeschNew" placeholder="E-Mail gesch."
+					value="#{adresslisteBean.neuerEintrag.emailGesch}" />
+				<p:datePicker id="geburtstagNew"
+					value="#{adresslisteBean.neuerEintrag.geburtstag}"
+					pattern="dd.MM.yyyy" placeholder="Geburtstag"
+					style="grid-column:1 / -1;" />
+				<p:inputTextarea id="bemerkungNew" autoResize="false"
+					value="#{adresslisteBean.neuerEintrag.bemerkung}" rows="3"
+					placeholder="Bemerkung" style="grid-column:1 / -1;" />
+			</div>
+			<div class="button-container">
+				<h:panelGroup rendered="#{!adresslisteBean.schreibzugriff}">
+					<p:commandButton value="Passwort anfordern"
+						actionListener="#{adresslisteBean.anfordernNeuEinmalpasswort}"
+						update=":newDialogForm" />
+					<h:panelGroup rendered="#{adresslisteBean.neuPasswortAngefordert}">
+						<p:inputText id="newOtp" placeholder="Einmalpasswort"
+							value="#{adresslisteBean.neuEinmalpasswortEingabe}" />
+						<p:commandButton value="Passwort prüfen"
+							actionListener="#{adresslisteBean.pruefeNeuEinmalpasswort}"
+							update=":newDialogForm" />
+					</h:panelGroup>
+				</h:panelGroup>
+				<p:commandButton value="Speichern"
+					rendered="#{adresslisteBean.schreibzugriff or adresslisteBean.neuSpeichernFreigeschaltet}"
+					actionListener="#{adresslisteBean.speichernNeu}"
+					update=":adresslisteForm :newDialogForm"
+					oncomplete="PF('newDialog').hide()" />
+				<p:commandButton value="Abbrechen" type="button"
+					onclick="PF('newDialog').hide()" />
+			</div>
+		</h:form>
+	</p:dialog>
+
+	<h:outputScript target="body">
+		(function() {
+			var debouncedTimer;
+			var resizeObserver;
+			var mediaQueryList;
+		
+			function sendHeightToParent() {
+				if (window.parent === window) {
+					return;
+				}
+
+				var body = document.body;
+				var html = document.documentElement;
+				var height = Math.max(
+					body ? body.scrollHeight : 0,
+					body ? body.offsetHeight : 0,
+					html ? html.clientHeight : 0,
+					html ? html.scrollHeight : 0,
+					html ? html.offsetHeight : 0
+				);
+
+				window.parent.postMessage(height, "*");
+			}
+
+			function scheduleHeightUpdate() {
+				window.clearTimeout(debouncedTimer);
+				debouncedTimer = window.setTimeout(sendHeightToParent, 100);
+			}
+		window.scheduleAdresslisteHeightUpdate = scheduleHeightUpdate;
+
+			function observeTableSizeChanges() {
+				if (!window.ResizeObserver) {
+					return;
+				}
+
+				if (resizeObserver) {
+					resizeObserver.disconnect();
+				}
+
+				resizeObserver = new ResizeObserver(scheduleHeightUpdate);
+
+				var tableWrapper = document.querySelector('.adressliste-table-scroll');
+				if (tableWrapper) {
+					resizeObserver.observe(tableWrapper);
+				}
+
+				var tableBody = document.getElementById('adresslisteForm:tabelle_data');
+				if (tableBody) {
+					resizeObserver.observe(tableBody);
+				}
+			}
+
+			document.addEventListener("DOMContentLoaded", scheduleHeightUpdate);
+			window.addEventListener("load", function() {
+				scheduleHeightUpdate();
+				observeTableSizeChanges();
+			});
+
+			window.addEventListener("resize", scheduleHeightUpdate);
+
+			if (window.PrimeFaces &amp;&amp; PrimeFaces.ajax) {
+				PrimeFaces.ajax.Queue.addOnComplete(function() {
+					scheduleHeightUpdate();
+					observeTableSizeChanges();
+				});
+
+			}
+
+			if (window.MutationObserver) {
+				var observer = new MutationObserver(scheduleHeightUpdate);
+				observer.observe(document.body, {
+					childList: true,
+					subtree: true,
+					attributes: true,
+					characterData: true
+				});
+			}
+			if (window.matchMedia) {
+				mediaQueryList = window.matchMedia('(max-width: 768px)');
+				if (mediaQueryList.addEventListener) {
+					mediaQueryList.addEventListener('change', scheduleHeightUpdate);
+				} else if (mediaQueryList.addListener) {
+					mediaQueryList.addListener(scheduleHeightUpdate);
+				}
+			}
+
+			observeTableSizeChanges();
+
+			scheduleHeightUpdate();
+		})();
+	</h:outputScript>
+</h:body>
+
+</html>

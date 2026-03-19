@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html">
+
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>Fehlerseite</title>
+	<h:outputStylesheet name="css/styles.css" />
+	<h:outputScript library="js" name="script.js" target="head" />
+	<link rel="icon" type="image/ico" href="resources/images/favicon.ico" />
+</h:head>
+
+<h:body>
+	<div class="error-panel"
+		style="max-width: 1000px; margin: 2rem auto; padding: 1rem;">
+		<h2>Ein Fehler ist aufgetreten</h2>
+		<h:outputText
+			value="Die Aktion konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut oder wenden Sie sich an den Support."
+			style="display:block; margin-bottom:1rem;" />
+
+		<h:panelGroup rendered="#{errorBean.exceptionAvailable}">
+			<details>
+				<summary>
+					<strong>Technische Fehlerdetails (für Entwickler)</strong>
+				</summary>
+				<div style="margin-top: 0.75rem;">
+					<h:outputText value="Fehlertyp: #{errorBean.type}"
+						style="font-weight:bold" />
+					<br />
+					<h:outputText value="Fehlermeldung: #{errorBean.message}"
+						style="font-weight:bold" />
+					<br /> <br />
+					<h:outputText escape="false" value="#{errorBean.stacktrace}"
+						style="font-family:monospace; font-size:0.9em;" />
+				</div>
+			</details>
+		</h:panelGroup>
+
+		<h:panelGroup rendered="#{not errorBean.exceptionAvailable}">
+			<h:outputText
+				value="Es sind aktuell keine technischen Fehlerdetails verfügbar. Details siehe Server-Log." />
+		</h:panelGroup>
+
+		<div style="margin-top: 1.5rem;">
+			<h:link outcome="index.xhtml" value="Zur Startseite" />
+		</div>
+	</div>
+</h:body>
+</html>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app
+    xmlns="https://jakarta.ee/xml/ns/jakartaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        https://jakarta.ee/xml/ns/jakartaee
+        https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+    version="6.0">
+
+    <!-- ================= CONTEXT PARAMS ================= -->
+
+    <context-param>
+        <param-name>jakarta.faces.STATE_SAVING_METHOD</param-name>
+        <param-value>server</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>jakarta.faces.PROJECT_STAGE</param-name>
+        <param-value>Development</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>primefaces.THEME</param-name>
+        <param-value>saga</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>org.omnifaces.EXCEPTION_TYPES_TO_UNWRAP</param-name>
+        <param-value>
+            jakarta.faces.FacesException,
+            jakarta.servlet.ServletException
+        </param-value>
+    </context-param>
+
+    <!-- ================= SERVLET ================= -->
+
+    <servlet>
+        <servlet-name>facesServlet</servlet-name>
+        <servlet-class>jakarta.faces.webapp.FacesServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>facesServlet</servlet-name>
+        <url-pattern>*.xhtml</url-pattern>
+    </servlet-mapping>
+
+    <!-- ================= ERROR PAGE ================= -->
+
+    <error-page>
+        <exception-type>java.lang.Exception</exception-type>
+        <location>/error.xhtml</location>
+    </error-page>
+
+    <!-- ================= SESSION ================= -->
+
+    <session-config>
+        <session-timeout>180</session-timeout>
+    </session-config>
+
+    <!-- ================= MIME ================= -->
+
+    <mime-mapping>
+        <extension>woff2</extension>
+        <mime-type>font/woff2</mime-type>
+    </mime-mapping>
+
+    <!-- ================= WELCOME ================= -->
+
+    <welcome-file-list>
+        <welcome-file>index.xhtml</welcome-file>
+    </welcome-file-list>
+
+</web-app>

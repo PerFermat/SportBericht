@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-war",
+      "type": "shell",
+      "command": "mvn -DskipTests package",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [
+        "$maven"
+      ]
+    },
+    {
+      "label": "deploy-to-wildfly",
+      "type": "shell",
+      "command": "cp -f target/*.war /home/michael/Programme/wildfly-35.0.0.Beta1/standalone/deployments/",
+      "dependsOn": [
+        "build-war"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "start-wildfly",
+      "type": "shell",
+      "command": "/home/michael/Programme/wildfly-35.0.0.Beta1/bin/standalone.sh -b 0.0.0.0",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "build+deploy+start",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "deploy-to-wildfly",
+        "start-wildfly"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
+
+

@@ -1,0 +1,1521 @@
+:root {
+	/* Basis-HSL-Farben für einfache Anpassung */
+	--base-hue: 204; /* HUE für ein Grün, 0-360 */
+	--base-saturation: 100%; /* Sättigung */
+	--base-lightness: 95%; /* Helligkeit (sehr hell) */
+	--white: hsl(0, 0%, 100%);
+	--black: hsl(0, 0%, 0%);
+	--red: hsl(0, 100%, 50%); /* Für Fehlermeldungen */
+	/* Abgeleitete Farben */
+	--primary-bg-color: hsl(var(--base-hue), var(--base-saturation),
+		var(--base-lightness));
+	--secondary-bg-color: hsl(var(--base-hue), 10%, 85%);
+	/* Leicht dunkler als primär */
+	--text-color: var(--black);
+	--border-color: hsl(var(--base-hue), 10%, 50%);
+	/* Button Farben - JETZT KORREKT VON DER GRUNDFARBE ABGELEITET */
+	--button-bg-color: hsl(var(--base-hue), 90%, 45%);
+	--button-hover-bg-color: hsl(var(--base-hue), 90%, 35%);
+	--button-active-bg-color: hsl(var(--base-hue), 90%, 25%);
+	--button-bglight-color: hsl(var(--base-hue), 90%, 80%);
+	--button-hover-bglight-color: hsl(var(--base-hue), 90%, 70%);
+	--button-active-bglight-color: hsl(var(--base-hue), 90%, 60%);
+	--button-text-color: var(--white);
+	/* Tabellen Farben */
+	--table-header-bg: hsl(var(--base-hue), 80%, 30%);
+	/* Grundfarbe in stärkerer Form */
+	--table-header-text-color: var(--white); /* Textfarbe für Header */
+	--table-row-bg: hsl(var(--base-hue), 80%, 99%);
+	/* Grundfarbe in abgeschwächter Form für alle Zeilen */
+	--table-row-hover-bg: hsl(var(--base-hue), 50%, 95%);
+	/* Mouse-Over-Effekt für Zeilen */
+	--table-border-color: hsl(var(--base-hue), 10%, 80%);
+	/* Panel Farben */
+	--panel-header-bg: hsl(var(--base-hue), 80%, 30%);
+	/* Dunkleres Blau für Panel Header */
+	--panel-header-text-color: var(--white);
+	/* Weißer Text im Panel Header */
+	--panel-content-bg: hsl(var(--base-hue), 10%, 90%);
+	/* Leicht abgesetzter Hintergrund für Panel-Inhalt */
+	/* NEU: Farbe für Ihre Box */
+	--box-bg-color: hsl(var(--base-hue), 5%, 92%);
+	/* Eine sehr helle, leicht entsättigte Version Ihrer Grundfarbe für die Box */
+	--box-shadow: hsl(var(--base-hue), 80%, 30%);
+	/* Grundfarbe in stärkerer Form */
+	/* Dialog Farben */
+	--dialog-header-bg: hsl(var(--base-hue), 80%, 30%);
+	--dialog-header-text: #ffffff;
+	--dialog-content-bg: hsl(var(--base-hue), 10%, 95%);
+	/* Button Farben (optional) */
+	--button-success-bg: hsl(140, 60%, 35%);
+	--button-warning-bg: hsl(40, 90%, 50%);
+	--button-cancel-bg: hsl(0, 0%, 70%);
+}
+
+/* Globaler Body-Hintergrund */
+body {
+	background-color: var(--primary-bg-color);
+	padding: 0;
+	font-family: Arial, sans-serif;
+	color: var(--text-color);
+	transition: background-color 0.5s ease, color 0.5s ease;
+	/* Transition für sanfte Farbübergänge */
+}
+
+.responsive-container, .button4-container, .button2-container,
+	.tabellen-container, .centered-container, .centered-grid,
+	.lightblue-section, .slider-container {
+	background-color: var(--primary-bg-color);
+	padding: 1rem;
+	border-radius: 5px;
+	display: flex;
+	flex-direction: column; /* Standard: untereinander */
+	gap: 1rem;
+	margin-bottom: 1rem;
+	transition: background-color 0.5s ease, color 0.5s ease;
+	color: var(--text-color); /* Sicherstellen, dass Textfarbe stimmt */
+}
+/* Neue Klasse für Slider-Container mit Panel-Hintergrund */
+.slider-container.slider-container-panel-bg {
+	background-color: var(--panel-content-bg);
+}
+/* Neue Klasse für Slider-Container mit Panel-Hintergrund */
+.button4-container.button-container-panel-bg {
+	background-color: var(--panel-content-bg);
+}
+
+/* Media Queries für Container-Layouts */
+@media ( min-width : 1000px) {
+	.responsive-container {
+		flex-direction: row;
+	}
+	.responsive-container>.text-input, .responsive-container>.error-table {
+		flex: 0 0 50%; /* Kein Wachsen, kein Schrumpfen, feste 50% */
+		max-width: 50%;
+	}
+	.responsive-container>.text-input, .responsive-container>.text2-input {
+		flex: 1 1 33%;
+	}
+}
+
+@media ( min-width : 500px) {
+	.button4-container {
+		flex-direction: row;
+	}
+}
+
+@media ( min-width : 250px) {
+	.button2-container {
+		flex-direction: row;
+	}
+	.slider-container>.slider-eintrag {
+		flex: 1 1 25%;
+	}
+	.slider-container {
+		flex-direction: row; /* Elemente nebeneinander */
+		align-items: center; /* Vertikal zentrieren */
+	}
+	.slider-container>.ui-selectonemenu,
+		/* PrimeFaces SelectOneMenu Klasse */ .slider-container>.ui-outputtext
+		{ /* PrimeFaces OutputText Klasse (oder h:outputText) */
+		flex: 1 1 50%; /* Jedes Element nimmt 50% Breite ein */
+		width: auto !important;
+		/* Wichtig, um inline-style zu überschreiben */
+		max-width: 50%;
+	}
+	.slider-container h\:outputText {
+		/* Fallback für h:outputText, falls ui-outputtext nicht greift */
+		width: auto !important;
+		max-width: 50%;
+	}
+}
+
+/* Spezifischer Text-Container innerhalb responsive-container */
+.responsive-container .text-container {
+	background-color: var(--secondary-bg-color);
+	padding: 1rem;
+	border-radius: 5px;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	margin-bottom: 1rem;
+	font-size: 1.2rem;
+	transition: background-color 0.5s ease, color 0.5s ease;
+	color: var(--text-color);
+}
+
+/* Textarea Stile */
+.text-input .ui-inputtextarea, .ui-inputtextarea {
+	width: 100%;
+	box-sizing: border-box;
+	background-color: var(--white);
+	border: 1px solid var(--border-color);
+	max-height: calc(1em * 20); /* entspricht 20 Zeilen */
+	font-size: 1rem;
+	color: var(--text-color); /* Textfarbe der Textarea */
+	transition: border-color 0.5s ease, color 0.5s ease, background-color
+		0.5s ease;
+}
+
+/* PrimeFaces Panel und DataTable im Fehlerbereich */
+.error-table .ui-panel, .error-table .ui-panel .ui-panel-content,
+	.error-table .ui-datatable {
+	background: var(--primary-bg-color);
+	border: none !important;
+	transition: background-color 0.5s ease, color 0.5s ease;
+	color: var(--text-color);
+}
+/* PrimeFaces Panel Stile */
+.ui-panel {
+	border-color: var(--border-color) !important;
+	transition: border-color 0.5s ease;
+}
+
+.ui-panel .ui-panel-titlebar {
+	background-color: var(--panel-header-bg) !important;
+	color: var(--panel-header-text-color) !important;
+	border-color: var(--panel-header-bg) !important;
+	/* Passend zum Hintergrund */
+	transition: background-color 0.5s ease, color 0.5s ease, border-color
+		0.5s ease;
+}
+
+.ui-panel .ui-panel-title {
+	color: var(--panel-header-text-color) !important;
+	transition: color 0.5s ease;
+}
+
+.ui-panel .ui-panel-content {
+	background-color: var(--panel-content-bg) !important;
+	border-color: var(--border-color) !important;
+	color: var(--text-color); /* Textfarbe im Panel-Inhalt */
+	transition: background-color 0.5s ease, border-color 0.5s ease, color
+		0.5s ease;
+}
+
+/* Icons für aufklappbare Panels (+/- Symbole) */
+/* Für Standard PrimeFaces Icons (Themed Icons) */
+.ui-panel .ui-panel-titlebar .ui-icon {
+	color: var(--white) !important;
+	transition: color 0.5s ease;
+}
+
+/* Für PrimeIcons (ab PrimeFaces 6.0) */
+.ui-panel .ui-panel-titlebar .pi {
+	color: var(--white) !important;
+	transition: color 0.5s ease;
+}
+
+/* Button-Container */
+.button-container {
+	display: flex;
+	justify-content: center; /* Zentriert horizontal */
+	gap: 10px; /* Abstand zwischen den Buttons */
+	padding: 10px 0; /* Abstand oben und unten */
+	/* alternativ: margin: 10px 0; wenn Abstand nach außen soll */
+}
+
+.buttontab-container {
+	text-align: left;
+	margin-top: 1rem;
+}
+
+/* Header Bereiche */
+.header-area {
+	text-align: center;
+	margin: 1rem 0;
+	font-size: 1.0rem;
+	color: var(--text-color);
+	transition: color 0.5s ease;
+}
+
+.tabheader-area {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px;
+	background-color: var(--primary-bg-color);
+	transition: background-color 0.5s ease;
+}
+
+.tabheader-area h2 {
+	text-align: center;
+	margin: 0 auto;
+	color: var(--text-color);
+	transition: color 0.5s ease;
+}
+
+/* Tabellen Container Stile */
+.tabellen-container {
+	overflow-x: auto; /* Horizontales Scrollen ermöglichen */
+	width: 100%;
+	max-width: 100vw;
+}
+
+@media ( max-width : 700px) {
+	.tabellen-container {
+		padding: 0;
+		gap: 0;
+		margin-bottom: 0;
+	}
+}
+
+/* Tabelle und Spalten Stile */
+.tabelle {
+	width: 100%; /* Passt sich dem Container an */
+	border-collapse: collapse; /* Für saubere Tabellenränder */
+}
+
+/* Tabellen-Header */
+.tabelle th {
+	background-color: var(--table-header-bg) !important;
+	color: var(--table-header-text-color) !important;
+	/* Weiße Textfarbe für besseren Kontrast */
+	padding: 0.8rem;
+	text-align: left;
+	border: 1px solid var(--table-border-color);
+	transition: background-color 0.5s ease, border-color 0.5s ease, color
+		0.5s ease;
+	vertical-align: middle; /* HIER WURDE ES GEÄNDERT */
+}
+
+/* Tabellen-Zeilen und Zellen */
+.tabelle td {
+	padding: 0.8rem;
+	border: 1px solid var(--table-border-color);
+	background-color: var(--table-row-bg);
+	/* Einheitliche abgeschwächte Grundfarbe */
+	transition: background-color 0.3s ease, border-color 0.5s ease, color
+		0.5s ease; /* Sanfter Übergang für Hover-Effekt */
+	color: var(--text-color);
+	vertical-align: middle; /* HIER WURDE ES GEÄNDERT */
+}
+
+/* Mouse-Over-Effekt für Tabellenzeilen */
+.tabelle tbody tr:hover td {
+	background-color: var(--table-row-hover-bg); /* Farbe beim Hover */
+}
+
+.col-turnier {
+	width: 80%;
+	font-size: 1.6rem;
+}
+
+.col-code {
+	width: 185px;
+	font-size: 1.4rem;
+}
+@media ( max-width : 700px) {
+	.col-code {
+		font-size: 1.1rem;
+		width: 130px;
+	}
+}
+@media ( max-width : 500px) {
+	.col-code {
+		font-size: 0.8rem;
+		width: 95px;
+	}
+}
+.col-pin {
+	width: 60px;
+	font-size: 1.4rem;
+}
+@media ( max-width : 700px) {
+	.col-pin {
+		font-size: 1.1rem;
+		width: 50px;
+	}
+}
+@media ( max-width : 500px) {
+	.col-pin {
+		font-size: 0.8rem;
+		width: 45px;
+	}
+}
+	
+.col-datum {
+	width: 100px;
+	font-size: 1.4rem;
+}
+
+@media ( max-width : 800px) {
+	.col-datum {
+		display: none; /* Spalte ausblenden */
+	}
+}
+
+.col-bilder {
+	width: 50px;
+	font-size: 1rem;
+	text-align: left;
+}
+
+@media ( max-width : 1000px) {
+	.col-bilder {
+		width: 15px;
+	}
+}
+
+.col-liga {
+	width: 100px;
+	font-size: 1.4rem;
+	text-align: left;
+}
+
+@media ( max-width : 1000px) {
+	.col-liga {
+		display: none; /* Spalte ausblenden */
+	}
+}
+
+.col-heim, .col-gast {
+	min-width: 500px;
+	max-width: 1500px;
+	font-size: 1.4rem;
+	text-align: left;
+}
+
+@media ( max-width : 700px) {
+	.col-heim, .col-gast {
+		font-size: 1.1rem;
+		text-align: left;
+		min-width: 150px;
+		max-width: 500px;
+	}
+}
+
+@media ( max-width : 500px) {
+	.col-heim, .col-gast {
+		font-size: 0.8rem;
+		text-align: left;
+		min-width: 150px;
+		max-width: 500px;
+	}
+}
+
+.col-bericht {
+	width: 125px;
+	font-size: 1.4rem;
+	text-align: left;
+}
+
+@media ( max-width : 700px) {
+	.col-bericht {
+		font-size: 1.1rem;
+		text-align: left;
+		width: 100px;
+	}
+}
+
+@media ( max-width : 500px) {
+	.col-bericht {
+		font-size: 0.8rem;
+		text-align: left;
+		width: 85px;
+	}
+}
+
+.col-ergebnis {
+	width: 70px;
+	text-align: center;
+	font-size: 1.4rem;
+}
+
+@media ( max-width : 700px) {
+	.col-ergebnis {
+		font-size: 1.1rem;
+		text-align: left;
+		width: 25px;
+	}
+}
+
+@media ( max-width : 500px) {
+	.col-ergebnis {
+		font-size: 0.8rem;
+		text-align: left;
+		width: 20px;
+	}
+}
+
+/* Button Stile */
+.ui-button, .custom-file-input, .myButtonfrei, .myButton, .myButtonLight {
+	/* Grundstile für alle Buttons */
+	font-size: 1rem;
+	padding: 0.5em 1em;
+	background-color: var(--button-bg-color) !important;
+	color: var(--button-text-color) !important;
+	border: none !important; /* Entfernt den sichtbaren Rahmen */
+	border-radius: 5px;
+	cursor: pointer;
+	transition: background-color 0.3s ease, transform 0.1s ease, color 0.5s
+		ease;
+	text-align: center; /* Standardmäßig zentriert */
+	vertical-align: middle; /* Standardmäßig vertikal mittig */
+	display: inline-flex; /* Für Flexbox-Zentrierung von Inhalt */
+	align-items: center;
+	justify-content: center;
+	outline: none !important; /* Entfernt den blauen Fokus-Rahmen */
+	box-shadow: none !important;
+	/* Entfernt eventuelle vordefinierte Box-Schatten, die als Rahmen wirken könnten */
+}
+
+.myButtonLight {
+	background-color: var(--button-bglight-color) !important;
+}
+
+.ui-button:hover, .custom-file-input:hover, .myButtonfrei:hover,
+	.myButton:hover, .myButtonLight:hover {
+	background-color: var(--button-hover-bg-color) !important;
+	transform: translateY(-2px); /* Leichter Hoch-Effekt beim Hover */
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Schatteneffekt */
+}
+
+.myButtonLight:hover {
+	background-color: var(--button-hover-bglight-color) !important;
+}
+
+/* Maus-Down-Effekt (während der Verarbeitung) */
+.ui-button:active, .custom-file-input:active, .myButtonfrei:active, .myButtonLight:active,
+	.myButton:active {
+	background-color: var(--button-active-bg-color) !important;
+	transform: translateY(0); /* Zurück zur Ausgangsposition */
+	box-shadow: none; /* Schatten entfernen */
+}
+
+.myButtonLight:active {
+	background-color: var(--button-active-bglight-color) !important;
+}
+
+/* Spezifische Button-Breiten und -Höhen */
+.myButtonfrei {
+	width: 100%;
+	text-align: left;
+}
+
+.myButton, .myButtonLight {
+	width: 100%;
+	height: 40px;
+	text-align: left;
+}
+
+@media ( max-width : 700px) {
+	.myButton , .myButtonLight {
+		font-size: 0.7rem;
+		padding: 1px;
+	}
+}
+
+@media ( max-width : 500px) {
+	.myButton , .myButtonLight {
+		font-size: 0.5rem;
+		padding: none;
+	}
+}
+
+/* KI Auswahl Container */
+.auswahl-ki-container {
+	display: flex;
+	height: 100vh;
+	width: 100vw;
+}
+
+.auswahl-ki-container>* {
+	flex: 1;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+/* Roter Container für Fehler/Warnungen */
+.responsive-container .red-container {
+	background-color: var(--red);
+	padding: 10px;
+	color: var(--white);
+}
+
+/* Bild- und Auswahl-Container */
+#imageContainer {
+	position: relative;
+	display: inline-block;
+}
+
+#selectionRectangle {
+	position: absolute;
+	border: 2px solid var(--red);
+	pointer-events: none;
+	display: none;
+}
+
+.leftCol {
+	white-space: nowrap;
+	padding-right: 10px;
+	font-weight: 600;
+}
+
+.rightCol {
+	min-width: 220px;
+}
+
+/* Hover-Container (für Zeilen in Tabellen oder ähnlichem) */
+.hover-container {
+	position: relative;
+	display: inline-block;
+	width: 100%;
+	box-sizing: border-box;
+	transition: background-color 0.3s ease;
+}
+
+.hover-container:hover {
+	background-color: hsla(var(--base-hue), 70%, 70%, 0.1);
+	/* Leicht blau, transparent */
+}
+
+.hover-container h\:outputText {
+	display: block;
+	width: 100%;
+}
+
+.hover-container button {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	z-index: 10;
+	border: none !important;
+	padding: 0;
+	margin: 0;
+}
+
+/* Zentrierte Container */
+.centered-container {
+	max-width: 800px;
+	margin: 0 auto;
+	padding: 20px;
+	border-radius: 10px;
+}
+
+.centered-grid {
+	margin: 0 auto;
+	width: 100%;
+}
+/* Zusätzliche Stile für den transparenten Download-Button über dem Bild */
+.dark-mode-download-button {
+	/* Eine neue Klasse für Ihren Download-Button */
+	position: absolute;
+	top: 0;
+	right: 0;
+	/* Grundzustand: komplett transparent, kein Rahmen, keine Box-Schatten */
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	outline: none !important; /* Entfernt den Fokus-Rahmen */
+	width: 50px; /* An Bildbreite anpassen, falls abweichend */
+	height: 50px; /* An Bildhöhe anpassen, falls abweichend */
+	padding: 0; /* Standard-Padding entfernen */
+	display: flex;
+	/* Für die Zentrierung des Icons, falls es PrimeFaces erlaubt */
+	align-items: center;
+	justify-content: center;
+	transition: background-color 0.3s ease;
+	/* Sanfter Übergang für den Hover-Effekt */
+	z-index: 10; /* Stellt sicher, dass der Button über dem Bild liegt */
+}
+
+.dark-mode-download-button .ui-button-icon-left {
+	color: hsl(0, 0%, 50%);
+	/* Icon-Farbe: Ein leichtes Grau, damit es sichtbar ist */
+	font-size: 1.5rem; /* Icon-Größe anpassen */
+	transition: color 0.3s ease;
+}
+
+.dark-mode-download-button:hover {
+	/* Leichter Farbstich der Grundfarbe bei Mouse-Over */
+	background-color: hsla(var(--base-hue), 50%, 50%, 0.2) !important;
+	/* Leichte Grundfarbe mit Transparenz */
+	cursor: pointer; /* Zeigt an, dass es klickbar ist */
+}
+
+/* Anpassung der Icon-Farbe bei Hover */
+.dark-mode-download-button:hover .ui-button-icon-left {
+	color: hsl(var(--base-hue), 80%, 30%) !important;
+	/* Das Icon wird etwas farbiger beim Hover */
+}
+
+/* Dark Mode Anpassungen für den Download-Button */
+body.dark-mode .dark-mode-download-button .ui-button-icon-left {
+	color: hsl(0, 0%, 70%) !important;
+	/* Im Dark Mode etwas helleres Grau für das Icon */
+}
+
+body.dark-mode .dark-mode-download-button:hover {
+	background-color: hsla(var(--base-hue), 50%, 50%, 0.3) !important;
+	/* Im Dark Mode etwas dunklerer Farbstich */
+}
+
+body.dark-mode .dark-mode-download-button:hover .ui-button-icon-left {
+	color: hsl(var(--base-hue), 80%, 60%) !important;
+	/* Icon wird im Dark Mode heller beim Hover */
+}
+
+/* Optional: Stile für den Icon selbst, falls PrimeFaces Standard-Padding o.ä. hat */
+/* Sie müssen möglicherweise die genaue Klasse für das Icon im PrimeFaces-Button überprüfen */
+/* Meistens ist es .ui-icon oder eine Klasse mit "pi" für PrimeIcons */
+.ui-button .ui-icon, .ui-button .pi {
+	/* Sicherstellen, dass Icons keine zusätzlichen Rahmen oder Hintergründe haben */
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+/* NEU: Stil für Ihre Box */
+.my-custom-box {
+	background-color: var(--box-bg-color);
+	padding: 15px;
+	border-radius: 8px;
+	border: 1px solid var(--border-color);
+	box-shadow: 0 2px 5px var(--box-shadow);
+	transition: background-color 0.5s ease;
+	/* Für sanften Übergang im Dark Mode */
+	width: 100%;
+	box-sizing: border-box;
+}
+
+/* Dialog Header */
+.ui-dialog .ui-dialog-titlebar {
+	background-color: var(--dialog-header-bg) !important;
+	color: var(--dialog-header-text) !important;
+	border: none;
+	border-radius: 0.5rem 0.5rem 0 0;
+	font-weight: bold;
+}
+
+/* Dialog Content */
+.ui-dialog .ui-dialog-content {
+	background-color: var(--dialog-content-bg);
+	font-size: 1rem;
+	padding: 1.5rem;
+}
+
+/* Dialog Footer */
+.dialog-footer-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	justify-content: center;
+}
+
+/* Responsives Button-Layout */
+@media ( max-width : 768px) {
+	.dialog-footer-buttons {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.ui-dialog {
+		width: 90vw !important;
+	}
+}
+
+.btn-success {
+	background-color: var(--button-success-bg) !important;
+	color: white;
+}
+
+.btn-warning {
+	background-color: var(--button-warning-bg) !important;
+	color: black;
+}
+
+.btn-cancel {
+	background-color: var(--button-cancel-bg) !important;
+	color: black;
+}
+
+/* Für den sichtbaren Eingabebereich */
+.bericht-editor .ql-editor {
+	min-height: 300px !important; /* ca. 10 Zeilen */
+	font-size: 1.5em !important; /* 1.5x größere Schrift */
+	line-height: 1.5em !important;
+}
+
+.bericht-editor .ql-toolbar button.ql-image, .bericht-editor .ql-toolbar button.ql-video
+	{
+	display: none !important;
+}
+/* Optional: wenn du auch den Toolbar-Abstand anpassen willst */
+.bericht-editor .ql-container {
+	min-height: 300px;
+}
+
+.ql-align-center {
+	text-align: center;
+}
+
+.ql-align-right {
+	text-align: right;
+}
+
+.ql-align-left {
+	text-align: left;
+}
+
+.ql-align-justify {
+	text-align: justify;
+}
+
+.row-flex {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin-bottom: 0.5rem;
+}
+
+.col {
+	display: flex;
+	align-items: center;
+}
+
+.desc {
+	width: 200px;
+	font-weight: bold;
+}
+
+.input {
+	flex-grow: 1;
+}
+
+/* ===== Bericht KI – Repeat Bereich ===== */
+.bericht-repeat {
+	font-size: 0.85rem !important; /* kleinere Schrift */
+}
+
+/* Panel Header grau einfärben */
+.bericht-repeat .ui-panel-titlebar {
+	background-color: var(--panel-content-bg) !important;
+	border-color: var(--panel-content-bg) !important;
+}
+
+/* Header-Text schwarz erzwingen */
+.bericht-repeat .ui-panel-titlebar, .bericht-repeat .ui-panel-titlebar .ui-panel-title,
+	.bericht-repeat .ui-panel-titlebar a {
+	color: var(--black) !important;
+}
+
+/* Optional: Inhalt etwas luftiger */
+.bericht-repeat .ui-panel-content {
+	padding: 0.75rem !important;
+}
+
+/* ===== Bericht KI – Layout ===== */
+.bericht-layout {
+	display: flex;
+	gap: 1rem;
+}
+
+/* Desktop: 50 / 50 */
+.bericht-layout .bericht-menu, .bericht-layout .bericht-inhalt {
+	flex: 0 0 50%;
+}
+
+/* Mobile: untereinander */
+@media ( max-width : 768px) {
+	.bericht-layout {
+		flex-direction: column;
+	}
+	.bericht-layout .bericht-menu, .bericht-layout .bericht-inhalt {
+		flex: 0 0 100%;
+	}
+}
+
+/* Toggle-Icon (+ / -) schwarz */
+.bericht-repeat .ui-panel-titlebar-icon, .bericht-repeat .ui-panel-titlebar-icon .ui-icon
+	{
+	color: var(--black) !important;
+}
+
+.bericht-repeat .ui-panel {
+	border: none !important;
+}
+
+.error-panel {
+	max-width: 800px;
+	margin: 50px auto;
+	padding: 20px;
+	border: 2px solid #d9534f;
+	border-radius: 10px;
+	background-color: #f2dede;
+	color: #a94442;
+	box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.error-details {
+	margin-top: 15px;
+	width: 100%;
+}
+
+.error-details h:outputText {
+	font-family: monospace;
+	font-size: 0.9em;
+}
+
+.gesamtspielplan-wrapper {
+	padding: 12px;
+}
+
+.gesamtspielplan-scroll {
+	overflow-x: auto;
+	padding-bottom: 6px;
+	scrollbar-gutter: stable;
+}
+
+.gesamtspielplan .spiel-col {
+	width: 140px;
+}
+
+.gesamtspielplan .betreuer-col {
+	width: 66px;
+}
+
+.gesamtspielplan tbody tr.week-separator td {
+	border-top: 1px solid #222;
+}
+
+.gesamtspielplan {
+	border-collapse: collapse;
+	width: 100%;
+	min-width: 1100px;
+	background: #ffffff;
+}
+
+.gesamtspielplan th, .gesamtspielplan td {
+	border: 1px solid #444;
+	padding: 4px 6px;
+	vertical-align: top;
+}
+
+.gesamtspielplan tbody tr {
+	transition: background-color 0.18s ease-in-out;
+}
+
+.gesamtspielplan tbody tr:hover td {
+	background-color: #f4f8ff;
+}
+
+.gesamtspielplan .headline {
+	text-align: center;
+	font-size: 1.3rem;
+	font-weight: bold;
+	background: #f1f1f1;
+}
+
+.gesamtspielplan .subheadline {
+	text-align: center;
+	font-weight: bold;
+	background: #f7f7f7;
+}
+
+.gesamtspielplan .date-col {
+	width: 12px;
+	font-weight: bold;
+}
+
+.gesamtspielplan .column-group-title {
+	text-align: center;
+	font-weight: bold;
+	background: #efefef;
+}
+
+.gesamtspielplan .column-sub-title {
+	text-align: center;
+	font-weight: normal;
+	background: #f6f6f6;
+}
+
+.match-block {
+	position: relative;
+	padding: 4px 0;
+	border-bottom: 1px dotted #ddd;
+}
+
+.match-block:last-child {
+	border-bottom: 0;
+}
+
+.match-head-row, .opponent-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+.match-head-row {
+	font-weight: bold;
+}
+
+.head-left {
+	text-align: left;
+}
+
+.head-right {
+	text-align: right;
+	min-width: 18px;
+}
+
+.result-win .match-head-row, .result-win .opponent-row {
+	color: #1b7f1b;
+}
+
+.result-loss .match-head-row, .result-loss .opponent-row {
+	color: #bc1a1a;
+}
+
+.result-draw .match-head-row, .result-draw .opponent-row {
+	color: #666;
+}
+
+.betreuer-input {
+	width: 100%;
+	box-sizing: border-box;
+}
+.youth-match {
+	position: relative;
+	cursor: pointer;
+}
+
+.youth-match-overlay {
+	position: absolute;
+	inset: 0;
+	display: block;
+	z-index: 2;
+}
+
+.adult-match-overlay {
+	position: absolute;
+	inset: 0;
+	display: block;
+	z-index: 1;
+}
+
+.column-group-title-nav {
+	position: relative;
+	overflow: hidden;
+}
+
+.column-group-title-content {
+	position: relative;
+	z-index: 1;
+}
+
+.column-header-nav-button.ui-button {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	background: transparent !important;
+	border: 0 !important;
+	box-shadow: none !important;
+	z-index: 2;
+	cursor: pointer;
+}
+
+.column-header-nav-button .ui-button-text,
+.column-header-nav-button .ui-button-icon-left,
+.column-header-nav-button .ui-button-icon-right {
+	display: none;
+}
+
+.verf-dialog-footer-link {
+	margin-top: 12px;
+	text-align: center;
+}
+
+
+
+.verfuegbar-link {
+	font-weight: bold;
+}
+
+.verfuegbarkeit-counts .count-yes {
+	color: #1b7f1b;
+}
+
+.verfuegbarkeit-counts .count-no {
+	color: #bc1a1a;
+}
+
+.verf-dialog-title {
+	font-weight: bold;
+	margin-bottom: 10px;
+}
+
+.verf-row {
+	margin-top: 6px;
+	padding: 6px 8px;
+	border-radius: 6px;
+
+}
+
+.verf-panel-zugesagt .ui-panel-content {
+	background-color: #e6f4e8 !important;
+}
+
+.verf-panel-abgesagt .ui-panel-content {
+	background-color: #f8e3e3 !important;
+}
+
+.verf-panel-offen .ui-panel-content {
+	background-color: #ececec !important;
+}
+
+.verf-panel-zusatz-zugesagt .ui-panel-content {
+	background-color: #eeeeee !important;
+}
+
+
+.verf-panel-zugesagt .ui-panel-titlebar {
+	background-color: #33d17a !important;
+	border-color: #33d17a!important;
+	color: #1f4d2a !important;
+}
+
+.verf-panel-abgesagt .ui-panel-titlebar {
+	background-color: #e01b24 !important;
+	border-color: #e01b24!important;
+	color: #6b1e1e !important;
+}
+
+.verf-panel-offen .ui-panel-titlebar {
+	background-color: #f6d32d !important;
+	border-color: #f6d32d!important;
+	color: #333 !important;
+}
+.verf-panel-zusatz-zugesagt .ui-panel-titlebar {
+	background-color: #a3a3a3 !important;
+	border-color: #a3a3a3 !important;
+	color: #1f1f1f !important;
+}
+
+
+.verf-panel-zugesagt .ui-panel-title,
+.verf-panel-zugesagt .ui-panel-titlebar .ui-panel-titlebar-icon,
+.verf-panel-zugesagt .ui-panel-titlebar .ui-icon,
+.verf-panel-zugesagt .ui-panel-titlebar .pi,
+.verf-panel-abgesagt .ui-panel-title,
+.verf-panel-abgesagt .ui-panel-titlebar .ui-panel-titlebar-icon,
+.verf-panel-abgesagt .ui-panel-titlebar .ui-icon,
+.verf-panel-abgesagt .ui-panel-titlebar .pi,
+.verf-panel-offen .ui-panel-title,
+.verf-panel-offen .ui-panel-titlebar .ui-panel-titlebar-icon,
+.verf-panel-offen .ui-panel-titlebar .ui-icon,
+.verf-panel-offen .ui-panel-titlebar .pi,
+.verf-panel-zusatz-zugesagt .ui-panel-title,
+.verf-panel-zusatz-zugesagt .ui-panel-titlebar .ui-panel-titlebar-icon,
+.verf-panel-zusatz-zugesagt .ui-panel-titlebar .ui-icon,
+.verf-panel-zusatz-zugesagt .ui-panel-titlebar .pi {
+
+	color: inherit !important;
+}
+
+.verf-status {
+	color: #333;
+}
+
+
+
+.verf-rang {
+	color: #555;
+}
+
+
+.controls {
+	padding: 10px 12px;
+}
+
+.controls-centered {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+.betreuer-status-confirmed {
+	color: #1b7f1b;
+}
+
+.betreuer-status-declined {
+	color: #bc1a1a;
+}
+
+.betreuer-status-open {
+	color: #111;
+}
+
+.betreuer-status-info {
+	margin-top: 8px;
+	display: flex;
+	gap: 6px;
+}
+
+
+.controls .field {
+	display: inline-block;
+	margin-right: 12px;
+}
+
+.info-popup-trigger.ui-button {
+	border-radius: 50% !important;
+	width: 1.9rem !important;
+	height: 1.9rem !important;
+	min-width: 1.9rem !important;
+	max-width: 1.9rem !important;
+	min-height: 1.9rem !important;
+	max-height: 1.9rem !important;
+	flex: 0 0 1.9rem;
+	box-sizing: border-box;
+	aspect-ratio: 1/1;
+	padding: 0 !important;
+	line-height: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transform: none !important;
+	background: var(--button-bg-color) !important;
+	border-color: var(--button-bg-color) !important;
+}
+
+
+.adressliste-table .ui-datatable-data>tr>td.adress-info-column,
+	.adressliste-table .ui-datatable-thead>tr>th.adress-info-column {
+	width: 2.1rem !important;
+	min-width: 2.1rem !important;
+	max-width: 2.1rem !important;
+	white-space: nowrap;
+	padding-left: 0.1rem !important;
+	padding-right: 0.1rem !important;
+	text-align: center;
+}
+
+.adressliste-table .ui-datatable-data>tr>td.adress-info-column+
+	td {
+	padding-left: 0.2rem !important;
+}
+
+
+.adressliste-table .ui-datatable-data>tr>td.adress-info-column {
+overflow: visible;
+}
+
+.info-popup-trigger.ui-button .pi {
+	font-size: 1rem;
+}
+.adress-info-popup.ui-overlaypanel {
+	padding: 0 !important;
+	border: none !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+.adress-info-popup.ui-overlaypanel:before,
+.adress-info-popup.ui-overlaypanel:after {
+	display: none !important;
+}
+
+.adress-info-popup .ui-overlaypanel-content {
+	padding: 0;
+	border: none !important;
+	background: transparent !important;
+	
+}
+
+.adress-info-popup-card {
+	background: #f4f4f4;
+	border: 1px solid #7a7a7a;
+	min-width: 420px;
+}
+
+.adress-info-popup-header {
+	background: var(--panel-header-bg);
+	color: #fff;
+	padding: 8px 14px;
+	font-size: 1.9rem;
+	line-height: 1.2;
+	display: flex;
+	flex-direction: column;
+}
+
+.adress-info-popup-body {
+	padding: 12px 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.adress-info-popup-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+	border: 1px solid #87a9d9;
+	padding: 8px;
+}
+
+.adress-info-popup-grid>div {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.adress-info-popup-label {
+	font-weight: 700;
+}
+
+.adress-info-popup-note {
+	border: 1px solid #87a9d9;
+	padding: 6px;
+	min-height: 64px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.adress-info-popup-actions {
+	display: flex;
+	justify-content: center;
+	gap: 8px;
+	padding: 0 0 12px;
+}
+
+.adressliste-table-scroll {
+	overflow-x: auto;
+	padding-bottom: 6px;
+}
+
+.adressliste-table .ui-datatable-data>tr>td, .adressliste-table .ui-datatable-data>tr>td .ui-outputlabel,
+	.adressliste-table .ui-datatable-data>tr>td span {
+	white-space: normal;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	hyphens: auto;
+}
+
+.adressliste-table .ui-datatable-data>tr:hover>td {
+	background-color: #e9f2ff;
+	transition: background-color 0.12s ease-in-out;
+}
+
+.adressliste-table .adress-col-email {
+	width: 15%;
+}
+
+.adressliste-table .adress-col-plz {
+	width: 5%;
+}
+
+.adressliste-global-filter {
+	display: flex;
+	justify-content: flex-end;
+	padding: 0.25rem 0;
+}
+
+.adressliste-global-filter .ui-inputtext {
+	width: min(100%, 320px);
+}
+
+.adress-toolbar {
+	justify-content: space-between;
+	align-items: center;
+}
+
+.adress-toolbar-left, .adress-toolbar-center, .adress-toolbar-right {
+	flex: 1;
+	display: flex;
+	align-items: center;
+}
+
+.adress-toolbar-center {
+	justify-content: center;
+	gap: 10px;
+	flex-wrap: nowrap;
+}
+
+.adress-toolbar-right {
+	justify-content: flex-end;
+}
+
+@media
+(
+max-width
+:
+1400px)
+{
+.adress-info-popup-card {
+	min-width: min(92vw, 420px);
+}
+
+.adress-info-popup-header {
+	font-size: 1.35rem;
+}
+
+.adress-info-popup-grid {
+	grid-template-columns: 1fr;
+}
+
+.adress-info-popup-actions {
+	flex-wrap: wrap;
+}
+
+.adress-info-popup-actions .ui-button {
+	width: 100%;
+}
+
+.adressliste-table.ui-datatable-reflow .ui-datatable-data td .ui-column-title
+	{
+	display: none !important;
+}
+
+.adressliste-table.ui-datatable-reflow .ui-datatable-data td:before,
+	.adressliste-table .ui-datatable-data>tr>td::before {
+	content: none !important;
+	display: none !important;
+}
+
+.adressliste-table.ui-datatable-reflow .ui-datatable-data td {
+	padding-left: 0.75rem !important;
+	padding-right: 0.75rem !important;
+}
+
+.adressliste-table.ui-datatable-reflow .ui-datatable-data td.adress-info-column
+	{
+	overflow: visible;
+	display: table-cell;
+	width: 1%;
+	padding-left: 0.15rem !important;
+	padding-right: 0.15rem !important;
+}
+
+.adressliste-table.ui-datatable-reflow .ui-datatable-data td.adress-info-column .info-popup-trigger.ui-button
+	{
+	margin: 0;
+
+}
+
+@media ( max-width : 650px) {
+	.adress-toolbar {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 8px;
+	}
+	.adress-toolbar-left, .adress-toolbar-center, .adress-toolbar-right {
+		justify-content: center;
+		flex: 0 0 auto;
+		width: 100%;
+	}
+	.adress-toolbar-center {
+		flex-wrap: wrap;
+	}
+	.adress-toolbar-center .ui-button, .adress-toolbar-right .ui-button {
+		width: 100%;
+	}
+}
+
+.verfuegbar-container {
+	width: 100%;
+	max-width: 1000px;
+	margin: 0 auto;
+}
+
+.top-spieler {
+	max-width: 450px;
+	margin: 0 auto 1rem auto;
+}
+
+.spiel-block {
+	margin-bottom: 0.4rem;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.spiel-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 1rem;
+	padding: 0.45rem 0.6rem;
+	background: #d8d8d8;
+}
+
+.spiel-links {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 1rem;
+}
+
+.toggle-btn {
+	min-width: 1.2rem;
+	text-align: center;
+	font-weight: bold;
+	font-size: 1rem;
+	text-decoration: none;
+	color: #222;
+}
+
+.counts {
+	font-size: 1rem;
+	text-align: right;
+	line-height: 1.1;
+	cursor: default;
+}
+
+.c-ja {
+	color: #108a00;
+}
+
+.c-ja-unsicher {
+	color: #63aa31;
+}
+
+.c-nein-unsicher {
+	color: #e08282;
+}
+
+.c-nein {
+	color: #cf2f2f;
+}
+
+.c-notfall {
+	color: #222;
+}
+
+.inhalt {
+	background: #e7e7e7;
+	padding: 0.5rem 0.6rem;
+}
+
+.eingabe-zeile {
+	display: flex;
+	gap: 0.4rem;
+	flex-wrap: wrap;
+	margin-bottom: 0.4rem;
+}
+
+.eingabe-zeile .ui-autocomplete, .eingabe-zeile .ui-inputfield {
+	flex: 1 1 320px;
+}
+
+.eintrag-zeile {
+	padding: 0.15rem 0;
+	font-size: 0.92rem;
+}
+
+.andere-mannschaft {
+	font-size: 0.8rem;
+	color: #666;
+	margin-left: 0.35rem;
+}
+.column-group-title:hover {
+    background-color: #f3f3f3;
+}
+
+}

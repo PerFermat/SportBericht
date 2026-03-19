@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>Verfügbarkeit</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{verfuegbarBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet name="css/styles.css" />
+	<style>
+.verfuegbar-container {
+	width: 100%;
+	max-width: 1000px;
+	margin: 0 auto;
+}
+
+.top-spieler {
+	max-width: 450px;
+	margin: 0 auto 1rem auto;
+}
+
+.spiel-block {
+	margin-bottom: 0.4rem;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.spiel-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 1rem;
+	padding: 0.45rem 0.6rem;
+	background: #d8d8d8;
+}
+
+.spiel-links {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 1rem;
+}
+
+.toggle-btn {
+	min-width: 1.2rem;
+	text-align: center;
+	font-weight: bold;
+	font-size: 1rem;
+	text-decoration: none;
+	color: #222;
+}
+
+.counts {
+	font-size: 1rem;
+	text-align: right;
+	line-height: 1.1;
+	cursor: default;
+}
+
+.c-ja {
+	color: #108a00;
+}
+
+.c-ja-unsicher {
+	color: #63aa31;
+}
+
+.c-nein-unsicher {
+	color: #e08282;
+}
+
+.c-nein {
+	color: #cf2f2f;
+}
+
+.c-notfall {
+	color: #222;
+}
+
+.inhalt {
+	background: #e7e7e7;
+	padding: 0.5rem 0.6rem;
+}
+
+.eingabe-zeile {
+	display: flex;
+	gap: 0.7rem;
+	flex-wrap: wrap;
+	margin-bottom: 0.4rem;
+}
+
+.verfuegbarkeit-zeile {
+	display: flex;
+	align-items: stretch;
+	gap: 0.55rem;
+	flex: 0 0 auto;
+}
+
+.verfuegbarkeit-select {
+	width: 150px !important;
+	min-width: 150px;
+	flex: 0 0 150px;
+}
+
+.verfuegbarkeit-loeschen {
+	width: 2.35rem !important;
+	height: 2.35rem !important;
+	min-width: 2.35rem;
+	padding: 0 !important;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.zusatzinfo-feld {
+	flex: 1 1 320px;
+}
+
+@media ( max-width : 640px) {
+	.zusatzinfo-feld {
+		flex-basis: 100%;
+	}
+}
+
+.eingabe-z
+.eingabe-zeile .ui-autocomplete, .eingabe-zeile .ui-inputfield {
+	flex: 1 1 320px;
+}
+
+.eintrag-zeile {
+	padding: 0.15rem 0;
+	font-size: 0.92rem;
+}
+
+.andere-mannschaft {
+	font-size: 0.8rem;
+	color: #666;
+	margin-left: 0.35rem;
+}
+</style>
+</h:head>
+
+<h:body>
+	<div class="tabheader-area"></div>
+
+	<h:form>
+		<div class="tabheader-area">
+			<h:outputLink value="#{verfuegbarBean.vereinHomepage}"
+				target="_blank">
+				<img src="#{verfuegbarBean.bestimmenIcon}"
+					style="vertical-align: middle;" width="50" />
+			</h:outputLink>
+			<h2>
+				Verfügbarkeit melden
+				<h:outputText
+					value="- #{verfuegbarBean.mannschaft} (#{verfuegbarBean.liga})"
+					rendered="#{not empty verfuegbarBean.mannschaft}" />
+			</h2>
+			<p:commandButton value="Zurück"
+				action="#{verfuegbarBean.ruecksprung}" immediate="true"
+				rendered="#{not empty verfuegbarBean.ruecksprung}">
+				<f:param name="vereinnr" value="#{verfuegbarBean.vereinnr}" />
+			</p:commandButton>
+		</div>
+	</h:form>
+	<div class="verfuegbar-container">
+		<h:form id="verfuegbarForm">
+			<p>
+				Bitte gib hier an, an welchen Spieltagen du verfügbar bist. Das
+				erleichtert die Planung der Aufstellungen. Wählt zuerst euren Namen
+				aus und gebt eure Verfügbarkeit dann bei den einzelnen Spielen an.
+				Die Verfügbarkeit kann jederzeit vor dem Spiel noch geändert werden.
+				<br /> <br /> <strong>Hinweis:</strong> Eine „Ja“-Rückmeldung
+				bedeutet noch nicht, dass du an diesem Spiel tatsächlich eingesetzt
+				wirst. Die endgültige Aufstellung wird vom Mannschaftsführer erst
+				kurz vor dem Spiel festgelegt. <br /> <br /> Im Feld für
+				Zusatzinfos kannst du bei Bedarf weitere Hinweise angeben, zum
+				Beispiel: „Bitte spätestens 7 Tage vorher Bescheid geben, wenn ich
+				spielen soll, sonst sage ich anderweitig zu.“
+			</p>
+			<div class="top-spieler">
+				<p:selectOneMenu id="spieler"
+					value="#{verfuegbarBean.selectedSpieler}" style="width:100%;"
+					filter="true" filterMatchMode="contains">
+
+					<f:selectItem itemLabel="Spieler auswählen" itemValue="#{null}"
+						noSelectionOption="true" />
+
+					<f:selectItems value="#{verfuegbarBean.spielerNamen}" var="spieler"
+						itemLabel="#{spieler}" itemValue="#{spieler}" />
+
+					<p:ajax event="change"
+						listener="#{verfuegbarBean.onSpielerAenderung}" update="@form"
+						process="@this" />
+
+				</p:selectOneMenu>
+
+
+			</div>
+
+			<ui:repeat value="#{verfuegbarBean.spiele}" var="spiel">
+				<div class="spiel-block">
+					<div class="spiel-header">
+						<div class="spiel-links">
+							<p:commandLink value="#{verfuegbarBean.getToggleSymbol(spiel)}"
+								actionListener="#{verfuegbarBean.toggleSpiel(spiel)}"
+								update="@form" process="@this" styleClass="toggle-btn" />
+							<strong> <h:outputText
+									value="#{spiel.wochentag} #{spiel.datum} #{spiel.zeit}" />
+							</strong> <br />
+							<h:outputText value="#{spiel.heim} - #{spiel.gast}" />
+						</div>
+						<div class="counts">
+							<span class="c-ja" title="Ja">#{verfuegbarBean.getAnzahl(spiel,
+								'Ja')}</span> / <span class="c-ja-unsicher"
+								title="Ja (aber noch nicht sicher)">#{verfuegbarBean.getAnzahl(spiel,
+								'Ja (aber noch nicht sicher)')}</span> / <span class="c-nein-unsicher"
+								title="Nein (aber noch nicht sicher)">#{verfuegbarBean.getAnzahl(spiel,
+								'Nein (aber noch nicht sicher)')}</span> / <span class="c-nein"
+								title="Nein">#{verfuegbarBean.getAnzahl(spiel, 'Nein')}</span> /
+							<span class="c-notfall" title="Ja (im Notfall)">#{verfuegbarBean.getAnzahl(spiel,
+								'Ja (im Notfall)')}</span>
+						</div>
+					</div>
+
+					<h:panelGroup rendered="#{not verfuegbarBean.isCollapsed(spiel)}">
+						<div class="inhalt">
+							<h:panelGroup
+								rendered="#{not empty verfuegbarBean.selectedSpieler}">
+								<div class="eingabe-zeile">
+									<h:panelGroup styleClass="verfuegbarkeit-zeile">
+
+										<p:selectOneMenu
+											value="#{verfuegbarBean.verfuegbarkeitBySpiel[verfuegbarBean.getSpielKey(spiel)]}"
+											styleClass="verfuegbarkeit-select">
+
+											<f:selectItem itemLabel="Verfügbarkeit" itemValue="#{null}"
+												noSelectionOption="false" />
+											<f:selectItems value="#{verfuegbarBean.verfuegbarkeiten}" />
+
+											<p:ajax event="change"
+												listener="#{verfuegbarBean.speichereSpiel(spiel)}"
+												process="@this" update="@form" />
+										</p:selectOneMenu>
+
+										<p:commandButton icon="pi pi-times" process="@this"
+											update="@form" action="#{verfuegbarBean.loescheSpiel(spiel)}"
+											styleClass="ui-button-danger verfuegbarkeit-loeschen"
+											title="Eintrag löschen" />
+
+									</h:panelGroup>
+									<p:inputText styleClass="zusatzinfo-feld"
+										value="#{verfuegbarBean.kommentarBySpiel[verfuegbarBean.getSpielKey(spiel)]}"
+										placeholder="Freitext / Zusatzinfo" style="width:100%;">
+										<p:ajax event="change"
+											listener="#{verfuegbarBean.speichereSpiel(spiel)}"
+											process="@this" update="@form" />
+									</p:inputText>
+								</div>
+							</h:panelGroup>
+
+							<ui:repeat value="#{verfuegbarBean.getEintraege(spiel)}"
+								var="eintrag">
+								<div class="eintrag-zeile">
+									<strong>#{eintrag.anzeigeName}</strong>
+									<h:outputText value="(andere Mannschaft)"
+										styleClass="andere-mannschaft"
+										rendered="#{eintrag.andereMannschaft}" />
+									: #{eintrag.verfuegbarkeit} #{empty eintrag.kommentar ? '' : '
+									| '}#{eintrag.kommentar}
+								</div>
+							</ui:repeat>
+						</div>
+					</h:panelGroup>
+				</div>
+			</ui:repeat>
+		</h:form>
+	</div>
+</h:body>
+</html>

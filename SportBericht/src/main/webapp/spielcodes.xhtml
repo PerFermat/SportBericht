@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>Spielcodes – #{spielcodesBean.verein}</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{spielcodesBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet name="css/styles.css" />
+</h:head>
+
+<h:body>
+	<div class="tabheader-area">
+		<h2>Spielcodes – #{spielcodesBean.verein}</h2>
+	</div>
+
+	<p:growl id="growl" widgetVar="copyGrowl" showDetail="true" life="2500" />
+
+
+
+	<div class="tabellen-container">
+		<h:form>
+			<p:dataTable value="#{spielcodesBean.spiele}" var="spiel" border="1"
+				styleClass="tabelle">
+				<p:column headerText="Liga" styleClass="col-liga">
+					<h:outputText value="#{spiel.liga}" />
+				</p:column>
+
+				<p:column headerText="Datum" styleClass="col-datum">
+					<h:outputText value="#{spiel.datum}" />
+				</p:column>
+
+				<p:column headerText="Zeit" styleClass="col-datum">
+					<h:outputText value="#{spiel.zeit}" />
+				</p:column>
+
+				<p:column headerText="Heimmannschaft" styleClass="col-heim">
+					<h:outputText value="#{spiel.heim}" />
+				</p:column>
+
+				<p:column headerText="Gastmannschaft" styleClass="col-gast">
+					<h:outputText value="#{spiel.gast}" />
+				</p:column>
+
+				<p:column headerText="Spiel-Code" styleClass="col-code">
+					<h:panelGroup rendered="#{spiel.spielcodeGefunden}"
+						style="cursor: copy;" title="Klicken zum Kopieren"
+						pt:onclick="copyToClipboard(this.textContent);">
+						<h:outputText value="#{spiel.spielCode}" />
+					</h:panelGroup>
+					<h:panelGroup rendered="#{not spiel.spielcodeGefunden}">
+						<h:outputText value="nicht gefunden" />
+					</h:panelGroup>
+				</p:column>
+
+				<p:column headerText="PIN" styleClass="col-pin">
+					<h:panelGroup rendered="#{spiel.spielcodeGefunden}"
+						style="cursor: copy;" title="Klicken zum Kopieren"
+						pt:onclick="copyToClipboard(this.textContent);">
+						<h:outputText value="#{spiel.pin}" />
+					</h:panelGroup>
+					<h:panelGroup rendered="#{not spiel.spielcodeGefunden}">
+						<h:outputText value="nicht gefunden" />
+					</h:panelGroup>
+				</p:column>
+			</p:dataTable>
+		</h:form>
+	</div>
+
+	<h:outputScript target="body">
+		function fallbackCopy(value) {
+			var tempInput = document.createElement("textarea");
+			tempInput.value = value;
+			tempInput.setAttribute("readonly", "");
+			tempInput.style.position = "fixed";
+			tempInput.style.top = "0";
+			tempInput.style.left = "-9999px";
+			document.body.appendChild(tempInput);
+			tempInput.focus();
+			tempInput.select();
+			document.execCommand("copy");
+			document.body.removeChild(tempInput);
+		}
+
+		function zeigeKopiertMeldung(value) {
+		var message = {
+				severity: "info",
+				summary: "Kopiert",
+				detail: "Wert in die Zwischenablage kopiert: " + value
+			};
+
+			if (window.PF) {
+				var growlWidget = PF("copyGrowl");
+				if (growlWidget &amp;&amp; growlWidget.renderMessage) {
+					growlWidget.renderMessage(message);
+					return;
+				}
+			}
+
+		
+			if (window.PrimeFaces &amp;&amp; PrimeFaces.showMessage) {
+							PrimeFaces.showMessage(message);
+			}
+		}
+
+		function copyToClipboard(value) {
+			if (!value) {
+				return;
+			}
+
+			if (navigator.clipboard &amp;&amp; navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(value).then(function() {
+					zeigeKopiertMeldung(value);
+				}).catch(function() {
+					fallbackCopy(value);
+					zeigeKopiertMeldung(value);
+				});
+				return;
+			}
+
+			fallbackCopy(value);
+			zeigeKopiertMeldung(value);
+		}
+
+	</h:outputScript>
+	<h:outputScript target="body">
+		(function() {
+			var debouncedTimer;
+
+			function sendHeightToParent() {
+				if (window.parent === window) {
+					return;
+				}
+
+				var body = document.body;
+				var html = document.documentElement;
+				var height = Math.max(
+					body ? body.scrollHeight : 0,
+					body ? body.offsetHeight : 0,
+					html ? html.clientHeight : 0,
+					html ? html.scrollHeight : 0,
+					html ? html.offsetHeight : 0
+				);
+
+				window.parent.postMessage(height, "*");
+			}
+
+			function scheduleHeightUpdate() {
+				window.clearTimeout(debouncedTimer);
+				debouncedTimer = window.setTimeout(sendHeightToParent, 100);
+			}
+
+			document.addEventListener("DOMContentLoaded", scheduleHeightUpdate);
+			window.addEventListener("load", scheduleHeightUpdate);
+			window.addEventListener("resize", scheduleHeightUpdate);
+
+			if (window.PrimeFaces &amp;&amp; PrimeFaces.ajax) {
+				PrimeFaces.ajax.Queue.addOnComplete(scheduleHeightUpdate);
+			}
+
+			if (window.MutationObserver) {
+				var observer = new MutationObserver(scheduleHeightUpdate);
+				observer.observe(document.body, {
+					childList: true,
+					subtree: true,
+					attributes: true,
+					characterData: true
+				});
+			}
+
+			scheduleHeightUpdate();
+		})();
+	</h:outputScript>	
+</h:body>
+</html>

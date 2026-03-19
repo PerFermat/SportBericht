@@ -1,0 +1,80 @@
+
+╔════════════════════════════════════════════════════════════════════════════════════════╗
+║        REFACTORING-ANALYSE STATISTIK - TischtennisBericht Projekt                      ║
+╚════════════════════════════════════════════════════════════════════════════════════════╝
+
+📊 GESAMTSTATISTIKEN
+─────────────────────────────────────────────────────────────────────────────────────────
+  • Gesamte Java-Dateien analysiert:        73
+  • Gesamte öffentliche Methoden:           780
+  • Umzubenennende Methoden:                780
+  • Aufwandsschätzung:                      3-5 Tage mit vollständigem Testing
+
+📦 VERTEILUNG NACH KATEGORIEN
+─────────────────────────────────────────────────────────────────────────────────────────
+  • Controller (Sonstiges)............................  780 Einträge
+
+🔄 METHODENTYP-VERTEILUNG
+─────────────────────────────────────────────────────────────────────────────────────────
+  • Getter............................................  410 ( 52.6%)
+  • Setter............................................  275 ( 35.3%)
+  • Geschäftslogik....................................   41 (  5.3%)
+  • Boolean-Check.....................................   29 (  3.7%)
+  • Has-Check.........................................   25 (  3.2%)
+
+📝 UMBENENNUNGSMUSTER
+─────────────────────────────────────────────────────────────────────────────────────────
+  ✓ Getter-Methoden:       get*()  →  hole*()
+  ✓ Setter-Methoden:       set*()  →  setze*()
+  ✓ Boolean-Checks:        is*()   →  ist*()
+  ✓ Has-Checks:            has*()  →  hat*()
+  ✓ Geschäftslogik:        Custom  →  German naming
+  ✓ Service-Klassen:       *Service  →  *Verwaltung / *Service
+  ✓ Controller-Klassen:    *Bean  →  *Controller
+  ✓ Entities:              *Data / *Entry  →  *Daten / *Eintrag
+
+🗂️ DATEIAUSGABEN
+─────────────────────────────────────────────────────────────────────────────────────────
+  1️⃣  REFACTORING_UMBENENNUNGSVORSCHLAEGE.md
+     → Detaillierter Bericht mit allen Klassen, Methoden und Vorschlägen
+     → Gruppiert nach Kategorien (Controller, Service, Utility, etc.)
+     → Mit Anwendungshinweisen und Best-Practices
+
+  2️⃣  REFACTORING_UMBENENNUNGEN.csv
+     → Maschinenlesbares Format für Automatisierung
+     → Spalten: Kategorie | OldClassName | NewClassName | Path | OldMethod | NewMethod | ReturnType
+     → Ideal für Import in Refactoring-Tools
+
+📋 EMPFOHLENE VORGEHENSWEISE
+─────────────────────────────────────────────────────────────────────────────────────────
+  1. Feature-Branch erstellen: git checkout -b refactor/german-naming
+  2. Jede Klasse einzeln refaktorieren
+  3. Nach jeder Klasse: mvn clean compile
+  4. Nach Klasse-Gruppe: Alle Tests ausführen
+  5. Regelmäßige Commits: git commit -m "refactor: rename [ClassName] to German"
+  6. Pull Request erstellen zum Mergen in main-Branch
+
+🔗 ABHÄNGIGKEITSANALYSE
+─────────────────────────────────────────────────────────────────────────────────────────
+  Kritische Abhängigkeiten (sollten ZUERST refaktoriert werden):
+  • ConfigManager (statische Utility-Klasse, viel verwendet)
+  • NamensSpeicher (Service-Abhängigkeit)
+  • DatabaseService (zentrale Service-Klasse)
+  • BerichtHelper (Hilfsfunktionen, viel verwendet)
+
+  Nach der Umbenennung dieser Kern-Klassen werden die Abhängigkeiten automatisch
+  aktualisiert, wenn die IDE-Refactoring-Tools korrekt verwendet werden.
+
+✅ QUALITÄTSSICHERUNG
+─────────────────────────────────────────────────────────────────────────────────────────
+  ☐ Kompilation erfolgreich (mvn clean compile)
+  ☐ Unit-Tests bestanden (mvn test)
+  ☐ Integration-Tests bestanden
+  ☐ Code-Review durchgeführt
+  ☐ Keine Breaking Changes in APIs
+  ☐ Dokumentation aktualisiert
+  ☐ JavaDoc kommentiert
+
+════════════════════════════════════════════════════════════════════════════════════════════
+Generiert: 31. Januar 2026 | Projekt: TischtennisBericht | Version: 1.0
+════════════════════════════════════════════════════════════════════════════════════════════

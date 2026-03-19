@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<title>KI-Bericht</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{berichtkiBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet library="css" name="styles.css" />
+	<h:outputScript library="js" name="script.js" target="head" />
+</h:head>
+
+<h:body>
+	<h:form id="kiBerichtForm">
+
+		<!-- Header-Bereich zentriert -->
+		<div class="header-area">
+			<h2>Mit KI einen Bericht erstellen</h2>
+			<p:link value="Spielbericht ansehen" target="_blank"
+				href="#{berichtkiBean.ergebnisLink}"
+				rendered="#{not berichtkiBean.freierBericht}" />
+			<h3>
+				<h:outputText value="#{berichtkiBean.liga}" />
+				<h:outputText value=": " />
+				<h:outputText value="#{berichtkiBean.heim}" />
+				<h:outputText value=" - " />
+				<h:outputText value="#{berichtkiBean.gast}" />
+				<h:outputText value=" (" />
+				<h:outputText value="#{berichtkiBean.datum}" />
+				<h:outputText value=") " />
+				<h:outputText value="#{berichtkiBean.ergebnis}" />
+			</h3>
+			<br />
+		</div>
+
+		<div class="responsive-container">
+			<div class="text-input">
+
+				<div class="text-container">
+					<!-- Hinweise (Text abhängig vom Vorhandensein des Spielberichts) -->
+					<h:outputText value="Was soll im Bericht erwähnt werden: " />
+					<br />
+					<!-- Besondere Vorkommnisse in einem hellblauen Panel -->
+					<p:inputTextarea id="bvBericht"
+						value="#{berichtkiBean.besondereVorkommnisse}" rows="5"
+						styleClass="my-custom-box" />
+					<br />
+					<p:panel header="Erweiterte Einstellungen für den Bericht:"
+						toggleable="true" collapsed="#{berichtkiBean.panelCollapsed}">
+
+						<h:outputText value="Berichtsperspektive: " />
+						<p:selectOneMenu value="#{berichtkiBean.berichtMannschaft}">
+							<p:ajax event="change" process="@this" update="@form" />
+
+							<f:selectItem itemLabel="Mannschaft auswählen"
+								itemValue="#{berichtkiBean.berichtMannschaft}"
+								noSelectionOption="false" />
+							<f:selectItems value="#{berichtkiBean.spielPaarung}" />
+						</p:selectOneMenu>
+						<br />
+						<hr style="width: 100%; border: 1px solid #ccc;" />
+						<br />
+						<p:outputLabel id="berichtLabel" for="berichtgroesseInput"
+							value="Berichtsgröße:" />
+						<p:tooltip for="berichtLabel">
+							"Gewünschte Anzahl der Wörter im Bericht." 
+						</p:tooltip>
+						<p:inputText id="berichtgroesseInput"
+							value="#{berichtkiBean.berichtgroesse}"
+							style="width: 50px; text-align: center;">
+							<p:ajax event="keyup" listener="#{berichtkiBean.onSlide}"
+								update="berichtgroesseOutput" />
+						</p:inputText>
+
+						<p:slider for="berichtgroesseInput" minValue="50" maxValue="500"
+							step="10">
+							<p:ajax event="slideEnd" listener="#{berichtkiBean.onSlide}"
+								update="berichtgroesseOutput" />
+						</p:slider>
+
+						<h:outputText id="berichtgroesseOutput"
+							value="#{berichtkiBean.berichtgroesse}" />
+						<br />
+						<hr style="width: 100%; border: 1px solid #ccc;" />
+						<br />
+						<h:outputText
+							value="In welchem Schreibstil soll der Bericht geschrieben werden: " />
+						<br />
+						<h:outputText
+							value="Es können bis zu 3 verschiedene Stilarten ausgewählt werden (mit Strg+Linke Maustaste) " />
+						<div class="slider-container slider-container-panel-bg">
+
+							<p:selectManyMenu value="#{berichtkiBean.wirkung}"
+								style="display: block; width: 50%;">
+								<p:ajax event="change" update="wirkungBeispielText" />
+								<f:selectItem itemLabel="" itemValue="#{berichtkiBean.wirkung}"
+									noSelectionOption="false" />
+								<f:selectItems value="#{berichtkiBean.wirkungen}" />
+							</p:selectManyMenu>
+
+							<h:outputText id="wirkungBeispielText" escape="false"
+								value="#{berichtkiBean.wirkungBeispiel}"
+								style="display: block; width: 50%;" />
+						</div>
+					</p:panel>
+					<p:panel header="Optionale Standard KI-Übergaben:"
+						toggleable="true" collapsed="true"
+						rendered="#{not berichtkiBean.freierBericht}">
+						<h:outputText
+							value="Sollen die optionele KI-Übergaben verwendet werden: " />
+						<p:selectBooleanCheckbox value="#{berichtkiBean.zusaetzlicheJSON}">
+							<p:ajax process="@this" />
+						</p:selectBooleanCheckbox>
+						<br />
+						<br />
+						<h:outputText value="Link Spielplan/Tabelle (optional): " />
+						<p:inputText id="tabelleUrl1" value="#{berichtkiBean.tabelleUrl}"
+							styleClass="my-custom-box" />
+						<br />
+						<br />
+						<h:outputText value="Link Bilanzen (optional): " />
+						<p:inputText id="bilanzUrl1" value="#{berichtkiBean.bilanzUrl}"
+							styleClass="my-custom-box" />
+						<br />
+						<br />
+					</p:panel>
+					<p:panel header="Optionale KI-Übergaben bei einem Freier Bericht:"
+						toggleable="true" collapsed="true"
+						rendered="#{berichtkiBean.freierBericht}">
+						<h:outputText
+							value="Sollen die optionele KI-Übergaben verwendet werden: " />
+						<p:selectBooleanCheckbox value="#{berichtkiBean.zusaetzlicheJSON}">
+							<p:ajax process="@this" />
+						</p:selectBooleanCheckbox>
+						<br />
+						<br />
+						<h:outputText value="Mannschaft eingeben: " />
+						<p:inputText id="freiMannschaft"
+							value="#{berichtkiBean.freiMannschaft}" />
+						<br />
+						<br />
+						<h:outputText value="Hier kann die KI-Eingabe angepasst werden " />
+						<br />
+						<p:inputTextarea id="freiPrompt"
+							value="#{berichtkiBean.freiPrompt}" rows="10"
+							styleClass="my-custom-box" />
+						<br />
+						<br />
+						<h:outputText value="Link Spielplan/Tabelle (optional): " />
+						<p:inputText id="tabelleUrl" value="#{berichtkiBean.tabelleUrl}"
+							styleClass="my-custom-box" />
+						<br />
+						<br />
+						<h:outputText value="Link Bilanzen (optional): " />
+						<p:inputText id="bilanzUrl" value="#{berichtkiBean.bilanzUrl}"
+							styleClass="my-custom-box" />
+						<br />
+						<br />
+					</p:panel>
+					<p:panel header="Mehrere Berichte zusammenfassen:"
+						toggleable="true" collapsed="true"
+						rendered="#{berichtkiBean.freierBericht}">
+						<h:outputText
+							value="Sollen mehrere Berichte zusammengefasst werden: " />
+						<p:selectBooleanCheckbox value="#{berichtkiBean.mehrereBerichte}">
+							<p:ajax process="@this" />
+						</p:selectBooleanCheckbox>
+						<br />
+						<br />
+						<p:inputTextarea id="zusammenfassenPrompt"
+							value="#{berichtkiBean.zusammenfassenPrompt}" rows="10"
+							styleClass="my-custom-box" />
+						<br />
+						<br />
+						<h:outputText
+							value="Folgende Berichte zusammenfassen (mit Strg+Linke Maustaste) " />
+						<div
+							class="slider-container slider-container-panel-bg bericht-layout">
+
+							<!-- LINKS -->
+							<div class="bericht-menu">
+								<p:selectManyMenu value="#{berichtkiBean.bericht}"
+									style="width:100%;">
+									<p:ajax process="@this" update="berichtePanel" />
+									<f:selectItems value="#{berichtkiBean.berichte}" />
+								</p:selectManyMenu>
+							</div>
+
+							<!-- RECHTS -->
+							<div class="bericht-inhalt">
+								<p:outputPanel id="berichtePanel" styleClass="bericht-repeat">
+
+									<ui:repeat value="#{berichtkiBean.zusammenfassenTexte}"
+										var="spiel">
+
+										<p:panel header="#{spiel.ueberschrift}" toggleable="true"
+											collapsed="true" style="width:100%;">
+
+											<h:outputText escape="false" value="#{spiel.text}" />
+
+										</p:panel>
+
+									</ui:repeat>
+
+								</p:outputPanel>
+							</div>
+
+						</div>
+
+
+						<br />
+					</p:panel>
+					<p:panel header="Erweiterte Einstellungen des KI-Moduls"
+						toggleable="true"
+						collapsed="#{berichtkiBean.berichtMannschaft eq null ? false : true}">
+
+						<h:outputText value="Gewünschtes KI-Model auswählen: " />
+						<p:selectOneMenu value="#{berichtkiBean.selectedModel}">
+							<f:selectItem itemLabel="Modell auswählen" itemValue=""
+								noSelectionOption="true" />
+							<f:selectItems value="#{berichtkiBean.modelle}" />
+						</p:selectOneMenu>
+						<br />
+						<br />
+						<h:outputText value="Gewünschtes Thinking-Methode auswählen: " />
+						<p:selectOneMenu value="#{berichtkiBean.selectedThinking}">
+							<f:selectItem itemLabel="Modell auswählen" itemValue=""
+								noSelectionOption="true" />
+							<f:selectItems value="#{berichtkiBean.thinking}" />
+						</p:selectOneMenu>
+						<br />
+						<br />
+						<p:outputLabel id="temperaturLabel" for="temperaturInput"
+							value="Temperatur:" />
+						<p:tooltip for="temperaturLabel">
+							"Die Temperatur steuert die Kreativität von ChatGPT: <br />
+Die Temperatur kann Werte von 0.0 bis 2.0 annehmen. In der Praxis haben sich Werte im Bereich von 0.2 bis 1.0 bewährt:  <br />
+    0.0 – 0.3: sehr sachlich, zuverlässig, aber wenig kreativ  <br />
+    0.4 – 0.7: ausgewogene Mischung aus Klarheit und Stil (empfohlen für Vereinsberichte) <br />
+    0.8 – 1.0: freier, origineller – aber auch potenziell ungenauer  <br />
+    > 1.0: experimentell, oft unvorhersehbar – für Standardberichte nicht empfohlen   <br />
+						</p:tooltip>
+						<p:inputText id="temperaturInput"
+							value="#{berichtkiBean.temperatur}">
+							<p:ajax event="keyup" listener="#{berichtkiBean.onSlide}"
+								update="temperaturOutput" />
+						</p:inputText>
+
+						<p:slider for="temperaturInput" minValue="0" maxValue="1.5"
+							step="0.1">
+							<p:ajax event="slideEnd" listener="#{berichtkiBean.onSlide}"
+								update="temperaturOutput" />
+						</p:slider>
+
+						<h:outputText id="temperaturOutput"
+							value="#{berichtkiBean.temperatur}" />
+
+						<br />
+						<p:outputLabel id="frequencyLabel" for="frequencyInput"
+							value="Wiederholungsstrafe (frequency_penalty);" />
+						<p:tooltip for="frequencyLabel">
+Wiederholungsstrafe (frequency_penalty) <br />
+Steuert, wie stark Wiederholungen von Wörtern in der Ausgabe vermieden werden sollen.<br />
+– Wert 0.0 = keine Einschränkung (Standard)  <br />
+– Höhere Werte (z. B. 0.5) = das Modell vermeidet Wiederholungen wie z. B. „sehr sehr gut“<br />
+Empfohlen:  <br />
+– 0.0 für neutrale Textanalyse oder Korrekturen  <br />
+– 0.4–0.7 für stilistische Vielfalt bei kreativen Texten<br />
+						</p:tooltip>
+						<p:inputText id="frequencyInput"
+							value="#{berichtkiBean.frequencyPenalty}">
+							<p:ajax event="keyup" listener="#{berichtkiBean.onSlide}"
+								update="frequencyOutput" />
+						</p:inputText>
+
+						<p:slider for="frequencyInput" minValue="-2" maxValue="2"
+							step="0.1">
+							<p:ajax event="slideEnd" listener="#{berichtkiBean.onSlide}"
+								update="frequencyOutput" />
+						</p:slider>
+
+						<h:outputText id="frequencyOutput"
+							value="#{berichtkiBean.frequencyPenalty}" />
+
+						<br />
+						<p:outputLabel id="presenceLabel" for="presenceInput"
+							value="Themenvielfalt / Neuheit (presence_penalty):" />
+						<p:tooltip for="presenceLabel">
+ Themenvielfalt / Neuheit (presence_penalty) <br />
+Steuert, wie stark das Modell dazu ermutigt wird, neue Wörter oder Konzepte einzuführen, die bisher noch nicht genannt wurden. <br />
+– Wert 0.0 = neutral (Standard)   <br />
+– Höhere Werte (z. B. 0.6) = Modell bringt eher neue Ideen ins Spiel <br />
+Empfohlen:   <br />
+– 0.0 für objektive Textprüfung   <br />
+– 0.4–0.8 für kreative oder abwechslungsreiche Textgenerierung <br />
+						</p:tooltip>
+						<p:inputText id="presenceInput"
+							value="#{berichtkiBean.presencePenalty}">
+							<p:ajax event="keyup" listener="#{berichtkiBean.onSlide}"
+								update="presenceOutput" />
+						</p:inputText>
+
+						<p:slider for="presenceInput" minValue="-2" maxValue="2"
+							step="0.1">
+							<p:ajax event="slideEnd" listener="#{berichtkiBean.onSlide}"
+								update="presenceOutput" />
+						</p:slider>
+
+						<h:outputText id="presenceOutput"
+							value="#{berichtkiBean.presencePenalty}" />
+						<br />
+						<p:commandButton value="Nur KI-Prompt erzeugen"
+							action="#{berichtkiBean.generieren}" update="@form , :growl"
+							disabled="#{berichtkiBean.berichtMannschaft eq null}">
+							<f:param name="prompt" value="true" />
+						</p:commandButton>
+					</p:panel>
+				</div>
+				<br />
+				<div class="button-container">
+					<p:commandButton value="Bericht generieren"
+						action="#{berichtkiBean.generieren}" update="@form, :growl"
+						disabled="#{berichtkiBean.berichtMannschaft eq null}">
+						<f:param name="prompt" value="false" />
+					</p:commandButton>
+					<!-- Zurück-Button -->
+					<p:commandButton value="Zurück" action="bericht.xhtml"
+						actionListener="#{berichtkiBean.zurueck}" immediate="true">
+						<f:param name="vereinnr" value="#{berichtkiBean.vereinnr}" />
+						<f:param name="heim" value="#{berichtkiBean.heim}" />
+						<f:param name="gast" value="#{berichtkiBean.gast}" />
+						<f:param name="datum" value="#{berichtkiBean.datum}" />
+						<f:param name="ergebnis" value="#{berichtkiBean.ergebnis}" />
+						<f:param name="ergebnisLink" value="#{berichtkiBean.ergebnisLink}" />
+						<f:param name="uuid" value="#{berichtkiBean.uuid}" />
+						<f:param name="liga" value="#{berichtkiBean.liga}" />
+					</p:commandButton>
+				</div>
+
+				<br />
+				<ui:repeat value="#{berichtkiBean.berichtText}" var="spiel"
+					varStatus="status">
+					<div class="text-container">
+						<h4>Generierter Bericht: #{spiel.variante}</h4>
+						<p>#{spiel.stilversion}</p>
+						<h5>Anzahl KI-Generierungen (max 5 möglich):
+							#{berichtkiBean.anzahlKi}</h5>
+						<p:inputTextarea value="#{spiel.text}" readonly="true" rows="10"
+							autoResize="false" />
+						<br />
+
+						<div class="button4-container">
+							<!-- Speichern-Button -->
+							<p:commandButton value="Bericht übernehmen"
+								action="bericht.xhtml"
+								actionListener="#{berichtkiBean.speichern(status.index)}"
+								immediate="true" update="@form">
+								<f:param name="vereinnr" value="#{berichtkiBean.vereinnr}" />
+								<f:param name="heim" value="#{berichtkiBean.heim}" />
+								<f:param name="gast" value="#{berichtkiBean.gast}" />
+								<f:param name="datum" value="#{berichtkiBean.datum}" />
+								<f:param name="ergebnis" value="#{berichtkiBean.ergebnis}" />
+								<f:param name="ergebnisLink"
+									value="#{berichtkiBean.ergebnisLink}" />
+								<f:param name="uuid" value="#{berichtkiBean.uuid}" />
+								<f:param name="liga" value="#{berichtkiBean.liga}" />
+							</p:commandButton>
+
+							<!-- Zurück-Button -->
+							<p:commandButton value="Zurück" action="bericht.xhtml"
+								actionListener="#{berichtkiBean.zurueck}" immediate="true">
+								<f:param name="vereinnr" value="#{berichtkiBean.vereinnr}" />
+								<f:param name="heim" value="#{berichtkiBean.heim}" />
+								<f:param name="gast" value="#{berichtkiBean.gast}" />
+								<f:param name="datum" value="#{berichtkiBean.datum}" />
+								<f:param name="ergebnis" value="#{berichtkiBean.ergebnis}" />
+								<f:param name="ergebnisLink"
+									value="#{berichtkiBean.ergebnisLink}" />
+								<f:param name="uuid" value="#{berichtkiBean.uuid}" />
+								<f:param name="liga" value="#{berichtkiBean.liga}" />
+							</p:commandButton>
+							<p:commandButton
+								value="#{berichtkiBean.spielplan ? 'Spielbericht ausblenden' : 'Spielbericht anzeigen'}"
+								action="#{berichtkiBean.spielplanAnzeige}"
+								update="@form, :fehlerPanel">
+							</p:commandButton>
+						</div>
+					</div>
+				</ui:repeat>
+			</div>
+			<div class="error-table">
+
+				<h:panelGroup id="fehlerPanelOK"
+					rendered="#{!berichtkiBean.spielplan}">
+					<h:outputText value="#{berichtkiBean.info}" escape="false" />
+					<br />
+					<h2>Die KI wurde mit folgender Anweisung gefüttert</h2>
+					<h:outputText value="#{berichtkiBean.frageAusgabe}" />
+					<pre>
+  					<h:outputText value="#{berichtkiBean.prettyJson}" />
+				</pre>
+				</h:panelGroup>
+				<h:panelGroup id="spielplanPanel"
+					rendered="#{berichtkiBean.spielplan}">
+					<p:outputPanel id="iframePanel">
+						<h:panelGroup>
+							<iframe src="#{berichtkiBean.ergebnisLink}" width="100%"
+								height="1300" frameborder="0">
+								<p>Ihr Browser unterstützt keine Iframes.</p>
+							</iframe>
+						</h:panelGroup>
+					</p:outputPanel>
+				</h:panelGroup>
+			</div>
+		</div>
+
+	</h:form>
+	<h:form prependId="false">
+		<p:growl id="growl" showDetail="true" life="6000" />
+		<p:poll interval="5" listener="#{berichtkiBean.updBearbeitung}" />
+	</h:form>
+</h:body>
+</html>
