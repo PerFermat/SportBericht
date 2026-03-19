@@ -108,6 +108,7 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 		String heimVerein = "";
 		String gastVerein = "";
 		String bezirk = "";
+		String klasse = "";
 		String saison = "";
 		String liga = doc.title();
 		String spielBeginn = "";
@@ -134,7 +135,16 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 			}
 		}
 
-		Matcher saisonMatcher = Pattern.compile("(\\d{4}/\\d{2})").matcher(doc.title());
+		String[] titleParts = doc.title().split(",");
+		if (titleParts.length > 0) {
+			bezirk = titleParts[0].trim();
+		}
+		if (titleParts.length > 1) {
+			klasse = titleParts[1].trim();
+		}
+
+		Matcher saisonMatcher = Pattern.compile("(\\d{2}/\\d{2}|\\d{4}/\\d{2})").matcher(doc.title());
+
 		if (saisonMatcher.find()) {
 			saison = saisonMatcher.group(1);
 		}
@@ -151,8 +161,23 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 			}
 		}
 
-		return new TennisMatchSummary(berichtMannschaft, heimVerein, gastVerein, bezirk, saison, liga, gesamtErgebnis,
-				spielBeginn, spielEnde, gesamtSaetze, gesamtGames);
+		String berichtMannschaftNormalisiert = berichtMannschaft;
+		if (containsIgnoreCase(heimVerein, berichtMannschaft)) {
+			berichtMannschaftNormalisiert = heimVerein;
+		} else if (containsIgnoreCase(gastVerein, berichtMannschaft)) {
+			berichtMannschaftNormalisiert = gastVerein;
+		}
+
+		return new TennisMatchSummary(berichtMannschaftNormalisiert, heimVerein, gastVerein, bezirk, saison, liga,
+				klasse, gesamtErgebnis, spielBeginn, spielEnde, gesamtSaetze, gesamtGames);
+	}
+
+	private boolean containsIgnoreCase(String text, String part) {
+		if (text == null || part == null) {
+			return false;
+		}
+		return text.toLowerCase().contains(part.toLowerCase());
+
 	}
 
 	private void parseMatches(Document doc, String vereinnr, NamensSpeicher ns, Boolean verschluesseln,
@@ -183,8 +208,6 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 				continue;
 			}
 
-			String heimSpieler = normalisiereSpielername(vereinnr, ns, verschluesseln, tds.get(0).text());
-			String gastSpieler = normalisiereSpielername(vereinnr, ns, verschluesseln, tds.get(1).text());
 			String satz1 = tds.get(2).text();
 			String satz2 = tds.get(3).text();
 			String satz3 = tds.get(4).text();
@@ -193,11 +216,15 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 			String games = tds.get(7).text();
 
 			if ("EINZEL".equals(aktuellerModus)) {
+				String heimSpieler = normalisiereSpielername(vereinnr, ns, verschluesseln, tds.get(0).text());
+				String gastSpieler = normalisiereSpielername(vereinnr, ns, verschluesseln, tds.get(1).text());
+
 				einzel.add(new TennisEinzelErgebnis(heimSpieler, gastSpieler, satz1, satz2, satz3, matches, saetze,
 						games));
 			} else {
-				String[] heim = splitDoppel(heimSpieler);
-				String[] gast = splitDoppel(gastSpieler);
+				String[] heim = splitDoppelAusZelle(tds.get(0), vereinnr, ns, verschluesseln);
+				String[] gast = splitDoppelAusZelle(tds.get(1), vereinnr, ns, verschluesseln);
+
 				doppel.add(new TennisDoppelErgebnis(heim[0], heim[1], gast[0], gast[1], satz1, satz2, satz3, matches,
 						saetze, games));
 			}
@@ -215,20 +242,54 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 		if (text == null || text.isBlank()) {
 			return new String[] { "", "" };
 		}
+		String normalized = text.replace('\u00A0', ' ').trim();
+		normalized = normalized.replaceAll("/+$", "").trim();
+
+		List<String> spielerTokens = extrahiereKompakteSpieler(normalized);
+		if (spielerTokens.size() >= 2) {
+			return new String[] { spielerTokens.get(0), spielerTokens.get(1) };
+		}
 
 		String[] parts;
-		if (text.contains("/")) {
-			parts = text.split("\\s*/\\s*");
-		} else if (text.contains("&")) {
-			parts = text.split("\\s*&\\s*");
+		if (normalized.contains("/")) {
+			parts = normalized.split("\\s*/\\s*");
+		} else if (normalized.contains("&")) {
+			parts = normalized.split("\\s*&\\s*");
+
 		} else {
-			parts = new String[] { text, "" };
+			parts = new String[] { normalized, "" };
 		}
 
 		if (parts.length == 1) {
 			return new String[] { parts[0].trim(), "" };
 		}
 		return new String[] { parts[0].trim(), parts[1].trim() };
+	}
+
+	private String[] splitDoppelAusZelle(Element spielerZelle, String vereinnr, NamensSpeicher ns,
+			boolean verschluesseln) {
+		Elements links = spielerZelle.select("a");
+		if (links.size() >= 2) {
+			String erster = normalisiereSpielername(vereinnr, ns, verschluesseln, links.get(0).text());
+			String zweiter = normalisiereSpielername(vereinnr, ns, verschluesseln, links.get(1).text());
+			return new String[] { erster, zweiter };
+		}
+
+		String normalisiert = normalisiereSpielername(vereinnr, ns, verschluesseln, spielerZelle.text());
+		return splitDoppel(normalisiert);
+	}
+
+	private List<String> extrahiereKompakteSpieler(String text) {
+		List<String> tokens = new ArrayList<>();
+		Matcher matcher = Pattern.compile("\\d{1,2}\\s*.*?\\d{1,2}\\s*[·.]?\\s*LK\\s*\\d{1,2,3}(?=\\s|$)")
+				.matcher(text);
+		while (matcher.find()) {
+			String token = matcher.group();
+			if (token != null && !token.isBlank()) {
+				tokens.add(token.trim());
+			}
+		}
+		return tokens;
 	}
 
 	private String dreheErgebnis(String ergebnis) {

@@ -1,5 +1,8 @@
 package de.bericht.service;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import de.bericht.util.SpielDetail;
 
 public class TennisEinzelErgebnis implements SpielDetail {
@@ -25,10 +28,12 @@ public class TennisEinzelErgebnis implements SpielDetail {
 		this.games = games;
 	}
 
+	@Override
 	public String getHeim() {
 		return heim;
 	}
 
+	@Override
 	public String getGast() {
 		return gast;
 	}
@@ -58,7 +63,19 @@ public class TennisEinzelErgebnis implements SpielDetail {
 	}
 
 	@Override
+	@JsonIgnore
 	public String getPosition() {
 		return "Einzel";
 	}
+
+	@JsonProperty("Heim Spieler")
+	public TennisSpielerInfo getHeimSpieler() {
+		return TennisSpielerInfo.parse(heim);
+	}
+
+	@JsonProperty("Gast Spieler")
+	public TennisSpielerInfo getGastSpieler() {
+		return TennisSpielerInfo.parse(gast);
+	}
+
 }

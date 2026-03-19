@@ -1,5 +1,7 @@
 package de.bericht.service;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import de.bericht.util.SpielDetail;
 
 public class TennisDoppelErgebnis implements SpielDetail {
@@ -30,11 +32,13 @@ public class TennisDoppelErgebnis implements SpielDetail {
 	}
 
 	@Override
+	@JsonIgnore
 	public String getHeim() {
 		return getHeimPaarung();
 	}
 
 	@Override
+	@JsonIgnore
 	public String getGast() {
 		return getGastPaarung();
 	}
@@ -88,8 +92,29 @@ public class TennisDoppelErgebnis implements SpielDetail {
 	}
 
 	@Override
+	@JsonIgnore
 	public String getPosition() {
 		return "Doppel";
+	}
+
+	@JsonIgnore
+	public TennisSpielerInfo getHeimSpieler1() {
+		return TennisSpielerInfo.parse(heim1);
+	}
+
+	@JsonIgnore
+	public TennisSpielerInfo getHeimSpieler2() {
+		return TennisSpielerInfo.parse(heim2);
+	}
+
+	@JsonIgnore
+	public TennisSpielerInfo getGastSpieler1() {
+		return TennisSpielerInfo.parse(gast1);
+	}
+
+	@JsonIgnore
+	public TennisSpielerInfo getGastSpieler2() {
+		return TennisSpielerInfo.parse(gast2);
 	}
 
 }
