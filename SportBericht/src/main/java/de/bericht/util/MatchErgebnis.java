@@ -5,12 +5,12 @@ import java.io.IOException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class MatchErgebnis {
+public class MatchErgebnis implements SpielDetail {
 
 	@JsonProperty("BerichtSpieler")
 	private String berichtSpieler;
 
-	@JsonProperty("Position Heim-Postition Gast")
+	@JsonProperty("Position Heim-Position Gast")
 	private String position;
 
 	@JsonProperty("Heim")
@@ -46,14 +46,9 @@ public class MatchErgebnis {
 	@JsonProperty("BerichtSpieler_hat_gewonnen")
 	private boolean berichtSpielerHatGewonnen;
 
-	// Konstruktor mit BerichtMannschaft
 	public MatchErgebnis(boolean istHeim, String position, String heim, String gast, String s1, String s2, String s3,
 			String s4, String s5, String saetze, String gesamt) {
-		if (istHeim) {
-			this.berichtSpieler = heim;
-		} else {
-			this.berichtSpieler = gast;
-		}
+		this.berichtSpieler = istHeim ? heim : gast;
 		this.position = position;
 		this.heim = heim;
 		this.gast = gast;
@@ -64,7 +59,6 @@ public class MatchErgebnis {
 		this.s5 = s5;
 		this.saetze = saetze;
 		this.gesamt = gesamt;
-
 		auswerten(istHeim);
 	}
 
@@ -85,25 +79,13 @@ public class MatchErgebnis {
 				gewinner = "Unentschieden";
 			}
 
-			// Berichts-Mannschaft kann Heim oder Gast sein
-			if (berichtSpieler != null) {
-
-				if ((gewinner.equals("Heim") && istHeim) || (gewinner.equals("Gast") && !istHeim)) {
-					berichtSpielerHatGewonnen = true;
-				} else {
-					berichtSpielerHatGewonnen = false;
-				}
-			} else {
-				berichtSpielerHatGewonnen = false;
-			}
-
+			berichtSpielerHatGewonnen = ("Heim".equals(gewinner) && istHeim) || ("Gast".equals(gewinner) && !istHeim);
 		} catch (Exception e) {
 			gewinner = "Unbekannt";
 			berichtSpielerHatGewonnen = false;
 		}
 	}
 
-	// Getter & Setter
 	public String toJson() throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper();
 		return objectMapper.writeValueAsString(this);
@@ -212,5 +194,4 @@ public class MatchErgebnis {
 	public void setBerichtSpielerHatGewonnen(boolean berichtSpielerHatGewonnen) {
 		this.berichtSpielerHatGewonnen = berichtSpielerHatGewonnen;
 	}
-
 }

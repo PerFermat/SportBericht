@@ -40,8 +40,8 @@ import de.bericht.util.ConfigManager;
 import de.bericht.util.ErgebnisCache;
 import de.bericht.util.Fehler;
 import de.bericht.util.IgnorierteWoerte;
-import de.bericht.util.MatchErgebnis;
 import de.bericht.util.NamensSpeicher;
+import de.bericht.util.SpielDetail;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.event.ActionEvent;
@@ -72,7 +72,7 @@ public class BerichtBean implements Serializable {
 	private List<LogEntry> logEntries;
 	private NamensSpeicher namensSpeicher = new NamensSpeicher();
 	private boolean email = false;
-	List<MatchErgebnis> spiele = new ArrayList<>();
+	List<? extends SpielDetail> spiele;
 
 	// Für den Bild-Upload: Wir verwenden den Part, den der Container liefert.
 	private Part uploadedBild;
@@ -603,7 +603,7 @@ public class BerichtBean implements Serializable {
 		this.spielErgebnis = provider.getSpielErgebnis();
 		dbService.saveOrUpdateSpielstatistik(vereinnr, ergebnisLink, this.spielErgebnis);
 
-		for (MatchErgebnis spiel : spiele) {
+		for (SpielDetail spiel : spiele) {
 			String spieler = spiel.getGast() + " " + spiel.getHeim();
 			// Alle Sonderzeichen durch Leerzeichen ersetzen
 			spieler = spieler.replaceAll("[^A-Za-zÄÖÜäöüß]", " ");

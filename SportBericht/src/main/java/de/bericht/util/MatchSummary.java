@@ -1,10 +1,21 @@
 package de.bericht.util;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-public class MatchSummary {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({ "Sportart", "Bezirk", "Saison", "Liga", "Heimmannschaft", "Gastmannschaft", "Ergebnis",
+		"berichtMannschaft", "berichtMannschaft_ist_Heim", "punkte_Heimmannschaft", "punkte_Gastmannschaft",
+		"punkte_berichtMannschaft", "punkte_Gegner", "spielentscheidung", "spiel_Beginn", "spiel_Ende", "Spiele" })
+public abstract class MatchSummary {
+
+	@JsonProperty("Sportart")
+	private String sportart;
 
 	@JsonProperty("Bezirk")
 	private String bezirk;
@@ -24,7 +35,6 @@ public class MatchSummary {
 	@JsonProperty("Ergebnis")
 	private String ergebnis;
 
-	// Neue, KI-freundliche Felder
 	@JsonProperty("berichtMannschaft")
 	private String berichtMannschaft;
 
@@ -53,78 +63,92 @@ public class MatchSummary {
 	private String spielEnde;
 
 	@JsonProperty("Spiele")
-	private List<MatchErgebnis> spiele;
+	private List<? extends SpielDetail> spiele;
 
-	public MatchSummary(String berichtMannschaft, String heimmannschaft, String gastmannschaft, String bezirk,
-			String saison, String liga, String ergebnis, String spielBeginn, String spielEnde) {
-
-		this.saison = saison;
-		this.bezirk = bezirk;
-		this.liga = liga;
+	protected MatchSummary(String sportart, String berichtMannschaft, String heimmannschaft, String gastmannschaft,
+			String bezirk, String saison, String liga, String ergebnis, String spielBeginn, String spielEnde) {
+		this.sportart = sportart;
 		this.berichtMannschaft = berichtMannschaft;
 		this.heimmannschaft = heimmannschaft;
 		this.gastmannschaft = gastmannschaft;
+		this.bezirk = bezirk;
+		this.saison = saison;
+		this.liga = liga;
 		this.ergebnis = ergebnis;
 		this.spielBeginn = spielBeginn;
 		this.spielEnde = spielEnde;
-
-		this.analyseErgebnis();
+		analyseErgebnis();
 	}
 
-	private void analyseErgebnis() {
-
-		// Schritt 2: Ergebnis auslesen
-		try {
-			String reinesErgebnis = ergebnis.split(" ")[0]; // Nur "6:3" behalten
-			String[] parts = reinesErgebnis.split(":");
-			this.punkteHeimmannschaft = Integer.parseInt(parts[0].trim());
-			this.punkteGastmannschaft = Integer.parseInt(parts[1].trim());
-		} catch (Exception e) {
-			this.punkteHeimmannschaft = -1;
-			this.punkteGastmannschaft = -1;
-			this.punkteBerichtMannschaft = -1;
-			this.punkteGegner = -1;
-			this.spielEntscheidung = "Unbekannt";
+	protected void analyseErgebnis() {
+		if (ergebnis == null || ergebnis.isBlank()) {
+			setUnknownResult();
 			return;
 		}
 
-		// Schritt 3: Prüfen, ob berichtMannschaft Heim oder Gast ist
-		berichtMannschaftIstHeim = heimmannschaft.toLowerCase().contains(berichtMannschaft.toLowerCase());
+		try {
+			Pattern pattern = Pattern.compile("(\\d+)\\s*:\\s*(\\d+)");
+			Matcher matcher = pattern.matcher(ergebnis);
 
-		if (berichtMannschaftIstHeim) {
-			punkteBerichtMannschaft = punkteHeimmannschaft;
-			punkteGegner = punkteGastmannschaft;
-		} else {
-			punkteBerichtMannschaft = punkteGastmannschaft;
-			punkteGegner = punkteHeimmannschaft;
+			if (!matcher.find()) {
+				setUnknownResult();
+				return;
+			}
+
+			this.punkteHeimmannschaft = Integer.parseInt(matcher.group(1));
+			this.punkteGastmannschaft = Integer.parseInt(matcher.group(2));
+
+			this.berichtMannschaftIstHeim = containsIgnoreCase(heimmannschaft, berichtMannschaft);
+
+			if (berichtMannschaftIstHeim) {
+				punkteBerichtMannschaft = punkteHeimmannschaft;
+				punkteGegner = punkteGastmannschaft;
+			} else {
+				punkteBerichtMannschaft = punkteGastmannschaft;
+				punkteGegner = punkteHeimmannschaft;
+			}
+
+			if (punkteBerichtMannschaft > punkteGegner) {
+				spielEntscheidung = "Sieg_BerichtMannschaft";
+			} else if (punkteBerichtMannschaft < punkteGegner) {
+				spielEntscheidung = "Sieg_Gegner";
+			} else {
+				spielEntscheidung = "Unentschieden";
+			}
+		} catch (Exception e) {
+			setUnknownResult();
 		}
+	}
 
-		// Schritt 4: Spielausgang bestimmen
-		if (punkteBerichtMannschaft > punkteGegner) {
-			spielEntscheidung = "Sieg_BerichtMannschaft";
-		} else if (punkteBerichtMannschaft < punkteGegner) {
-			spielEntscheidung = "Sieg_Gegner";
-		} else {
-			spielEntscheidung = "Unentschieden";
+	private void setUnknownResult() {
+		this.punkteHeimmannschaft = -1;
+		this.punkteGastmannschaft = -1;
+		this.punkteBerichtMannschaft = -1;
+		this.punkteGegner = -1;
+		this.spielEntscheidung = "Unbekannt";
+	}
+
+	private boolean containsIgnoreCase(String text, String part) {
+		if (text == null || part == null) {
+			return false;
 		}
-
+		return text.toLowerCase().contains(part.toLowerCase());
 	}
 
-	public List<MatchErgebnis> getSpiele() {
-		return spiele;
+	public String getSportart() {
+		return sportart;
 	}
 
-	public void setSpiele(List<MatchErgebnis> spiele) {
-		this.spiele = spiele;
+	public String getBezirk() {
+		return bezirk;
 	}
 
-	public String getErgebnis() {
-		return ergebnis;
+	public String getSaison() {
+		return saison;
 	}
 
-	public void setErgebnis(String ergebnis) {
-		this.ergebnis = ergebnis;
-		this.analyseErgebnis();
+	public String getLiga() {
+		return liga;
 	}
 
 	public String getHeimmannschaft() {
@@ -135,12 +159,36 @@ public class MatchSummary {
 		return gastmannschaft;
 	}
 
-	public void setHeimmannschaft(String heimmannschaft) {
-		this.heimmannschaft = heimmannschaft;
+	public String getErgebnis() {
+		return ergebnis;
 	}
 
-	public void setGastmannschaft(String gastmannschaft) {
-		this.gastmannschaft = gastmannschaft;
+	public String getBerichtMannschaft() {
+		return berichtMannschaft;
+	}
+
+	public boolean isBerichtMannschaftIstHeim() {
+		return berichtMannschaftIstHeim;
+	}
+
+	public int getPunkteHeimmannschaft() {
+		return punkteHeimmannschaft;
+	}
+
+	public int getPunkteGastmannschaft() {
+		return punkteGastmannschaft;
+	}
+
+	public int getPunkteBerichtMannschaft() {
+		return punkteBerichtMannschaft;
+	}
+
+	public int getPunkteGegner() {
+		return punkteGegner;
+	}
+
+	public String getSpielEntscheidung() {
+		return spielEntscheidung;
 	}
 
 	public String getSpielBeginn() {
@@ -149,6 +197,19 @@ public class MatchSummary {
 
 	public String getSpielEnde() {
 		return spielEnde;
+	}
+
+	public List<? extends SpielDetail> getSpiele() {
+		return spiele;
+	}
+
+	public void setErgebnis(String ergebnis) {
+		this.ergebnis = ergebnis;
+		analyseErgebnis();
+	}
+
+	public void setSpiele(List<? extends SpielDetail> spiele) {
+		this.spiele = spiele;
 	}
 
 	public void setSpielBeginn(String spielBeginn) {
