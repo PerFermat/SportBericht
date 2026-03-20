@@ -13,7 +13,6 @@
 		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{berichtBean.vereinnr}"
 		type="text/css" />
 	<h:outputStylesheet library="css" name="styles.css" />
-	<!-- Einbinden des externen Skripts -->
 	<h:outputScript name="js/script.js" />
 </h:head>
 
@@ -37,10 +36,7 @@
 		</h3>
 	</div>
 
-
-	<!-- Formular für Bericht und Bild -->
 	<h:form id="berichtForm" enctype="multipart/form-data">
-		<!-- Container, der Eingabefeld und Fehlerbereich sowie die jeweiligen Buttons enthält -->
 		<div class="responsive-container">
 			<div class="text-input">
 				<div class="button-container">
@@ -57,64 +53,68 @@
 					</p:commandButton>
 				</div>
 
-				<!-- Linker Bereich: Texteingabefeld und Button "Bericht generieren" -->
 				<div class="text-container">
-					<h:panelGroup id="textPanel"
-						rendered="#{berichtBean.inBearbeitung}">
-						<div class="responsive-container">
-							<div class="red-container">
-								<div class="text-input">
-									<h:outputText
-										value="Achtung: Bericht wird möglicherweise gerade von jemand Bearbeitet. Bitte das Log überprüfen und ggf. ein paar Minuten warten. " />
+					<h:panelGroup id="textPanel">
+						<h:panelGroup rendered="#{berichtBean.inBearbeitung}">
+							<div class="responsive-container">
+								<div class="red-container">
+									<div class="text-input">
+										<h:outputText
+											value="Achtung: Bericht wird möglicherweise gerade von jemand Bearbeitet. Bitte das Log überprüfen und ggf. ein paar Minuten warten. " />
+									</div>
 								</div>
 							</div>
-						</div>
-					</h:panelGroup>
-					<!-- Anzeige, wenn Ergebnislink vorhanden und mit http beginnt -->
-					<h:panelGroup
-						rendered="#{not empty berichtBean.ergebnisLink and berichtBean.ergebnisLink.startsWith('http')}">
-						<h3>
-							<h:outputText value="#{berichtBean.heim}" />
-							<h:outputText value=" - " />
-							<h:outputText value="#{berichtBean.gast}" />
-							<h:outputText value="    " />
-							<h:outputText value="#{berichtBean.ergebnis}" />
-						</h3>
-					</h:panelGroup>
+						</h:panelGroup>
 
-					<!-- Eingabefeld, wenn obige Bedingung NICHT zutrifft -->
-					<h:panelGroup
-						rendered="#{empty berichtBean.ergebnisLink or not berichtBean.ergebnisLink.startsWith('http')}">
-						<h:inputText id="ueberschrift" value="#{berichtBean.ueberschrift}"
-							style="font-size: 1.5em;">>
+						<h:panelGroup
+							rendered="#{not empty berichtBean.ergebnisLink and berichtBean.ergebnisLink.startsWith('http')}">
+							<h3>
+								<h:outputText value="#{berichtBean.heim}" />
+								<h:outputText value=" - " />
+								<h:outputText value="#{berichtBean.gast}" />
+								<h:outputText value="    " />
+								<h:outputText value="#{berichtBean.ergebnis}" />
+							</h3>
+						</h:panelGroup>
+
+						<h:panelGroup
+							rendered="#{empty berichtBean.ergebnisLink or not berichtBean.ergebnisLink.startsWith('http')}">
+							<h:inputText id="ueberschrift" value="#{berichtBean.ueberschrift}"
+								style="font-size: 1.5em;">
 							</h:inputText>
-					</h:panelGroup>
-					<p:textEditor id="bereichsText" value="#{berichtBean.berichtText}"
-						styleClass="bericht-editor"
-						placeholder="Bitte hier den Bericht eingeben..."
-						modules="{toolbar: [['bold','italic','underline','strike'], [{'list':'ordered'},{'list':'bullet'}], ['link','clean']]}">
-					</p:textEditor>
-					<h:outputScript name="js/script.js" />
+						</h:panelGroup>
 
-					<!-- Optional: Anzeige der Spielergebnisse -->
-					<h:outputText value="#{berichtBean.spielErgebnis}" escape="false"
-						style="display:inline; white-space:normal;" />
-					<h:panelGroup rendered="#{not empty berichtBean.bildUrl}">
-						<h:graphicImage value="#{berichtBean.bildUrl}" width="300" />
-						<p:inputText id="bildUnterschrift"
-							value="#{berichtBean.bildUnterschrift}"
-							styleClass="my-custom-box"
-							placeholder="Bildunterschrift eingeben..." />
-					</h:panelGroup>
+						<p:textEditor id="bereichsText" value="#{berichtBean.berichtText}"
+							styleClass="bericht-editor"
+							placeholder="Bitte hier den Bericht eingeben..."
+							modules="{toolbar: [['bold','italic','underline','strike'], [{'list':'ordered'},{'list':'bullet'}], ['link','clean']]}">
+						</p:textEditor>
 
+						<h:outputScript name="js/script.js" />
+
+						<h:outputText value="#{berichtBean.spielErgebnis}" escape="false"
+							style="display:inline; white-space:normal;" />
+
+						<h:panelGroup rendered="#{not empty berichtBean.bildUrl}">
+							<h:graphicImage value="#{berichtBean.bildUrl}" width="300" />
+							<p:inputText id="bildUnterschrift"
+								value="#{berichtBean.bildUnterschrift}"
+								styleClass="my-custom-box"
+								placeholder="Bildunterschrift eingeben..." />
+						</h:panelGroup>
+					</h:panelGroup>
 				</div>
+
 				<div class="text-input">
 					<div class="button-container">
 						<p:commandButton value="Rechtschreibung prüfen"
 							action="#{berichtBean.pruefeRechtschreibung}"
-							update="@form, :fehlerPanel" />
+							update="fehlerWrapper textPanel growl logPanel  spielplanWrapper spielplanButtonPanel" />
+
 						<p:commandButton value="Bericht mit KI verbessern"
-							action="#{berichtBean.verbessernKI}" update="@form, :fehlerPanel" />
+							action="#{berichtBean.verbessernKI}"
+							update="fehlerWrapper textPanel growl logPanel  spielplanWrapper spielplanButtonPanel" />
+
 						<p:commandButton value="Bericht mit KI ändern"
 							action="aenderung.xhtml"
 							actionListener="#{berichtBean.speichern}">
@@ -128,9 +128,8 @@
 							<f:param name="uuid" value="#{berichtBean.uuid}" />
 						</p:commandButton>
 					</div>
+
 					<div class="text-container">
-
-
 						<p>
 							Gib hier bitte deinen Namen ein und speichere den Bericht ab.
 							Anschließend kann der Bericht versendet werden. <br /> Die
@@ -140,6 +139,7 @@
 							styleClass="my-custom-box" placeholder="Dein Name...">
 						</p:inputText>
 					</div>
+
 					<h:panelGroup rendered="#{empty berichtBean.bildUrl}">
 						<div class="text-container">
 							<p>Bild hochladen:</p>
@@ -147,7 +147,7 @@
 								angezeigt:</p>
 							<h:inputFile id="fileInput" value="#{berichtBean.uploadedBild}"
 								accept="image/*" onchange="resizeImage(this);"
-								update="@form, :logPanel" styleClass="custom-file-input" />
+								styleClass="custom-file-input" />
 							<h:inputHidden id="hiddenImageBase64"
 								value="#{berichtBean.resizedImage}" />
 						</div>
@@ -157,15 +157,20 @@
 
 				<div class="button-container">
 					<p:commandButton value="Speichern"
-						action="#{berichtBean.speichern}" update="@form, :logPanel" />
+						action="#{berichtBean.speichern}"
+						update="textPanel logPanel growl fehlerWrapper" />
 
 					<p:commandButton value="E-Mail senden"
 						actionListener="#{berichtBean.pruefeEmailStatus}" process="@this"
 						oncomplete="handleEmailDialog(#{berichtBean.email ? 'true' : 'false'})"
-						disabled="#{empty berichtBean.name}" update="@form, :growl" />
+						disabled="#{empty berichtBean.name}"
+						update="textPanel growl logPanel fehlerWrapper" />
+
 					<p:commandButton value="Bild löschen"
-						action="#{berichtBean.bildLoeschen}" update="@form, :logPanel"
+						action="#{berichtBean.bildLoeschen}"
+						update="textPanel logPanel growl fehlerWrapper"
 						disabled="#{empty berichtBean.bildUrl}" />
+
 					<p:commandButton value="Bild bearbeiten"
 						disabled="#{empty berichtBean.bildUrl}"
 						action="bildBearbeiten.xhtml">
@@ -178,21 +183,26 @@
 						<f:param name="liga" value="#{berichtBean.liga}" />
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
 					</p:commandButton>
-					<p:commandButton value="Freigeben" action="index.xhtml"
+
+					<p:commandButton value="Freigeben" action="spielplan.xhtml"
 						rendered="#{berichtBean.anzFreigabe and berichtBean.ergebnisLink.startsWith('http')}"
 						actionListener="#{berichtBean.freigabe}" immediate="true">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 					</p:commandButton>
+
 					<p:commandButton value="Freigeben" action="freieBerichte.xhtml"
 						rendered="#{berichtBean.anzFreigabe and not berichtBean.ergebnisLink.startsWith('http')}"
 						actionListener="#{berichtBean.freigabe}" immediate="true">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 					</p:commandButton>
-					<p:commandButton value="Zurück" action="index.xhtml"
+
+					<p:commandButton value="Zurück"
+						action="#{berichtBean.zurueckAction}"
 						actionListener="#{berichtBean.zurueck}" immediate="true"
 						rendered="#{not empty berichtBean.ergebnisLink and berichtBean.ergebnisLink.startsWith('http')}">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 					</p:commandButton>
+
 					<p:commandButton value="Zurück" action="freieBerichte.xhtml"
 						actionListener="#{berichtBean.zurueck}" immediate="true"
 						rendered="#{not empty berichtBean.ergebnisLink and not berichtBean.ergebnisLink.startsWith('http')}">
@@ -206,6 +216,7 @@
 						<h:outputText value="Hallo #{berichtBean.name}," />
 						<br />
 						<br />
+
 						<h:panelGroup rendered="#{not berichtBean.ki}">
 							<h:outputText
 								value="Überprüfe den Bericht bitte vor dem Senden noch mit 'Bericht mit KI verbessern'?"
@@ -215,6 +226,7 @@
 							<h:outputText
 								value="Möchtest Du die E-Mail jetzt trotzdem an folgende Empfänger senden?" />
 						</h:panelGroup>
+
 						<h:outputText
 							value="Möchtest Du die E-Mail jetzt an folgende Empfänger senden?"
 							rendered="#{berichtBean.ki}" />
@@ -226,6 +238,7 @@
 						<h:outputText value="#{berichtBean.ccEmpfaenger}" escape="false" />
 						<br />
 						<br />
+
 						<h:panelGroup rendered="#{berichtBean.anzFreigabe}">
 							<h:outputText
 								value="Wenn du stattdessen den Bericht freigeben willst, klick auf 'Freigeben'." />
@@ -245,10 +258,11 @@
 						<f:facet name="footer">
 							<div class="dialog-footer-buttons">
 								<p:commandButton value="E-Mail erneut senden"
-									action="#{berichtBean.emailSenden}" update="@form, :growl"
+									action="#{berichtBean.emailSenden}"
+									update="textPanel growl logPanel fehlerWrapper"
 									icon="pi pi-envelope" styleClass="ui-button-warning" />
 
-								<p:commandButton value="Freigeben" action="index.xhtml"
+								<p:commandButton value="Freigeben" action="spielplan.xhtml"
 									rendered="#{berichtBean.anzFreigabe and berichtBean.ergebnisLink.startsWith('http')}"
 									actionListener="#{berichtBean.freigabe}" immediate="true">
 									<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
@@ -274,6 +288,7 @@
 						<h:outputText value="Hallo #{berichtBean.name}" />
 						<br />
 						<br />
+
 						<h:panelGroup rendered="#{not berichtBean.ki}">
 							<h:outputText
 								value="Überprüfe den Bericht bitte vor dem Senden noch mit 'Bericht mit KI verbessern'?"
@@ -283,6 +298,7 @@
 							<h:outputText
 								value="Möchtest Du die E-Mail jetzt trotzdem an folgende Empfänger senden?" />
 						</h:panelGroup>
+
 						<h:outputText
 							value="Möchtest Du die E-Mail jetzt an folgende Empfänger senden?"
 							rendered="#{berichtBean.ki}" />
@@ -293,10 +309,12 @@
 						<h:outputText value="#{berichtBean.ccEmpfaenger}" escape="false" />
 						<br />
 						<br />
+
 						<f:facet name="footer">
 							<div class="dialog-footer-buttons">
 								<p:commandButton value="Ja, senden"
-									action="#{berichtBean.emailSenden}" update="@form, :growl"
+									action="#{berichtBean.emailSenden}"
+									update="textPanel growl logPanel fehlerWrapper"
 									icon="pi pi-check" styleClass="ui-button-success" />
 
 								<p:commandButton value="Abbrechen"
@@ -305,133 +323,139 @@
 							</div>
 						</f:facet>
 					</p:dialog>
-
 				</div>
 			</div>
 
-			<!-- Rechter Bereich: Fehleranzeige und Button "Rechtschreibung prüfen" -->
 			<div class="error-table">
-				<div class="button-container">
-					<p:commandButton
-						value="#{berichtBean.spielplan ? 'Spielbericht ausblenden' : 'Spielbericht anzeigen'}"
-						action="#{berichtBean.spielplanAnzeige}"
-						update="@form, :fehlerPanel" />
-				</div>
-				<h:panelGroup id="fehlerPanelOK"
-					rendered="#{!berichtBean.spielplan}">
-					<p>
-						Die Rechtschreibprüfung erfolgt mit <a
-							href="https://languagetool.org">https://languagetool.org</a>. Ihr
-						könnt auch gerne das Addon für euren Browser downloaden, dann ist
-						die Korrektur komfortabler. <br /> Die KI-Korrektur übergibt den
-						anonymisierten Bericht an ChatGPT mit der Bitte um Korrektur.
-					</p>
-				</h:panelGroup>
-				<h:panelGroup id="fehlerPanel"
-					rendered="#{not empty berichtBean.fehlerListe and !berichtBean.spielplan}">
-					<p:panel header="Gefundene Fehler" toggleable="true"
-						collapsed="false">
-						<p:dataTable value="#{berichtBean.fehlerListe}" var="fehler">
-							<p:column headerText="Fehlerhafter Text">
-								<h:outputText value="#{fehler.fehlerhaftesWort}" />
-							</p:column>
-							<p:column headerText="Vorschlag">
-								<h:outputText value="#{fehler.vorschlag}" />
-							</p:column>
-							<p:column headerText="Erklärung">
-								<h:outputText value="#{fehler.erklärung}" escape="false" />
-							</p:column>
-							<p:column headerText="" styleClass="col-bericht">
-								<div class="buttontab-container">
-									<p:commandButton value="Übernehmen"
-										actionListener="#{berichtBean.korrektur(fehler.fehlerhaftesWort, fehler.vorschlag)}"
-										rendered="#{fehler.button}" styleClass="myButton"
-										update="@form, :textPanel :growl">
-									</p:commandButton>
-								</div>
-							</p:column>
-
-						</p:dataTable>
-					</p:panel>
-					<p:panel header="KI Details" toggleable="true" collapsed="true">
-						<h:outputText value="#{berichtBean.kiRueckgabe}" escape="false" />
-					</p:panel>
-				</h:panelGroup>
-				<h:panelGroup id="spielplanPanel"
-					rendered="#{berichtBean.spielplan}">
-					<p:outputPanel id="iframePanel">
-						<h:panelGroup>
-							<iframe src="#{berichtBean.ergebnisLink}" width="100%"
-								height="1300" frameborder="0">
-								<p>Ihr Browser unterstützt keine Iframes.</p>
-							</iframe>
-						</h:panelGroup>
-					</p:outputPanel>
+				<h:panelGroup id="spielplanButtonPanel">
+					<div class="button-container">
+						<p:commandButton
+							value="#{berichtBean.spielplan ? 'Spielbericht ausblenden' : 'Spielbericht anzeigen'}"
+							action="#{berichtBean.spielplanAnzeige}"
+							update="spielplanButtonPanel fehlerWrapper spielplanWrapper" />
+					</div>
 				</h:panelGroup>
 
+				<h:panelGroup id="fehlerWrapper">
+					<h:panelGroup id="fehlerPanelOK"
+						rendered="#{!berichtBean.spielplan}">
+						<p>
+							Die Rechtschreibprüfung erfolgt mit <a
+								href="https://languagetool.org">https://languagetool.org</a>. Ihr
+							könnt auch gerne das Addon für euren Browser downloaden, dann ist
+							die Korrektur komfortabler. <br /> Die KI-Korrektur übergibt den
+							anonymisierten Bericht an ChatGPT mit der Bitte um Korrektur.
+						</p>
+					</h:panelGroup>
+
+					<h:panelGroup id="fehlerPanel"
+						rendered="#{not empty berichtBean.fehlerListe and !berichtBean.spielplan}">
+						<p:panel header="Gefundene Fehler" toggleable="true"
+							collapsed="false">
+							<p:dataTable value="#{berichtBean.fehlerListe}" var="fehler">
+								<p:column headerText="Fehlerhafter Text">
+									<h:outputText value="#{fehler.fehlerhaftesWort}" />
+								</p:column>
+								<p:column headerText="Vorschlag">
+									<h:outputText value="#{fehler.vorschlag}" />
+								</p:column>
+								<p:column headerText="Erklärung">
+									<h:outputText value="#{fehler.erklärung}" escape="false" />
+								</p:column>
+								<p:column headerText="" styleClass="col-bericht">
+									<div class="buttontab-container">
+										<p:commandButton value="Übernehmen"
+											actionListener="#{berichtBean.korrektur(fehler.fehlerhaftesWort, fehler.vorschlag)}"
+											rendered="#{fehler.button}" styleClass="myButton"
+											update="textPanel growl fehlerWrapper">
+										</p:commandButton>
+									</div>
+								</p:column>
+							</p:dataTable>
+						</p:panel>
+
+						<p:panel header="KI Details" toggleable="true" collapsed="true">
+							<h:outputText value="#{berichtBean.kiRueckgabe}" escape="false" />
+						</p:panel>
+					</h:panelGroup>
+				</h:panelGroup>
+
+				<h:panelGroup id="spielplanWrapper">
+					<h:panelGroup id="spielplanPanel"
+						rendered="#{berichtBean.spielplan}">
+						<iframe src="#{berichtBean.ergebnisLink}" width="100%"
+							height="1300" frameborder="0">
+							<p>Ihr Browser unterstützt keine Iframes.</p>
+						</iframe>
+					</h:panelGroup>
+				</h:panelGroup>
 			</div>
 		</div>
 
 		<br />
-		<h:panelGroup id="logPanel"
-			rendered="#{not empty berichtBean.logEntries}">
-			<p:panel header="Änderungshistorie" toggleable="true"
-				collapsed="true" widgetVar="logPanelWidget">
-				<div class="button-container">
-					<p:commandButton value="Alter Zustand widerherstellen"
-						action="historien.xhtml"
-						rendered="#{berichtBean.historienTimestamps}">
-						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
-						<f:param name="heim" value="#{berichtBean.heim}" />
-						<f:param name="gast" value="#{berichtBean.gast}" />
-						<f:param name="datum" value="#{berichtBean.datum}" />
-						<f:param name="ergebnis" value="#{berichtBean.ergebnis}" />
-						<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
-						<f:param name="liga" value="#{berichtBean.liga}" />
-						<f:param name="uuid" value="#{berichtBean.uuid}" />
-					</p:commandButton>
-					<p:commandButton value="Spielberichtsbogen neu lesen"
-						action="#{berichtBean.spielHtmlLesen}" />
-				</div>
-				<p>
-					<a href="#{berichtBean.generateBerichtUrlLink}">Direkter Link
-						zum Bericht</a>
-				</p>
 
-				<p:dataTable id="logTable" value="#{berichtBean.logEntries}"
-					var="log" rowKey="#{log.ergebnisLink}-#{log.timestamp.time}">
-					<p:column headerText="Datum">
-						<h:outputText value="#{log.timestamp}">
-							<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"
-								timeZone="Europe/Berlin" />
-						</h:outputText>
-					</p:column>
-					<p:column headerText="Name">
-						<h:outputText value="#{log.name}" />
-					</p:column>
-					<p:column headerText="Aktion">
-						<h:outputText value="#{log.mail}" />
-					</p:column>
-					<p:column headerText="Mailversand erfolgreich">
-						<h:outputText value="#{log.mailErfolgreich}" />
-					</p:column>
-					<p:column headerText="Info">
-						<h:outputText value="#{log.info}" />
-					</p:column>
-					<p:rowExpansion>
-						<h:panelGrid columns="1">
-							<h:outputText value="ErgebnisLink: #{log.ergebnisLink}" />
-						</h:panelGrid>
-					</p:rowExpansion>
-				</p:dataTable>
-			</p:panel>
+		<h:panelGroup id="logPanel">
+			<h:panelGroup rendered="#{not empty berichtBean.logEntries}">
+				<p:panel header="Änderungshistorie" toggleable="true"
+					collapsed="true" widgetVar="logPanelWidget">
+					<div class="button-container">
+						<p:commandButton value="Alter Zustand widerherstellen"
+							action="historien.xhtml"
+							rendered="#{berichtBean.historienTimestamps}">
+							<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
+							<f:param name="heim" value="#{berichtBean.heim}" />
+							<f:param name="gast" value="#{berichtBean.gast}" />
+							<f:param name="datum" value="#{berichtBean.datum}" />
+							<f:param name="ergebnis" value="#{berichtBean.ergebnis}" />
+							<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
+							<f:param name="liga" value="#{berichtBean.liga}" />
+							<f:param name="uuid" value="#{berichtBean.uuid}" />
+						</p:commandButton>
+
+						<p:commandButton value="Spielberichtsbogen neu lesen"
+							action="#{berichtBean.spielHtmlLesen}"
+							update="textPanel logPanel growl fehlerWrapper" />
+					</div>
+
+					<p>
+						<a href="#{berichtBean.generateBerichtUrlLink}">Direkter Link
+							zum Bericht</a>
+					</p>
+
+					<p:dataTable id="logTable" value="#{berichtBean.logEntries}"
+						var="log" rowKey="#{log.ergebnisLink}-#{log.timestamp.time}">
+						<p:column headerText="Datum">
+							<h:outputText value="#{log.timestamp}">
+								<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"
+									timeZone="Europe/Berlin" />
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Name">
+							<h:outputText value="#{log.name}" />
+						</p:column>
+						<p:column headerText="Aktion">
+							<h:outputText value="#{log.mail}" />
+						</p:column>
+						<p:column headerText="Mailversand erfolgreich">
+							<h:outputText value="#{log.mailErfolgreich}" />
+						</p:column>
+						<p:column headerText="Info">
+							<h:outputText value="#{log.info}" />
+						</p:column>
+						<p:rowExpansion>
+							<h:panelGrid columns="1">
+								<h:outputText value="ErgebnisLink: #{log.ergebnisLink}" />
+							</h:panelGrid>
+						</p:rowExpansion>
+					</p:dataTable>
+				</p:panel>
+			</h:panelGroup>
 		</h:panelGroup>
-
 
 		<p:growl id="growl" showDetail="true" life="6000" />
 
-		<!-- Polling zur UI-Aktualisierung -->
-		<p:poll interval="5" listener="#{berichtBean.updBearbeitung}" />
+		<p:poll interval="5" listener="#{berichtBean.updBearbeitung}"
+			update="textPanel" />
 	</h:form>
 </h:body>
 </html>

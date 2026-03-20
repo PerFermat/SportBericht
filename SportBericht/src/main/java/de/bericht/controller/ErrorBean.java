@@ -65,4 +65,5 @@ public class ErrorBean {
 		exception.printStackTrace(new PrintWriter(sw));
 		return sw.toString().replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>");
 	}
+
 }

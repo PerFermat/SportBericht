@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 import de.bericht.service.DatabaseService;
+import de.bericht.util.ConfigManager;
 import de.bericht.util.ImageProcessor;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.context.FacesContext;
@@ -214,4 +215,13 @@ public class ImageBean extends HttpServlet implements Serializable {
 	public void setVereinnr(String vereinnr) {
 		this.vereinnr = vereinnr;
 	}
+
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
+
 }

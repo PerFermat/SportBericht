@@ -1035,4 +1035,13 @@ public class BerichtkiBean implements Serializable {
 	public void setZusammenfassenTexte(List<KiZusammenfassenText> zusammenfassenTexte) {
 		this.zusammenfassenTexte = zusammenfassenTexte;
 	}
+
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
+
 }

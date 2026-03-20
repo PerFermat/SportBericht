@@ -1275,4 +1275,15 @@ public class GesamtspielplanBean implements Serializable {
 		return null;
 	}
 
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public void zurueck() {
+
+	}
 }

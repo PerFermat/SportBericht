@@ -622,4 +622,16 @@ public class BestaetigungBean implements Serializable {
 		this.liga = liga;
 	}
 
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public void zurueck() {
+
+	}
+
 }

@@ -507,7 +507,7 @@ public class BerichtBean implements Serializable {
 
 	public void pruefeRechtschreibung() {
 
-		if (spiele.isEmpty() && isHttpLink()) {
+		if ((spiele == null || spiele.isEmpty()) && isHttpLink()) {
 			spielHtmlLesen();
 		}
 
@@ -942,6 +942,18 @@ public class BerichtBean implements Serializable {
 
 	public boolean isHttpLink() {
 		return ergebnisLink != null && ergebnisLink.startsWith("http");
+	}
+
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public String zurueckAction() {
+		return isTennis() ? "spielplan.xhtml" : "spielplan.xhtml";
 	}
 
 }

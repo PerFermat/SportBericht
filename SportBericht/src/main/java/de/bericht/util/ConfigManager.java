@@ -348,4 +348,18 @@ public class ConfigManager {
 		return getConfigValue(vereinnr, "programm.url");
 	}
 
+	public static boolean isTischtennis(String vereinnr) {
+		if ("TISCHTENNIS".equals(getConfigValue(vereinnr, "sportart.verein"))) {
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean isTennis(String vereinnr) {
+		if ("TENNIS".equals(getConfigValue(vereinnr, "sportart.verein"))) {
+			return true;
+		}
+		return false;
+	}
+
 }

@@ -770,4 +770,12 @@ public class AdresslisteBean implements Serializable {
 		addError("Bitte zuerst ein Einmalpasswort anfordern und korrekt eingeben.");
 		return false;
 	}
+
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
 }

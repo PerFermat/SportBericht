@@ -34,12 +34,16 @@
 			<div class="button-container">
 				<p:commandButton value="Veröffentlichen"
 					action="zusammenGesamt.xhtml">
-					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+					<f:param name="vereinnr" value="#{freieBerichteBean.vereinnr}" />
 					<f:param name="frei" value="frei" />
 					<f:param name="back" value="#{view.viewId}" />
 				</p:commandButton>
 				<p:commandButton value="Zurück" action="index.xhtml"
-					immediate="true">
+					immediate="true" rendered="#{freieBerichteBean.tennis}">
+					<f:param name="vereinnr" value="#{freieBerichteBean.vereinnr}" />
+				</p:commandButton>
+				<p:commandButton value="Zurück" action="spielplan.xhtml"
+					immediate="true" rendered="#{freieBerichteBean.tischtennis}">
 					<f:param name="vereinnr" value="#{freieBerichteBean.vereinnr}" />
 				</p:commandButton>
 			</div>

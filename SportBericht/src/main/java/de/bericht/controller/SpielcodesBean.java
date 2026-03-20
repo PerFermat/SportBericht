@@ -108,4 +108,16 @@ public class SpielcodesBean implements Serializable {
 	public String getVerein() {
 		return ConfigManager.getConfigValue(vereinnr, "spielplan.Verein");
 	}
+
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public void zurueck() {
+
+	}
 }

@@ -263,4 +263,15 @@ public class SpielplanBean implements Serializable {
 	public void setUrl(String url) {
 		this.url = url;
 	}
+
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public void zurueck() {
+	}
 }

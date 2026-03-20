@@ -221,4 +221,16 @@ public class KommentarBean implements Serializable {
 	public String getVereinHomepage() {
 		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
 	}
+
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public void zurueck() {
+
+	}
 }

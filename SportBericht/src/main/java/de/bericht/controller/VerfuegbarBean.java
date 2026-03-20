@@ -645,4 +645,15 @@ public class VerfuegbarBean implements Serializable {
 		return vorrunde;
 	}
 
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public void zurueck() {
+
+	}
 }

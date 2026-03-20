@@ -724,4 +724,16 @@ public class ZusammenGesamtBean implements Serializable {
 		this.freigegebeneBerichte = freigegebeneBerichte;
 		erstellenBerichtListe(freigegebeneBerichte);
 	}
+
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public void zurueck() {
+
+	}
 }

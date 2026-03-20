@@ -13,6 +13,7 @@ import de.bericht.service.DatabaseService;
 import de.bericht.service.LogEntry;
 import de.bericht.util.BerichtData;
 import de.bericht.util.BerichtHelper;
+import de.bericht.util.ConfigManager;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
@@ -279,4 +280,13 @@ public class HistorienBean implements Serializable {
 	public void setVereinnr(String vereinnr) {
 		this.vereinnr = vereinnr;
 	}
+
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
+
 }

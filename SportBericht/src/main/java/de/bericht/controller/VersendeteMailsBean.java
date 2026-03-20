@@ -12,6 +12,7 @@ import java.util.Map;
 import de.bericht.service.DatabaseService;
 import de.bericht.service.VersendeteMail;
 import de.bericht.util.BerichtHelper;
+import de.bericht.util.ConfigManager;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -189,4 +190,15 @@ public class VersendeteMailsBean implements Serializable {
 		return ruecksprung;
 	}
 
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public void zurueck() {
+
+	}
 }

@@ -332,9 +332,10 @@ public class AenderungBean implements Serializable {
 		this.berichtText = decodeUrl(berichtText);
 
 	}
+
 	/**
-	 * Dekodiert einen übergebenen String von ISO-8859-1 nach UTF-8,
-	 * sofern keine Umlaute vorhanden sind.
+	 * Dekodiert einen übergebenen String von ISO-8859-1 nach UTF-8, sofern keine
+	 * Umlaute vorhanden sind.
 	 *
 	 * @param url Eingabe-String
 	 * @return Dekodierter String oder null bei null-Eingabe
@@ -487,8 +488,8 @@ public class AenderungBean implements Serializable {
 	}
 
 	/**
-	 * Erzeugt per KI angepasste Berichtsversionen basierend auf den
-	 * konfigurierten `KiAenderung`-Optionen und setzt `berichtTextNeu`.
+	 * Erzeugt per KI angepasste Berichtsversionen basierend auf den konfigurierten
+	 * `KiAenderung`-Optionen und setzt `berichtTextNeu`.
 	 */
 	public void generieren() {
 		String antwort = null;
@@ -583,7 +584,8 @@ public class AenderungBean implements Serializable {
 	}
 
 	/**
-	 * Parst die rohe KI-Antwort (JSON/Code-Fences) und liefert ein `Spielbericht`-Objekt.
+	 * Parst die rohe KI-Antwort (JSON/Code-Fences) und liefert ein
+	 * `Spielbericht`-Objekt.
 	 *
 	 * @param rawJson Roher JSON-String oder Text vom KI-Service
 	 * @return Geparster `Spielbericht` oder Fallback bei Fehlern
@@ -650,8 +652,8 @@ public class AenderungBean implements Serializable {
 	}
 
 	/**
-	 * Fallback, falls das Parsen fehlschlägt: legt ein `Spielbericht` mit
-	 * dem Originaltext an.
+	 * Fallback, falls das Parsen fehlschlägt: legt ein `Spielbericht` mit dem
+	 * Originaltext an.
 	 *
 	 * @param originalJson Originaltext
 	 * @return `Spielbericht`-Fallback
@@ -688,7 +690,8 @@ public class AenderungBean implements Serializable {
 	}
 
 	/**
-	 * Aktualisiert die Bearbeitungseinträge in der Datenbank (fügt ggf. neuen Eintrag hinzu).
+	 * Aktualisiert die Bearbeitungseinträge in der Datenbank (fügt ggf. neuen
+	 * Eintrag hinzu).
 	 */
 	public void updBearbeitung() {
 		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
@@ -756,7 +759,8 @@ public class AenderungBean implements Serializable {
 	}
 
 	/**
-	 * Speichert den generierten Bericht in der Datenbank (bereinigt und formatiert als HTML).
+	 * Speichert den generierten Bericht in der Datenbank (bereinigt und formatiert
+	 * als HTML).
 	 */
 	public void speichern() {
 		String cleaned = berichtTextNeu.getText().replaceAll("\u001B\\[[;\\d]*m", "");
@@ -801,6 +805,14 @@ public class AenderungBean implements Serializable {
 	 */
 	public void setFrageAusgabe(String frageAusgabe) {
 		this.frageAusgabe = frageAusgabe;
+	}
+
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
 	}
 
 }

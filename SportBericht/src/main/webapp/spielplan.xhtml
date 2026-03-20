@@ -34,10 +34,16 @@
 
 		<h2>Spielauswahl – #{spielplanBean.verein}</h2>
 		<h:form>
+			<p:commandButton value="Zurück" action="index.xhtml"
+				actionListener="#{spielplanBean.zurueck}" immediate="true"
+				rendered="#{spielplanBean.tennis}">
+				<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+			</p:commandButton>
+
 			<p:commandButton value="Veröffentlichen"
 				action="zusammenGesamt.xhtml">
 				<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
-				<f:param name="back" value="#{view.viewId}" />				
+				<f:param name="back" value="#{view.viewId}" />
 			</p:commandButton>
 		</h:form>
 	</div>
