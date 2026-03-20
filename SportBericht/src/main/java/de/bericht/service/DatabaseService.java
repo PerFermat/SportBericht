@@ -1,5 +1,8 @@
 package de.bericht.service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -48,7 +51,7 @@ public class DatabaseService {
 	private final Random random = new Random();
 	private static final String DEFAULT_JNDI_NAME = "java:/jdbc/TischtennisDS";
 	private static volatile DataSource dataSource;
-
+	private static boolean spielplanTablePrepared = false;
 	static {
 
 		try {
@@ -168,8 +171,8 @@ public class DatabaseService {
 		return bilder;
 	}
 
-	public void deleteFreigabe(String vereinnr, String ergebnisLink) {
-		String sql = "DELETE FROM freigegeben WHERE vereinnr = ? AND ergebnisLink = ?";
+	public void deleteSpiel(String vereinnr, String ergebnisLink) {
+		String sql = "DELETE FROM spielplan WHERE vereinnr = ? AND ergebnisLink = ?";
 
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -593,63 +596,6 @@ public class DatabaseService {
 			ErgebnisCache.setze(vereinnr, "Wordpress", this, ergebnisLink, name);
 			BerichtHelper.refreshCachedBerichtData(vereinnr, ergebnisLink);
 
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public List<FreigegebeneSpiele> freigegebeneSpiele(String vereinnr) {
-		String sql = "SELECT vereinnr, timestamp, ergebnisLink, heim, gast, datum, ergebnis, name, gruppe "
-				+ "FROM freigegeben " + "WHERE vereinnr = ? AND timestamp >= NOW() - INTERVAL 14 DAY "
-				+ "ORDER BY timestamp DESC";
-
-		List<FreigegebeneSpiele> spiele = new ArrayList<>();
-
-		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-			pstmt.setString(1, vereinnr);
-			ResultSet rs = pstmt.executeQuery();
-
-			while (rs.next()) {
-				String ergebnisLink = rs.getString("ergebnisLink");
-				String heim = rs.getString("heim");
-				String gast = rs.getString("gast");
-				String datum = rs.getString("datum"); // oder ggf. aus timestamp berechnen
-				String ergebnis = rs.getString("ergebnis");
-				String name = rs.getString("name");
-				String gruppe = rs.getString("gruppe");
-
-				// Du kannst weitere Felder ergänzen, je nachdem, wie dein Spiel-Konstruktor
-				// aussieht.
-				FreigegebeneSpiele spiel = new FreigegebeneSpiele(vereinnr, ergebnisLink, heim, gast, datum, ergebnis,
-						name, gruppe);
-
-				spiele.add(spiel);
-			}
-			rs.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-		return spiele;
-	}
-
-	public void insertFreigegebeneSpiele(FreigegebeneSpiele freigegebeneSpiele) {
-		String sql = "INSERT INTO freigegeben "
-				+ "(vereinnr, ergebnisLink, heim, gast, datum, ergebnis, name, liga, timestamp) "
-				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
-
-		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-			pstmt.setString(1, freigegebeneSpiele.getVereinnr());
-			pstmt.setString(2, freigegebeneSpiele.getErgebnisLink());
-			pstmt.setString(3, freigegebeneSpiele.getHeim());
-			pstmt.setString(4, freigegebeneSpiele.getGast());
-			pstmt.setString(5, freigegebeneSpiele.getDatum()); // z. B. "2025-07-19" im Format CHAR(10)
-			pstmt.setString(6, freigegebeneSpiele.getErgebnis());
-			pstmt.setString(7, freigegebeneSpiele.getName());
-			pstmt.setString(8, freigegebeneSpiele.getLiga());
-			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -1836,6 +1782,66 @@ public class DatabaseService {
 			e.printStackTrace();
 		}
 		return spiele;
+	}
+
+	public void saveSpielplanEntries(String vereinnr, List<Spiel> spiele) {
+		if (spiele == null || spiele.isEmpty()) {
+			return;
+		}
+
+		String insertSql = "INSERT INTO spielplan_tabelle "
+				+ " (unique_key, vereinnr, wochentag_datum, wochentag, datum, zeit, liga, spiellokal, heim, gast, ergebnis, ergebnis_link, heim_link, gast_link) "
+				+ "VALUES (? , ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+				+ "ON DUPLICATE KEY UPDATE wochentag_datum=VALUES(wochentag_datum), wochentag=VALUES(wochentag),  "
+				+ "datum=VALUES(datum), zeit=VALUES(zeit), spiellokal=VALUES(spiellokal), ergebnis=VALUES(ergebnis), ergebnis_link=VALUES(ergebnis_link), "
+				+ "heim_link=VALUES(heim_link), gast_link=VALUES(gast_link)";
+
+		try (Connection conn = openConnection()) {
+
+			try (PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
+				for (Spiel spiel : spiele) {
+					pstmt.setString(1, generateUniqueKey(spiel, vereinnr));
+					pstmt.setString(2, vereinnr);
+					pstmt.setString(3, spiel.getDatumAnzeige());
+					pstmt.setString(4, "");
+					pstmt.setString(5, spiel.getDatumAnzeige());
+					pstmt.setString(6, spiel.getZeitAnzeige());
+					pstmt.setString(7, spiel.getLiga());
+					pstmt.setString(8, "");
+					pstmt.setString(9, spiel.getHeim());
+					pstmt.setString(10, spiel.getGast());
+					pstmt.setString(11, spiel.getErgebnis());
+					pstmt.setString(12, spiel.getErgebnisLink());
+					pstmt.setString(13, "");
+					pstmt.setString(14, "");
+					pstmt.addBatch();
+				}
+				pstmt.executeBatch();
+			}
+			System.out.println("Die Spielplan wurde erfolgreich gespeichert.");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private String generateUniqueKey(Spiel spiel, String vereinnr) {
+		String keyInput = String.join("|", vereinnr, sanitize(spiel.getHeim()), sanitize(spiel.getGast()),
+				sanitize(spiel.getLiga()));
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			byte[] hash = digest.digest(keyInput.getBytes(StandardCharsets.UTF_8));
+			StringBuilder hex = new StringBuilder();
+			for (byte b : hash) {
+				hex.append(String.format("%02x", b));
+			}
+			return hex.toString();
+		} catch (NoSuchAlgorithmException e) {
+			throw new IllegalStateException("SHA-256 ist nicht verfügbar", e);
+		}
+	}
+
+	private String sanitize(String value) {
+		return value == null ? "" : value.trim();
 	}
 
 	public List<AdressEintrag> ladeAdressEintraege(String vereinnr) {

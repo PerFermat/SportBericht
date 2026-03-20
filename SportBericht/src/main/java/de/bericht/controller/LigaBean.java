@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import de.bericht.service.DatabaseService;
 import de.bericht.service.Liga;
 import de.bericht.service.LigaService;
 import de.bericht.util.BerichtHelper;
@@ -19,12 +20,14 @@ import jakarta.servlet.http.HttpServletRequest;
 @ViewScoped
 public class LigaBean implements Serializable {
 
+	private static final long serialVersionUID = 1L;
 	private List<Liga> ligen;
 	private String verein;
 
 	private String berichtDatum;
 	private Date berichtDatumCal;
 	private String vereinnr;
+	DatabaseService db = new DatabaseService();
 	ConfigManager config = ConfigManager.getInstance();
 
 	private String freierText;
@@ -44,7 +47,7 @@ public class LigaBean implements Serializable {
 
 		String url = ConfigManager.getSpielplanURL(vereinnr);
 
-		System.out.println("Liga");
+		System.out.println("Liga" + vereinnr);
 		LigaService ls = new LigaService(url);
 		ligen = ls.getLigen();
 		verein = ls.getVerein();

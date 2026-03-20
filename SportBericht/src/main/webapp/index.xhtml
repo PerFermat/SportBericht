@@ -66,7 +66,7 @@
 				<p:column headerText="Bericht" styleClass="col-bericht">
 					<div class="buttontab-container">
 						<!-- Button "Bericht" wird nur angezeigt, wenn in der Ergebnis-Spalte ein Wert steht -->
-						<p:commandButton value="Auswählen" action="spielplan.xhtml"
+						<p:commandButton value="Auswählen" action="ligaBean.xhtml"
 							styleClass="myButton">
 							<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
 							<f:param name="url" value="#{liga.gruppeUrl}" />
@@ -81,8 +81,9 @@
 		<h:form id="berichtForm">
 			<p:panel header="Freier Bericht eingeben" toggleable="true">
 				<h:outputText value="Datum:" />
-				<p:calendar id="berichtDatumCal" value="#{ligaBean.berichtDatumCal}"
-					pattern="dd.MM.yyyy" styleClass="berichtDatumCal" locale="de"
+				<p:calendar id="berichtDatumCal"
+					value="#{ligaBean.berichtDatumCal}" pattern="dd.MM.yyyy"
+					styleClass="berichtDatumCal" locale="de"
 					converterMessage="Ungültiges Datum">
 					<p:ajax event="dateSelect" listener="#{ligaBean.onDateSelect}"
 						update="@form" />
@@ -114,9 +115,13 @@
                              not ligaBean.hasFreigabe(ligaBean.freierLink)}"
 						styleClass="myButtonfrei">
 						<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
-						<f:param name="verein" value="#{ligaBean.verein}" />
 						<f:param name="heim" value="#{ligaBean.freierText}" />
-						<f:param name="ergebnisLink" value="#{ligaBean.freierLink}" />
+						<f:param name="gast" value="#{ligaBean.berichtDatum} " />
+						<f:param name="datum" value="" />
+						<f:param name="ergebnis" value="" />
+						<f:param name="liga" value="" />
+						<f:param name="ergebnisLink"
+							value="#{ligaBean.berichtDatum}-#{ligaBean.freierText}" />
 					</p:commandButton>
 					<p:commandButton value="Veröffentlichen" action="zusammen.xhtml"
 						rendered="#{not empty ligaBean.berichtDatum and
@@ -124,8 +129,11 @@
                              ligaBean.hasFreigabe(ligaBean.freierLink)}"
 						styleClass="myButtonfrei">
 						<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
-						<f:param name="verein" value="#{ligaBean.verein}" />
 						<f:param name="heim" value="#{ligaBean.freierText}" />
+						<f:param name="gast" value="" />
+						<f:param name="datum" value="" />
+						<f:param name="ergebnis" value="" />
+						<f:param name="liga" value="" />
 						<f:param name="ergebnisLink" value="#{ligaBean.freierLink}" />
 					</p:commandButton>
 				</div>

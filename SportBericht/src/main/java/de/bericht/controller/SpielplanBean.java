@@ -19,14 +19,15 @@ import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.ErgebnisCache;
 import de.bericht.util.WebCache;
-import jakarta.enterprise.context.SessionScoped;
+import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
+import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Named("spielplanBean")
-@SessionScoped
+@ViewScoped
 public class SpielplanBean implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -42,10 +43,15 @@ public class SpielplanBean implements Serializable {
 	private String url;
 	ConfigManager config;
 	List<BerichtText> meineBerichtTexte = new ArrayList<>();
+	DatabaseService db = new DatabaseService();
 
 	private String freierText;
 
 	public SpielplanBean() {
+	}
+
+	@PostConstruct
+	public void init() {
 		FacesContext context = FacesContext.getCurrentInstance();
 		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 		System.out.println("Das kommt an " + request.getParameter("v"));
@@ -74,6 +80,12 @@ public class SpielplanBean implements Serializable {
 			}
 			System.out.println("Anfang" + i++ + vereinnr);
 			spiele = provider.getSpielplan();
+			if (ConfigManager.isTennis(vereinnr)) {
+				for (Spiel spiel : spiele) {
+					spiel.setGruppe(liga);
+					db.saveSpielplanEntries(vereinnr, spiele);
+				}
+			}
 			System.out.println("Anfang" + i++ + vereinnr);
 			if (provider.isFallbackSourceUsed()) {
 				System.out.println("Anfang" + i++ + vereinnr);

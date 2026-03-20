@@ -204,4 +204,8 @@ public class TennisSpiel extends Spiel {
 			return "";
 		}
 	}
+
+	public void setGruppe(String gruppe) {
+		this.gruppe = gruppe;
+	}
 }

@@ -445,7 +445,6 @@ public class ZusammenBean implements Serializable {
 
 	public void freigabeAufheben() {
 		dbService.deleteLogData(vereinnr, ergebnisLink, "Freigegeben");
-		dbService.deleteFreigabe(vereinnr, ergebnisLink);
 		logEntries = dbService.getLogEntries(vereinnr, ergebnisLink);
 	}
 

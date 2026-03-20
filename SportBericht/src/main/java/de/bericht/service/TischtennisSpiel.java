@@ -125,4 +125,7 @@ public class TischtennisSpiel extends Spiel {
 		return zeit;
 	}
 
+	@Override
+	public void setGruppe(String gruppe) {
+	}
 }

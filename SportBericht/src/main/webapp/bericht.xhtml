@@ -39,10 +39,10 @@
 
 
 	<!-- Formular für Bericht und Bild -->
-	<h:form id="berichtForm" enctype="multipart/form-data">
-		<!-- Container, der Eingabefeld und Fehlerbereich sowie die jeweiligen Buttons enthält -->
-		<div class="responsive-container">
-			<div class="text-input">
+	<!-- Container, der Eingabefeld und Fehlerbereich sowie die jeweiligen Buttons enthält -->
+	<div class="responsive-container">
+		<div class="text-input">
+			<h:form id="berichtForm" enctype="multipart/form-data">
 				<div class="button-container">
 					<p:commandButton value="Bericht generieren"
 						action="berichtki.xhtml">
@@ -112,9 +112,10 @@
 					<div class="button-container">
 						<p:commandButton value="Rechtschreibung prüfen"
 							action="#{berichtBean.pruefeRechtschreibung}"
-							update="@form, :fehlerPanel" />
+							update=":berichtForm, :logForm, :fehlerPanel, :errorForm" />
 						<p:commandButton value="Bericht mit KI verbessern"
-							action="#{berichtBean.verbessernKI}" update="@form, :fehlerPanel" />
+							action="#{berichtBean.verbessernKI}"
+							update=":berichtForm, :logForm, :fehlerPanel, :errorForm" />
 						<p:commandButton value="Bericht mit KI ändern"
 							action="aenderung.xhtml"
 							actionListener="#{berichtBean.speichern}">
@@ -147,7 +148,8 @@
 								angezeigt:</p>
 							<h:inputFile id="fileInput" value="#{berichtBean.uploadedBild}"
 								accept="image/*" onchange="resizeImage(this);"
-								update="@form, :logPanel" styleClass="custom-file-input" />
+								update=":berichtForm, :logForm, :logPanel"
+								styleClass="custom-file-input" />
 							<h:inputHidden id="hiddenImageBase64"
 								value="#{berichtBean.resizedImage}" />
 						</div>
@@ -157,14 +159,17 @@
 
 				<div class="button-container">
 					<p:commandButton value="Speichern"
-						action="#{berichtBean.speichern}" update="@form, :logPanel" />
+						action="#{berichtBean.speichern}"
+						update=":berichtForm, :logForm, :logPanel" />
 
 					<p:commandButton value="E-Mail senden"
 						actionListener="#{berichtBean.pruefeEmailStatus}" process="@this"
 						oncomplete="handleEmailDialog(#{berichtBean.email ? 'true' : 'false'})"
-						disabled="#{empty berichtBean.name}" update="@form, :growl" />
+						disabled="#{empty berichtBean.name}"
+						update=":berichtForm, :logForm, :growl" />
 					<p:commandButton value="Bild löschen"
-						action="#{berichtBean.bildLoeschen}" update="@form, :logPanel"
+						action="#{berichtBean.bildLoeschen}"
+						update=":berichtForm, :logForm, :logPanel"
 						disabled="#{empty berichtBean.bildUrl}" />
 					<p:commandButton value="Bild bearbeiten"
 						disabled="#{empty berichtBean.bildUrl}"
@@ -247,8 +252,9 @@
 						<f:facet name="footer">
 							<div class="dialog-footer-buttons">
 								<p:commandButton value="E-Mail erneut senden"
-									action="#{berichtBean.emailSenden}" update="@form, :growl"
-									icon="pi pi-envelope" styleClass="ui-button-warning" />
+									action="#{berichtBean.emailSenden}"
+									update=":berichtForm, :logForm, :growl" icon="pi pi-envelope"
+									styleClass="ui-button-warning" />
 
 								<p:commandButton value="Freigeben" action="spielplan.xhtml"
 									rendered="#{berichtBean.anzFreigabe and berichtBean.ergebnisLink.startsWith('http')}"
@@ -298,8 +304,9 @@
 						<f:facet name="footer">
 							<div class="dialog-footer-buttons">
 								<p:commandButton value="Ja, senden"
-									action="#{berichtBean.emailSenden}" update="@form, :growl"
-									icon="pi pi-check" styleClass="ui-button-success" />
+									action="#{berichtBean.emailSenden}"
+									update=":berichtForm,  :logForm, :growl" icon="pi pi-check"
+									styleClass="ui-button-success" />
 
 								<p:commandButton value="Abbrechen"
 									onclick="PF('dialogNochNichtGesendet').hide();" type="button"
@@ -309,15 +316,16 @@
 					</p:dialog>
 
 				</div>
-			</div>
-
-			<!-- Rechter Bereich: Fehleranzeige und Button "Rechtschreibung prüfen" -->
-			<div class="error-table">
+			</h:form>
+		</div>
+		<!-- Rechter Bereich: Fehleranzeige und Button "Rechtschreibung prüfen" -->
+		<div class="error-table">
+			<h:form id="errorForm" enctype="multipart/form-data">
 				<div class="button-container">
 					<p:commandButton
 						value="#{berichtBean.spielplan ? 'Spielbericht ausblenden' : 'Spielbericht anzeigen'}"
 						action="#{berichtBean.spielplanAnzeige}"
-						update="@form, :fehlerPanel" />
+						update=":errorForm,  :fehlerPanel" />
 				</div>
 				<h:panelGroup id="fehlerPanelOK"
 					rendered="#{!berichtBean.spielplan}">
@@ -348,7 +356,7 @@
 									<p:commandButton value="Übernehmen"
 										actionListener="#{berichtBean.korrektur(fehler.fehlerhaftesWort, fehler.vorschlag)}"
 										rendered="#{fehler.button}" styleClass="myButton"
-										update="@form, :textPanel :growl">
+										update=":errorForm, :berichtForm :growl">
 									</p:commandButton>
 								</div>
 							</p:column>
@@ -371,10 +379,12 @@
 					</p:outputPanel>
 				</h:panelGroup>
 
-			</div>
+			</h:form>
 		</div>
+	</div>
 
-		<br />
+	<br />
+	<h:form id="logForm" enctype="multipart/form-data">
 		<h:panelGroup id="logPanel"
 			rendered="#{not empty berichtBean.logEntries}">
 			<p:panel header="Änderungshistorie" toggleable="true"
@@ -393,7 +403,7 @@
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
 					</p:commandButton>
 					<p:commandButton value="Spielberichtsbogen neu lesen"
-						action="#{berichtBean.spielHtmlLesen}" />
+						action="#{berichtBean.spielHtmlLesen}" update=":berichtForm" />
 				</div>
 				<p>
 					<a href="#{berichtBean.generateBerichtUrlLink}">Direkter Link
