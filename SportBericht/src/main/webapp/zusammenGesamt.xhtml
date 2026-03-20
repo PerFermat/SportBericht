@@ -25,14 +25,10 @@
 					style="vertical-align: middle;" width="50" />
 			</h:outputLink>
 			<h2>Veröffentlichen Spielbereichte - Gesamt</h2>
-			<p:commandButton value="Zurück" action="index.xhtml" immediate="true"
-				rendered="#{not zusammenGesamtBean.freieBerichte}">
+			<p:button value="Zurück" outcome="#{param.back}"
+				rendered="#{not empty param.back}">
 				<f:param name="vereinnr" value="#{zusammenGesamtBean.vereinnr}" />
-			</p:commandButton>
-			<p:commandButton value="Zurück" action="freieBerichte.xhtml"
-				immediate="true" rendered="#{zusammenGesamtBean.freieBerichte}">
-				<f:param name="vereinnr" value="#{zusammenGesamtBean.vereinnr}" />
-			</p:commandButton>
+			</p:button>
 		</div>
 	</h:form>
 	<br />
@@ -42,7 +38,7 @@
 			<p:toggleSwitch value="#{zusammenGesamtBean.freigegebeneBerichte}">
 				<p:ajax update=":liste label" />
 			</p:toggleSwitch>
-			<h:outputText  id="label" 
+			<h:outputText id="label"
 				value="#{zusammenGesamtBean.freigegebeneBerichte 
             ? '  Freigegebene Berichte' 
             : '  Alle Berichte'}" />
