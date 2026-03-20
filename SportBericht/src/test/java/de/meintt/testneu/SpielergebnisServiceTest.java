@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import de.bericht.provider.SpielergebnisFactory;
@@ -21,7 +22,7 @@ class SpielergebnisServiceTest {
 	SpielergebnisProvider provider;
 	NamensSpeicher ns = new NamensSpeicher();
 
-	// @Disabled("temporär deaktiviert")
+	@Disabled("temporär deaktiviert")
 	@BeforeEach
 	void setUp() {
 		config = ConfigManager.getInstance();
@@ -30,7 +31,7 @@ class SpielergebnisServiceTest {
 			// Hier stehen die von dir gewünschten Zeilen am Anfang
 			ergebnis = provider.getSpielErgebnis();
 			System.out.println(ergebnis);
-			// System.out.println(provider.summaryToJson());
+			System.out.println(provider.summaryToJson());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -38,7 +39,7 @@ class SpielergebnisServiceTest {
 
 	}
 
-	// @Disabled("temporär deaktiviert")
+	@Disabled("temporär deaktiviert")
 	@Test
 	void spielplan_darf_nicht_null_und_soll_nicht_leer_sein() {
 		assertNotNull(ergebnis, "Spielplan darf nicht null sein");

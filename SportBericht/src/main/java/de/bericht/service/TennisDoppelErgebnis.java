@@ -59,12 +59,29 @@ public class TennisDoppelErgebnis implements SpielDetail {
 		return getVorname(gast1) + "/" + getVorname(gast2);
 	}
 
+	public String getHeimPaarungMitNachnamen() {
+		return getNachname(heim1) + "/" + getNachname(heim2);
+	}
+
+	public String getGastPaarungMitNachnamen() {
+		return getNachname(gast1) + "/" + getNachname(gast2);
+	}
+
 	private String getVorname(String vollerName) {
 		if (vollerName == null || vollerName.trim().isEmpty()) {
 			return "";
 		}
-		String[] teile = vollerName.trim().split(" ");
+		String[] teile = TennisSpielerInfo.parse(vollerName).getName().split(" ");
+
 		return teile.length > 0 ? teile[0] : vollerName;
+	}
+
+	private String getNachname(String vollerName) {
+		if (vollerName == null || vollerName.trim().isEmpty()) {
+			return "";
+		}
+		String[] teile = TennisSpielerInfo.parse(vollerName).getName().split(" ");
+		return teile.length > 0 ? teile[teile.length - 1] : vollerName;
 	}
 
 	public String getSatz1() {

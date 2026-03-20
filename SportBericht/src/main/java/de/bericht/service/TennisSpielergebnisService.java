@@ -11,6 +11,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import de.bericht.util.ConfigManager;
 import de.bericht.util.NamensSpeicher;
 import de.bericht.util.SpielDetail;
 import de.bericht.util.TennisMatchSummary;
@@ -53,7 +54,7 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 		boolean berichtIstHeim = summary.isBerichtMannschaftIstHeim();
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("Für ").append(verein).append(" spielten:\n\n");
+		sb.append("<strong>Für ").append(ConfigManager.getSpielplanVerein(vereinnr)).append(" spielen:<br></strong>");
 
 		List<?> alle = summary.getSpiele();
 		List<TennisEinzelErgebnis> einzel = new ArrayList<>();
@@ -68,9 +69,9 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 		}
 
 		if (!einzel.isEmpty()) {
-			sb.append("Einzel:\n");
+			sb.append("<strong>Einzel:</strong><br>");
 			for (TennisEinzelErgebnis e : einzel) {
-				String spieler = berichtIstHeim ? e.getHeim() : e.getGast();
+				String spieler = berichtIstHeim ? e.getHeimSpieler().getName() : e.getGastSpieler().getName();
 				if (spieler.toLowerCase().contains("nachgenannt")) {
 					continue;
 				}
@@ -80,14 +81,14 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 				if (e.getSatz3() != null && !e.getSatz3().isBlank()) {
 					sb.append(" / ").append(berichtIstHeim ? e.getSatz3() : dreheErgebnis(e.getSatz3()));
 				}
-				sb.append("\n");
+				sb.append("<br>");
 			}
 		}
 
 		if (!doppel.isEmpty()) {
-			sb.append("Doppel:\n");
+			sb.append("<strong>Doppel:</strong><br>");
 			for (TennisDoppelErgebnis d : doppel) {
-				String paarung = berichtIstHeim ? d.getHeimPaarungMitVornamen() : d.getGastPaarungMitVornamen();
+				String paarung = berichtIstHeim ? d.getHeimPaarungMitNachnamen() : d.getGastPaarungMitNachnamen();
 				if (paarung.toLowerCase().contains("nachgenannt")) {
 					continue;
 				}
@@ -98,7 +99,7 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 				if (d.getSatz3() != null && !d.getSatz3().isBlank()) {
 					sb.append(" / ").append(berichtIstHeim ? d.getSatz3() : dreheErgebnis(d.getSatz3()));
 				}
-				sb.append("\n");
+				sb.append("<br>");
 			}
 		}
 
