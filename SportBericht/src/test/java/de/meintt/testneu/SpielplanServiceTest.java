@@ -20,6 +20,12 @@ class SpielplanServiceTest {
 	SpielplanProvider provider;
 	List<Spiel> spiele;
 	String vereinnr = "20233"; // <-- passe an, falls nötig
+	String url = "https://www.wtb-tennis.de/spielbetrieb/vereine/verein/mannschaften/mannschaft/v/20233/m/3496261.html";
+	// String vereinnr = "13014"; // <-- passe an, falls nötig
+	// String url =
+	// "https://www.mytischtennis.de/click-tt/TTBW/25--26/verein/13014/TSGV_Hattenhofen_III/spielplan";
+	// String url =
+	// "https://ttvwh.click-tt.de/cgi-bin/WebObjects/nuLigaTTDE.woa/wa/clubInfoDisplay?club=3947";
 
 	@Disabled("temporär deaktiviert")
 	@BeforeEach
@@ -28,8 +34,7 @@ class SpielplanServiceTest {
 		ConfigManager config = ConfigManager.getInstance();
 		// Hier stehen die von dir gewünschten Zeilen am Anfang
 		try {
-			provider = SpielplanFactory.createForUrl(vereinnr,
-					"https://www.wtb-tennis.de/spielbetrieb/vereine/verein/mannschaften/mannschaft/v/20233/m/3496261.html");
+			provider = SpielplanFactory.createForUrl(vereinnr, url);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -49,7 +54,7 @@ class SpielplanServiceTest {
 	@Test
 	void erstes_spiel_hat_gueltige_felder() {
 		Spiel s = spiele.get(0);
-		assertNotNull(s.getDatumAnzeige(), "Datum darf nicht null sein");
+		assertNotNull(s.getDatum(), "Datum darf nicht null sein");
 		assertNotNull(s.getHeim(), "Heimmannschaft darf nicht null sein");
 	}
 }

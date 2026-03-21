@@ -108,6 +108,7 @@ public class BerichtkiBean implements Serializable {
 		this.datum = params.get("datum");
 		this.ergebnis = params.get("ergebnis");
 		this.ergebnisLink = params.get("ergebnisLink");
+		this.gruppeUrl = params.get("gruppeUrl");
 		this.besondereVorkommnisse = params.get("besondereVorkommnisse");
 		if (params.get("berichtText") != null && !params.get("berichtText").isEmpty()) {
 			Spielbericht sb = new Spielbericht();
@@ -1042,6 +1043,14 @@ public class BerichtkiBean implements Serializable {
 
 	public boolean isTischtennis() {
 		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public String getBestimmenIcon() {
+		return ConfigManager.getConfigValue(vereinnr, "style.icon");
+	}
+
+	public String getVereinHomepage() {
+		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
 	}
 
 }

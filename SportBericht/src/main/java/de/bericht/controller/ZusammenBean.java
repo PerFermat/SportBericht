@@ -85,13 +85,13 @@ public class ZusammenBean implements Serializable {
 	private Boolean mitSpielberichte;
 	private SpielplanProvider provider;
 	private List<Spiel> spiele;
-	private String url;
+	private String gruppeUrl;
 
 	private String freierText;
 
 	public ZusammenBean() throws UnsupportedEncodingException {
 		Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
-		url = params.get("url");
+		gruppeUrl = params.get("gruppeUrl");
 		vereinnr = params.get("vereinnr");
 		datum = params.get("datum");
 		liga = params.get("liga");
@@ -116,21 +116,24 @@ public class ZusammenBean implements Serializable {
 		String mail = params.get("mail");
 		name = BerichtHelper.getHomepageStandardEinzel(vereinnr);
 		if (datum != null) {
-			this.selectedItem = new TischtennisSpiel(vereinnr, datum, "", liga, heim, gast, ergebnis, ergebnisLink);
+			this.selectedItem = new TischtennisSpiel(vereinnr, "", "", datum, "", liga, heim, gast, ergebnis,
+					ergebnisLink);
 			ladeIframe(selectedItem);
 		}
 		freieBerichte = params.get("frei");
-
+		System.out.println(freieBerichte);
 		if (freieBerichte != null && "frei".equals(freieBerichte)) {
 			spiele = dbService.listeFreieBerichte(vereinnr);
 		} else {
 			try {
-				if (url == null) {
+				System.out.println(gruppeUrl);
+				if (gruppeUrl == null) {
 					provider = SpielplanFactory.create(vereinnr);
-					url = provider.getFallbackSourceUrl();
+					gruppeUrl = provider.getFallbackSourceUrl();
+
 				} else {
-					System.out.println(url);
-					provider = SpielplanFactory.create(vereinnr, url);
+					System.out.println(gruppeUrl);
+					provider = SpielplanFactory.create(vereinnr, gruppeUrl);
 				}
 			} catch (Exception e) {
 				spieleFreigegeben = new ArrayList<>();
@@ -158,8 +161,8 @@ public class ZusammenBean implements Serializable {
 
 			spieleFreigegeben.sort((s1, s2) -> {
 				try {
-					Date d1 = formatter.parse(s1.getDatumAnzeige());
-					Date d2 = formatter.parse(s2.getDatumAnzeige());
+					Date d1 = formatter.parse(s1.getDatum());
+					Date d2 = formatter.parse(s2.getDatum());
 					return d1.compareTo(d2);
 				} catch (ParseException e) {
 					return 0;
@@ -225,7 +228,7 @@ public class ZusammenBean implements Serializable {
 		LocalDate vorTagen = heute.minusDays(configTage);
 
 		return spieleFreigegeben.stream().filter(spiel -> {
-			LocalDate spielDatum = LocalDate.parse(spiel.getDatumAnzeige(), formatter);
+			LocalDate spielDatum = LocalDate.parse(spiel.getDatum(), formatter);
 			return (spielDatum.isAfter(vorTagen) || spielDatum.isEqual(vorTagen));
 		}).collect(Collectors.toList());
 	}
@@ -301,7 +304,7 @@ public class ZusammenBean implements Serializable {
 
 	public void ladeIframe(Spiel spiel) throws UnsupportedEncodingException {
 
-		datum = spiel.getDatumAnzeige();
+		datum = spiel.getDatum();
 		liga = spiel.getLiga();
 		heim = spiel.getHeim();
 		gast = spiel.getGast();
@@ -864,5 +867,13 @@ public class ZusammenBean implements Serializable {
 
 	public void zurueck() {
 
+	}
+
+	public String getGruppeUrl() {
+		return gruppeUrl;
+	}
+
+	public void setGruppeUrl(String gruppeUrl) {
+		this.gruppeUrl = gruppeUrl;
 	}
 }

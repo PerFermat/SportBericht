@@ -2,24 +2,23 @@ package de.bericht.service;
 
 import java.util.List;
 
-import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 
 public class TischtennisSpiel extends Spiel {
 
-	private String datum;
-	private String zeit;
 	private String liga;
 	private DatabaseService dbService = new DatabaseService();
 	private List<LogEntry> logEntries;
 	private static ConfigManager config;
 
-	public TischtennisSpiel(String vereinnr, String datum, String zeit, String liga, String heim, String gast,
-			String ergebnis, String ergebnisLink) {
+	public TischtennisSpiel(String vereinnr, String datumGesamt, String wochentag, String datum, String zeit,
+			String liga, String heim, String gast, String ergebnis, String ergebnisLink) {
 		this.vereinnr = vereinnr;
+		this.liga = liga;
+		this.datumGesamt = datumGesamt;
+		this.wochentag = wochentag;
 		this.datum = datum;
 		this.zeit = zeit;
-		this.liga = liga;
 		this.heim = heim;
 		this.gast = gast;
 		this.ergebnis = ergebnis;
@@ -45,18 +44,6 @@ public class TischtennisSpiel extends Spiel {
 				break;
 			}
 		}
-	}
-
-	public String getDatum() {
-		return datum;
-	}
-
-	public String getZeit() {
-		return zeit;
-	}
-
-	public void setZeit(String zeit) {
-		this.zeit = zeit;
 	}
 
 	@Override
@@ -102,30 +89,9 @@ public class TischtennisSpiel extends Spiel {
 		return logEntries;
 	}
 
-	public String getBildUrl(String vereinnr) {
-		return BerichtHelper.getBildUrl(vereinnr, ergebnisLink);
-	}
-
-	public String getBildUrl() {
-		return BerichtHelper.getBildUrl(vereinnr, ergebnisLink);
-	}
-
 	@Override
 	public String getSportart() {
 		return "tischtennis";
 	}
 
-	@Override
-	public String getDatumAnzeige() {
-		return datum;
-	}
-
-	@Override
-	public String getZeitAnzeige() {
-		return zeit;
-	}
-
-	@Override
-	public void setGruppe(String gruppe) {
-	}
 }

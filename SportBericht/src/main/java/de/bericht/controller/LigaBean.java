@@ -47,7 +47,6 @@ public class LigaBean implements Serializable {
 
 		String url = ConfigManager.getSpielplanURL(vereinnr);
 
-		System.out.println("Liga" + vereinnr);
 		LigaService ls = new LigaService(url);
 		ligen = ls.getLigen();
 		verein = ls.getVerein();

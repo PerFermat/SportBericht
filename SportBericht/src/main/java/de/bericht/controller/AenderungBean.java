@@ -55,6 +55,7 @@ public class AenderungBean implements Serializable {
 	private boolean spielplan = false;
 	private int anzahlKi;
 	private String frageAusgabe;
+	private String gruppeUrl;
 
 	public AenderungBean() {
 		Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
@@ -66,6 +67,7 @@ public class AenderungBean implements Serializable {
 		this.ergebnisLink = params.get("ergebnisLink");
 		this.liga = params.get("liga");
 		this.uuid = params.get("uuid");
+		this.gruppeUrl = params.get("gruppeUrl");
 		if (uuid == null) {
 			uuid = UUID.randomUUID().toString();
 		}
@@ -813,6 +815,14 @@ public class AenderungBean implements Serializable {
 
 	public boolean isTischtennis() {
 		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public String getGruppeUrl() {
+		return gruppeUrl;
+	}
+
+	public void setGruppeUrl(String gruppeUrl) {
+		this.gruppeUrl = gruppeUrl;
 	}
 
 }

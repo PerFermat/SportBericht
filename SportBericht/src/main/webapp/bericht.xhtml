@@ -18,12 +18,33 @@
 </h:head>
 
 <h:body>
-	<div class="header-area">
+	<div class="tabheader-area">
+		<h:outputLink value="#{berichtBean.vereinHomepage}" target="_blank">
+			<img src="#{berichtBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
 		<h2>Bericht schreiben</h2>
+		<h:form>
+			<p:commandButton value="Zurück" action="#{berichtBean.zurueckAction}"
+				actionListener="#{berichtBean.zurueck}" immediate="true"
+				rendered="#{not empty berichtBean.ergebnisLink and berichtBean.ergebnisLink.startsWith('http')}">
+				<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
+				<f:param name="liga" value="#{berichtBean.liga}" />
+				<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
+			</p:commandButton>
+			<p:commandButton value="Zurück" action="freieBerichte.xhtml"
+				actionListener="#{berichtBean.zurueck}" immediate="true"
+				rendered="#{not empty berichtBean.ergebnisLink and not berichtBean.ergebnisLink.startsWith('http')}">
+				<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
+				<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
+			</p:commandButton>
+		</h:form>
+
+	</div>
+	<div class="header-area">
 		<p:link value="Spielbericht ansehen" target="_blank"
 			href="#{berichtBean.ergebnisLink}"
 			rendered="#{not empty berichtBean.ergebnisLink and berichtBean.ergebnisLink.startsWith('http')}" />
-
 		<h3>
 			<h:outputText value="#{berichtBean.liga}" />
 			<h:outputText value=": " />
@@ -36,7 +57,6 @@
 			<h:outputText value="#{berichtBean.ergebnis}" />
 		</h3>
 	</div>
-
 
 	<!-- Formular für Bericht und Bild -->
 	<!-- Container, der Eingabefeld und Fehlerbereich sowie die jeweiligen Buttons enthält -->
@@ -54,6 +74,7 @@
 						<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
+						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 				</div>
 
@@ -127,6 +148,7 @@
 							<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
 							<f:param name="liga" value="#{berichtBean.liga}" />
 							<f:param name="uuid" value="#{berichtBean.uuid}" />
+							<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 						</p:commandButton>
 					</div>
 					<div class="text-container">
@@ -182,16 +204,20 @@
 						<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
+						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Freigeben" action="spielplan.xhtml"
 						rendered="#{berichtBean.anzFreigabe and berichtBean.ergebnisLink.startsWith('http')}"
 						actionListener="#{berichtBean.freigabe}" immediate="true">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
+						<f:param name="liga" value="#{berichtBean.liga}" />
+						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Freigeben" action="freieBerichte.xhtml"
 						rendered="#{berichtBean.anzFreigabe and not berichtBean.ergebnisLink.startsWith('http')}"
 						actionListener="#{berichtBean.freigabe}" immediate="true">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
+						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Zurück"
 						action="#{berichtBean.zurueckAction}"
@@ -199,11 +225,14 @@
 						rendered="#{not empty berichtBean.ergebnisLink and berichtBean.ergebnisLink.startsWith('http')}">
 
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
+						<f:param name="liga" value="#{berichtBean.liga}" />
+						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Zurück" action="freieBerichte.xhtml"
 						actionListener="#{berichtBean.zurueck}" immediate="true"
 						rendered="#{not empty berichtBean.ergebnisLink and not berichtBean.ergebnisLink.startsWith('http')}">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
+						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 
 					<p:dialog header="Erneuten E-Mail-Versand bestätigen"
@@ -260,6 +289,7 @@
 									rendered="#{berichtBean.anzFreigabe and berichtBean.ergebnisLink.startsWith('http')}"
 									actionListener="#{berichtBean.freigabe}" immediate="true">
 									<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
+									<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 								</p:commandButton>
 
 								<p:commandButton value="Freigeben" action="freieBerichte.xhtml"
@@ -401,6 +431,7 @@
 						<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
+						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Spielberichtsbogen neu lesen"
 						action="#{berichtBean.spielHtmlLesen}" update=":berichtForm" />

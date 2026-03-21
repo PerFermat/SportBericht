@@ -1,8 +1,5 @@
 package de.bericht.service;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import de.bericht.util.ConfigManager;
@@ -10,11 +7,6 @@ import de.bericht.util.ConfigManager;
 public class TennisSpiel extends Spiel {
 
 	private String titel;
-	private String datumGesamt;
-	private String wochentag;
-	private LocalDate datum;
-	private String uhrzeit;
-	private String gruppe;
 	private String heimLink;
 	private String gastLink;
 	private String spielort;
@@ -24,12 +16,15 @@ public class TennisSpiel extends Spiel {
 	private List<LogEntry> logEntries;
 	private static ConfigManager config;
 
-	public TennisSpiel(String vereinnr, String titel, String datumGesamt, String heim, String heimLink, String gast,
-			String gastLink, String spielort, String matches, String saetze, String games, String ergebnisLink,
-			boolean bericht) {
+	public TennisSpiel(String vereinnr, String titel, String datumGesamt, String wochentag, String datum, String zeit,
+			String heim, String heimLink, String gast, String gastLink, String spielort, String matches, String saetze,
+			String games, String ergebnisLink, boolean bericht) {
 		this.vereinnr = vereinnr;
 		this.titel = titel;
 		this.datumGesamt = datumGesamt;
+		this.wochentag = wochentag;
+		this.datum = datum;
+		this.zeit = zeit;
 		this.heim = heim;
 		this.gast = gast;
 		this.heimLink = heimLink;
@@ -44,8 +39,6 @@ public class TennisSpiel extends Spiel {
 
 		// Für gemeinsame Anzeige kann Ergebnis = Matches sein
 		this.ergebnis = matches;
-
-		datumAufbereiten(datumGesamt);
 
 		config = ConfigManager.getInstance();
 		String sortlist = config.getConfigValue(vereinnr, "bericht.sortierung");
@@ -69,66 +62,8 @@ public class TennisSpiel extends Spiel {
 		}
 	}
 
-	public void datumAufbereiten(String datumGesamt) {
-		if (datumGesamt == null || datumGesamt.isBlank()) {
-			return;
-		}
-
-		String[] teile = datumGesamt.split(" ");
-		if (teile.length < 3) {
-			return;
-		}
-
-		String datumsString = teile[1];
-		DateTimeFormatter[] formatters = { DateTimeFormatter.ofPattern("d.MM.yyyy"),
-				DateTimeFormatter.ofPattern("dd.MM.yyyy"), DateTimeFormatter.ofPattern("d.M.yyyy"),
-				DateTimeFormatter.ofPattern("dd.M.yyyy") };
-
-		for (DateTimeFormatter formatter : formatters) {
-			try {
-				datum = LocalDate.parse(datumsString, formatter);
-				break;
-			} catch (DateTimeParseException e) {
-				// nächstes Format versuchen
-			}
-		}
-
-		if (datum != null) {
-			wochentag = teile[0].replace(",", "");
-			uhrzeit = teile[2];
-		}
-	}
-
 	public String getTitel() {
 		return titel;
-	}
-
-	public String getDatumGesamt() {
-		return datumGesamt;
-	}
-
-	public String getWochentag() {
-		return wochentag;
-	}
-
-	public String getDatumAuf() {
-		if (datum == null) {
-			return "";
-		}
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-		return datum.format(formatter);
-	}
-
-	public LocalDate getDatum() {
-		return datum;
-	}
-
-	public String getUhrzeit() {
-		return uhrzeit;
-	}
-
-	public String getGruppe() {
-		return gruppe;
 	}
 
 	public String getHeimLink() {
@@ -175,37 +110,21 @@ public class TennisSpiel extends Spiel {
 	}
 
 	@Override
-	public String getDatumAnzeige() {
-		return getDatumAuf();
-	}
-
-	@Override
-	public String getZeitAnzeige() {
-		return uhrzeit;
-	}
-
-	@Override
-	public String getLiga() {
-		return gruppe;
-	}
-
-	@Override
 	public String getLigaJugend() {
-		if (gruppe == null) {
+		if (liga == null) {
 			return "";
 		}
-		if (gruppe.matches("^J\\s\\d{2}.*")) {
-			String altersklasse = gruppe.substring(2, 4);
+		if (liga.matches("^J\\s\\d{2}.*")) {
+			String altersklasse = liga.substring(2, 4);
 			return "Jugend U" + altersklasse;
-		} else if (gruppe.matches("^M\\s\\d{2}.*")) {
-			String altersklasse = gruppe.substring(2, 4);
+		} else if (liga.matches("^M\\s\\d{2}.*")) {
+			String altersklasse = liga.substring(2, 4);
 			return "Mädchen U" + altersklasse;
+		} else if (liga.matches("^Kid")) {
+			return "Kids-Cup";
 		} else {
 			return "";
 		}
 	}
 
-	public void setGruppe(String gruppe) {
-		this.gruppe = gruppe;
-	}
 }

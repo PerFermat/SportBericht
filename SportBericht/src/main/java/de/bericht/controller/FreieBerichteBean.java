@@ -33,6 +33,7 @@ public class FreieBerichteBean implements Serializable {
 	private String berichtDatum;
 	private String vereinnr;
 	private Date berichtDatumCal;
+	private String gruppeUrl;
 	List<BerichtText> meineBerichtTexte = new ArrayList<>();
 
 	private String freierText;
@@ -41,13 +42,14 @@ public class FreieBerichteBean implements Serializable {
 	public void init() {
 		Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
 		this.vereinnr = params.get("vereinnr");
+		this.gruppeUrl = params.get("gruppeUrl");
 		spiele = dbService.listeFreieBerichte(vereinnr);
 		SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
 
 		spiele.sort((s1, s2) -> {
 			try {
-				Date d1 = formatter.parse(s1.getDatumAnzeige());
-				Date d2 = formatter.parse(s2.getDatumAnzeige());
+				Date d1 = formatter.parse(s1.getDatum());
+				Date d2 = formatter.parse(s2.getDatum());
 				return d1.compareTo(d2);
 			} catch (ParseException e) {
 				return 0;
@@ -67,7 +69,7 @@ public class FreieBerichteBean implements Serializable {
 		LocalDate vorTagen = heute.minusDays(configTage);
 
 		return spiele.stream().filter(spiel -> {
-			LocalDate spielDatum = LocalDate.parse(spiel.getDatumAnzeige(), formatter);
+			LocalDate spielDatum = LocalDate.parse(spiel.getDatum(), formatter);
 			return (spielDatum.isAfter(vorTagen) || spielDatum.isEqual(vorTagen));
 		}).collect(Collectors.toList());
 	}
@@ -164,8 +166,16 @@ public class FreieBerichteBean implements Serializable {
 	public void zurueck() {
 
 	}
-	
+
 	public String zurueckAction() {
 		return isTennis() ? "spielplan.xhtml" : "spielplan.xhtml";
+	}
+
+	public String getGruppeUrl() {
+		return gruppeUrl;
+	}
+
+	public void setGruppeUrl(String gruppeUrl) {
+		this.gruppeUrl = gruppeUrl;
 	}
 }

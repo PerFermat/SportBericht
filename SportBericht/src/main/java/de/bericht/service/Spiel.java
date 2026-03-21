@@ -6,12 +6,19 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import de.bericht.util.BerichtHelper;
+
 public abstract class Spiel implements Comparable<Spiel> {
 
 	protected String vereinnr;
+	protected String datumGesamt;
+	protected String wochentag;
+	protected String datum;
+	protected String zeit;
 	protected String heim;
 	protected String gast;
 	protected String ergebnis;
+	protected String liga;
 	protected String ergebnisLink;
 	protected int sortierung = 99;
 	protected boolean wahl = true;
@@ -47,6 +54,10 @@ public abstract class Spiel implements Comparable<Spiel> {
 
 	public void setWahl(boolean wahl) {
 		this.wahl = wahl;
+	}
+
+	public void setLiga(String liga) {
+		this.liga = liga;
 	}
 
 	public boolean isBericht() {
@@ -97,16 +108,52 @@ public abstract class Spiel implements Comparable<Spiel> {
 		return Integer.compare(this.sortierung, anderesObjekt.sortierung);
 	}
 
+	public String getBildUrl(String vereinnr) {
+		return BerichtHelper.getBildUrl(vereinnr, ergebnisLink);
+	}
+
+	public String getBildUrl() {
+		return BerichtHelper.getBildUrl(vereinnr, ergebnisLink);
+	}
+
 	public abstract String getSportart();
 
-	public abstract String getDatumAnzeige();
-
-	public abstract String getZeitAnzeige();
-
-	public abstract String getLiga();
-
-	public abstract void setGruppe(String liga);
-
 	public abstract String getLigaJugend();
+
+	public String getLiga() {
+		return liga;
+	}
+
+	public String getWochentag() {
+		return wochentag;
+	}
+
+	public String getDatum() {
+		return datum;
+	}
+
+	public String getZeit() {
+		return zeit;
+	}
+
+	public void setWochentag(String wochentag) {
+		this.wochentag = wochentag;
+	}
+
+	public void setDatum(String datum) {
+		this.datum = datum;
+	}
+
+	public void setZeit(String zeit) {
+		this.zeit = zeit;
+	}
+
+	public void setDatumGesamt(String datumGesamt) {
+		this.datumGesamt = datumGesamt;
+	}
+
+	public String getDatumGesamt() {
+		return datumGesamt;
+	}
 
 }

@@ -40,6 +40,7 @@ public class AufstellungBean implements Serializable {
 	private String betreuer;
 	private String rueckmeldeStatus;
 	private String liga;
+	private String gruppeUrl;
 
 	private AufstellungSpielInfo spielInfo;
 	private final List<AufstellungSpieler> spielerListe = new ArrayList<>();
@@ -64,6 +65,7 @@ public class AufstellungBean implements Serializable {
 		}
 		uniqueKey = request.getParameter("uuid");
 		ruecksprung = request.getParameter("ruecksprung");
+		gruppeUrl = request.getParameter("gruppeUrl");
 
 		if (vereinnr == null || vereinnr.isBlank() || uniqueKey == null || uniqueKey.isBlank()) {
 			context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehlende Parameter",
@@ -486,5 +488,13 @@ public class AufstellungBean implements Serializable {
 
 	public void zurueck() {
 
+	}
+
+	public String getGruppeUrl() {
+		return gruppeUrl;
+	}
+
+	public void setGruppeUrl(String gruppeUrl) {
+		this.gruppeUrl = gruppeUrl;
 	}
 }

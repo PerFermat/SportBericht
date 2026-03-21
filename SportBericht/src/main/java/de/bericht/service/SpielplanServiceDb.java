@@ -78,7 +78,7 @@ public class SpielplanServiceDb implements SpielplanProvider {
 			}
 
 			if (spielDruck) {
-				String datum = spiel.getDatumAnzeige();
+				String datum = spiel.getDatum();
 				long tage = SpielplanService.tageBisDatum(datum, heute);
 				long configTage = Long.parseLong(ConfigManager.getConfigValue(vereinnr, "spielplan.vorschau.tage"));
 
@@ -90,7 +90,7 @@ public class SpielplanServiceDb implements SpielplanProvider {
 					i++;
 					tageLetzterSatz = tage;
 
-					sb.append("<strong>   - ").append(spiel.getZeitAnzeige()).append(": ").append(spiel.getLiga())
+					sb.append("<strong>   - ").append(spiel.getZeit()).append(": ").append(spiel.getLiga())
 							.append(": </strong> ").append(spiel.getHeim()).append(" - ").append(spiel.getGast())
 							.append("<br>");
 
@@ -107,20 +107,6 @@ public class SpielplanServiceDb implements SpielplanProvider {
 	}
 
 	@Override
-	public String ausgabe(List<Spiel> spiele) {
-		StringBuilder spieleListe = new StringBuilder();
-		for (Spiel spiel : spiele) {
-			spieleListe.append(spiel.getDatumAnzeige()).append(" - ");
-			spieleListe.append(spiel.getLiga()).append(" - ");
-			spieleListe.append(spiel.getHeim()).append(" - ");
-			spieleListe.append(spiel.getGast()).append(" - ");
-			spieleListe.append(spiel.getErgebnis()).append(" - ");
-			spieleListe.append(spiel.getErgebnisLink()).append("\n");
-		}
-		return spieleListe.toString();
-	}
-
-	@Override
 	public boolean isFallbackSourceUsed() {
 		return true;
 	}
@@ -128,5 +114,23 @@ public class SpielplanServiceDb implements SpielplanProvider {
 	@Override
 	public String getFallbackSourceUrl() {
 		return fallbackSourceUrl;
+	}
+
+	@Override
+	public String ausgabe(List<Spiel> spiele) {
+		StringBuilder tabelleListe = new StringBuilder();
+
+		for (Spiel spiel : spiele) {
+			tabelleListe.append(spiel.getDatumGesamt()).append(" - ");
+			tabelleListe.append(spiel.getWochentag()).append(" - ");
+			tabelleListe.append(spiel.getDatum()).append(" - ");
+			tabelleListe.append(spiel.getZeit()).append(" - ");
+			tabelleListe.append(spiel.getLiga()).append(" - ");
+			tabelleListe.append(spiel.getHeim()).append(" - ");
+			tabelleListe.append(spiel.getGast()).append(" - ");
+			tabelleListe.append(spiel.getErgebnis()).append(" \n ");
+		}
+
+		return tabelleListe.toString();
 	}
 }

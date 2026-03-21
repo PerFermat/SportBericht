@@ -43,6 +43,7 @@ import de.bericht.util.ConfigEintrag;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.ErgebnisCache;
 import de.bericht.util.Stil;
+import de.bericht.util.TennisGruppeKurz;
 
 public class DatabaseService {
 
@@ -118,7 +119,8 @@ public class DatabaseService {
 				String ueberschrift = rs.getString("ueberschrift");
 				String datum = ergebnisLink.length() >= 10 ? ergebnisLink.substring(0, 10) : "";
 				String heim = ueberschrift;
-				TischtennisSpiel spiel = new TischtennisSpiel(vereinnr, datum, "", "", heim, "", "", ergebnisLink);
+				TischtennisSpiel spiel = new TischtennisSpiel(vereinnr, "", "", datum, "", "", heim, "", "",
+						ergebnisLink);
 				spiele.add(spiel);
 			}
 			rs.close();
@@ -140,7 +142,8 @@ public class DatabaseService {
 				String ueberschrift = rs.getString("ueberschrift");
 				String heim = ueberschrift;
 				String datum = ergebnisLink.length() >= 10 ? ergebnisLink.substring(0, 10) : "31.12.2999";
-				TischtennisSpiel spiel = new TischtennisSpiel(vereinnr, datum, "", "", heim, "", "", ergebnisLink);
+				TischtennisSpiel spiel = new TischtennisSpiel(vereinnr, "", "", datum, "", "", heim, "", "",
+						ergebnisLink);
 				spiele.add(spiel);
 			}
 			rs.close();
@@ -1322,7 +1325,7 @@ public class DatabaseService {
 	}
 
 	public List<TischtennisSpiel> ladeSpielplanAusTabelle(String vereinnr) {
-		String sql = "SELECT datum, zeit, liga, heim, gast, ergebnis, ergebnis_link FROM spielplan_tabelle WHERE vereinnr = ?";
+		String sql = "SELECT wochentag_datum, wochentag, datum, zeit, liga, heim, gast, ergebnis, ergebnis_link FROM spielplan_tabelle WHERE vereinnr = ?";
 		List<TischtennisSpiel> spiele = new ArrayList<>();
 		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 		Pattern timePattern = Pattern.compile("^(\\d{1,2}:\\d{2})");
@@ -1334,9 +1337,10 @@ public class DatabaseService {
 					if (!isValidDate(datum, dateFormatter)) {
 						continue;
 					}
-					spiele.add(new TischtennisSpiel(vereinnr, datum, rs.getString("zeit"), rs.getString("liga"),
-							rs.getString("heim"), rs.getString("gast"), rs.getString("ergebnis"),
-							rs.getString("ergebnis_link")));
+					spiele.add(
+							new TischtennisSpiel(vereinnr, rs.getString("wochentag_datum"), rs.getString("wochentag"),
+									datum, rs.getString("zeit"), rs.getString("liga"), rs.getString("heim"),
+									rs.getString("gast"), rs.getString("ergebnis"), rs.getString("ergebnis_link")));
 				}
 			}
 		} catch (SQLException e) {
@@ -1784,7 +1788,7 @@ public class DatabaseService {
 		return spiele;
 	}
 
-	public void saveSpielplanEntries(String vereinnr, List<Spiel> spiele) {
+	public void saveSpielplanEntries(String vereinnr, List<Spiel> spiele, String liga) {
 		if (spiele == null || spiele.isEmpty()) {
 			return;
 		}
@@ -1802,11 +1806,11 @@ public class DatabaseService {
 				for (Spiel spiel : spiele) {
 					pstmt.setString(1, generateUniqueKey(spiel, vereinnr));
 					pstmt.setString(2, vereinnr);
-					pstmt.setString(3, spiel.getDatumAnzeige());
-					pstmt.setString(4, "");
-					pstmt.setString(5, spiel.getDatumAnzeige());
-					pstmt.setString(6, spiel.getZeitAnzeige());
-					pstmt.setString(7, spiel.getLiga());
+					pstmt.setString(3, spiel.getDatumGesamt());
+					pstmt.setString(4, spiel.getWochentag());
+					pstmt.setString(5, spiel.getDatum());
+					pstmt.setString(6, spiel.getZeit());
+					pstmt.setString(7, TennisGruppeKurz.kuerzeGruppe(liga));
 					pstmt.setString(8, "");
 					pstmt.setString(9, spiel.getHeim());
 					pstmt.setString(10, spiel.getGast());

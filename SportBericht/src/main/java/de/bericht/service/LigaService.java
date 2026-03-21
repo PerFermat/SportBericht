@@ -109,7 +109,7 @@ public class LigaService {
 			LigaListe.append(spiel.getRunde()).append(" - ");
 			LigaListe.append(spiel.getMannschaft()).append(" - ");
 			LigaListe.append(spiel.getMannschaftsführer()).append(" - ");
-			LigaListe.append(spiel.getGruppe()).append(" - ");
+			LigaListe.append(spiel.getLiga()).append(" - ");
 			LigaListe.append(spiel.getGruppeUrl()).append(" - ");
 			LigaListe.append(spiel.getRang()).append(" - ");
 			LigaListe.append(spiel.getPunkte()).append(" \n");

@@ -74,6 +74,7 @@ public class BerichtBean implements Serializable {
 	private NamensSpeicher namensSpeicher = new NamensSpeicher();
 	private boolean email = false;
 	List<? extends SpielDetail> spiele;
+	private String gruppeUrl;
 
 	// Für den Bild-Upload: Wir verwenden den Part, den der Container liefert.
 	private Part uploadedBild;
@@ -98,7 +99,7 @@ public class BerichtBean implements Serializable {
 	public void init() {
 		Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
 		this.vereinnr = params.get("vereinnr");
-		System.out.println("bericht " + vereinnr);
+
 		ignorieren = new IgnorierteWoerte();
 		String woerterIgnorieren = ConfigManager.getConfigValue(vereinnr, "bericht.pruefung.ok");
 		// Aufteilen in ein Array
@@ -128,6 +129,7 @@ public class BerichtBean implements Serializable {
 		this.name = params.get("name");
 		this.liga = params.get("liga");
 		this.uuid = params.get("uuid");
+		this.gruppeUrl = params.get("gruppeUrl");
 
 		if (vereinnr == null) {
 			vereinnr = "13014";
@@ -957,6 +959,22 @@ public class BerichtBean implements Serializable {
 
 	public String zurueckAction() {
 		return isTennis() ? "spielplan.xhtml" : "spielplan.xhtml";
+	}
+
+	public String getGruppeUrl() {
+		return gruppeUrl;
+	}
+
+	public void setGruppeUrl(String gruppeUrl) {
+		this.gruppeUrl = gruppeUrl;
+	}
+
+	public String getBestimmenIcon() {
+		return ConfigManager.getConfigValue(vereinnr, "style.icon");
+	}
+
+	public String getVereinHomepage() {
+		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
 	}
 
 }

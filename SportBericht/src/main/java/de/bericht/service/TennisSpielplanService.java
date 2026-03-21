@@ -2,8 +2,8 @@ package de.bericht.service;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +22,10 @@ public class TennisSpielplanService implements SpielplanProvider {
 	private String verein;
 	private String vereinnr;
 	private String url;
+	private String datumGesamt;
+	private String datum;
+	private String zeit;
+	private String wochentag;
 	private int fehlercode;
 	private List<Spiel> plan = new ArrayList<>();
 
@@ -116,8 +120,8 @@ public class TennisSpielplanService implements SpielplanProvider {
 						|| !isValidIndex(cols, gamesIndex)) {
 					continue;
 				}
-
-				String datum = formatiereDatumTennis(cols.get(datumIndex).text());
+				String datumGesamt = cols.get(datumIndex).text();
+				parseDatumZeit(datumGesamt);
 				String heim = cols.get(heimIndex).text();
 				String gast = cols.get(gastIndex).text();
 
@@ -144,39 +148,18 @@ public class TennisSpielplanService implements SpielplanProvider {
 
 				Element gastElement = cols.get(gastIndex).selectFirst("a");
 				String gastLink = (gastElement != null) ? gastElement.absUrl("href") : null;
-
-				System.out.println(datum);
-				System.out.println(heim + gast + verein);
+				saetze = saetze.replace("0:0", "");
+				matches = matches.replace("0:0", "");
+				games = games.replace("0:0", "");
 				if (heim.contains(verein) || gast.contains(verein)) {
-					plan.add(new TennisSpiel(vereinnr, title, datum, heim, heimLink, gast, gastLink, spielort, matches,
-							saetze, games, ergebnisLink, bericht));
+					plan.add(new TennisSpiel(vereinnr, title, datumGesamt, wochentag, datum, zeit, heim, heimLink, gast,
+							gastLink, spielort, matches, saetze, games, ergebnisLink, bericht));
 				}
 			}
 
 		} catch (IOException e) {
 			fehlercode = -1;
 			throw e;
-		}
-	}
-
-	public static String formatiereDatumTennis(String datum) {
-		if (datum == null || datum.isBlank()) {
-			return datum;
-		}
-
-		try {
-			// Eingabeformat: 2025-10-19
-			DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-			// Ausgabeformat: 10.10.2025
-			DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-
-			LocalDate parsedDate = LocalDate.parse(datum.trim(), inputFormatter);
-			return parsedDate.format(outputFormatter);
-
-		} catch (DateTimeParseException e) {
-			// Falls Format nicht passt → Original zurückgeben
-			return datum;
 		}
 	}
 
@@ -212,17 +195,132 @@ public class TennisSpielplanService implements SpielplanProvider {
 		// aktuell leer wie bei deinem bisherigen Aufbau
 	}
 
+	public void parseDatumZeit(String input) {
+		wochentag = "";
+		datum = "";
+		zeit = "";
+
+		if (input == null || input.isBlank()) {
+			return;
+		}
+
+		String text = input.trim();
+
+		try {
+			// 1) Versuch: Wochentag erkennen (z. B. "So, ")
+			String[] parts = text.split(",", 2);
+
+			if (parts.length < 2) {
+				// ❌ Kein Wochentag vorhanden
+				datum = text;
+				return;
+			}
+
+			String wt = parts[0].trim();
+			String rest = parts[1].trim();
+
+			if (!istGueltigerWochentag(wt)) {
+				// ❌ Ungültiger Wochentag
+				datum = text;
+				return;
+			}
+
+			wochentag = wt;
+
+			// 2) Rest aufteilen in Datum + Zeit
+			String[] restParts = rest.split("\\s+", 2);
+
+			if (restParts.length == 0) {
+				datum = rest;
+				return;
+			}
+
+			String dat = restParts[0];
+			String zt = restParts.length > 1 ? restParts[1] : "";
+
+			// 3) Datum prüfen
+			String normDatum = normalisiereDatum(dat);
+
+			if (normDatum == null) {
+				// ❌ Datum ungültig
+				datum = rest;
+				zeit = "";
+				return;
+			}
+
+			datum = normDatum;
+
+			// 4) Zeit prüfen
+			if (!istGueltigeZeit(zt)) {
+				// ❌ Zeit ungültig
+				zeit = zt; // Rest in Zeit übernehmen
+				return;
+			}
+
+			zeit = zt;
+
+		} catch (Exception e) {
+			// Absolute Fallback-Sicherheit
+			datum = input;
+			wochentag = "";
+			zeit = "";
+		}
+	}
+
+	private static boolean istGueltigerWochentag(String wt) {
+		return wt.matches("(?i)Mo|Di|Mi|Do|Fr|Sa|So");
+	}
+
+	private static boolean istGueltigesDatum(String dat) {
+		try {
+			DateTimeFormatter fmt = DateTimeFormatter.ofPattern("d.MM.yyyy");
+			LocalDate.parse(dat, fmt);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	private static boolean istGueltigeZeit(String zt) {
+		try {
+			DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
+			LocalTime.parse(zt, fmt);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	private static String normalisiereDatum(String dat) {
+		try {
+			DateTimeFormatter inputFmt = DateTimeFormatter.ofPattern("d.M.yyyy");
+			DateTimeFormatter outputFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+			LocalDate date = LocalDate.parse(dat, inputFmt);
+			return date.format(outputFmt);
+
+		} catch (Exception e) {
+			return null; // wichtig für Fallback-Logik
+		}
+	}
+
 	@Override
 	public String ausgabe(List<Spiel> spiele) {
 		StringBuilder tabelleListe = new StringBuilder();
 
 		for (Spiel spiel : spiele) {
-			tabelleListe.append(spiel.getDatumAnzeige()).append(" - ");
+			tabelleListe.append(spiel.getDatumGesamt()).append(" - ");
+			tabelleListe.append(spiel.getWochentag()).append(" - ");
+			tabelleListe.append(spiel.getDatum()).append(" - ");
+			tabelleListe.append(spiel.getZeit()).append(" - ");
+			tabelleListe.append(spiel.getLiga()).append(" - ");
 			tabelleListe.append(spiel.getHeim()).append(" - ");
 			tabelleListe.append(spiel.getGast()).append(" - ");
-			tabelleListe.append(spiel.getErgebnis()).append(" - ");
+			tabelleListe.append(spiel.getErgebnisLink()).append(" - ");
+			tabelleListe.append(spiel.getErgebnis()).append(" \n ");
 		}
 
 		return tabelleListe.toString();
 	}
+
 }

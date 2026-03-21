@@ -18,14 +18,34 @@
 </h:head>
 
 <h:body>
-	<h:form id="kiBerichtForm">
 
-		<!-- Header-Bereich zentriert -->
+	<div class="tabheader-area">
+		<h:outputLink value="#{berichtkiBean.vereinHomepage}" target="_blank">
+			<img src="#{berichtkiBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
+		<h2>Bericht mit KI generieren</h2>
+		<h:form>
+			<p:commandButton value="Zurück" action="bericht.xhtml"
+				actionListener="#{berichtkiBean.zurueck}" immediate="true">
+				<f:param name="vereinnr" value="#{berichtkiBean.vereinnr}" />
+				<f:param name="heim" value="#{berichtkiBean.heim}" />
+				<f:param name="gast" value="#{berichtkiBean.gast}" />
+				<f:param name="datum" value="#{berichtkiBean.datum}" />
+				<f:param name="ergebnis" value="#{berichtkiBean.ergebnis}" />
+				<f:param name="ergebnisLink" value="#{berichtkiBean.ergebnisLink}" />
+				<f:param name="uuid" value="#{berichtkiBean.uuid}" />
+				<f:param name="liga" value="#{berichtkiBean.liga}" />
+				<f:param name="gruppeUrl" value="#{berichtkiBean.gruppeUrl}" />
+			</p:commandButton>
+		</h:form>
+
+	</div>
+	<h:form id="kiBerichtForm">
 		<div class="header-area">
-			<h2>Mit KI einen Bericht erstellen</h2>
 			<p:link value="Spielbericht ansehen" target="_blank"
 				href="#{berichtkiBean.ergebnisLink}"
-				rendered="#{not berichtkiBean.freierBericht}" />
+				rendered="#{not empty berichtkiBean.ergebnisLink and berichtkiBean.ergebnisLink.startsWith('http')}" />
 			<h3>
 				<h:outputText value="#{berichtkiBean.liga}" />
 				<h:outputText value=": " />
@@ -37,7 +57,6 @@
 				<h:outputText value=") " />
 				<h:outputText value="#{berichtkiBean.ergebnis}" />
 			</h3>
-			<br />
 		</div>
 
 		<div class="responsive-container">
@@ -341,6 +360,7 @@ Empfohlen:   <br />
 						<f:param name="ergebnisLink" value="#{berichtkiBean.ergebnisLink}" />
 						<f:param name="uuid" value="#{berichtkiBean.uuid}" />
 						<f:param name="liga" value="#{berichtkiBean.liga}" />
+						<f:param name="gruppeUrl" value="#{berichtkiBean.gruppeUrl}" />
 					</p:commandButton>
 				</div>
 
@@ -371,6 +391,7 @@ Empfohlen:   <br />
 									value="#{berichtkiBean.ergebnisLink}" />
 								<f:param name="uuid" value="#{berichtkiBean.uuid}" />
 								<f:param name="liga" value="#{berichtkiBean.liga}" />
+								<f:param name="gruppeUrl" value="#{berichtkiBean.gruppeUrl}" />
 							</p:commandButton>
 
 							<!-- Zurück-Button -->
@@ -385,6 +406,7 @@ Empfohlen:   <br />
 									value="#{berichtkiBean.ergebnisLink}" />
 								<f:param name="uuid" value="#{berichtkiBean.uuid}" />
 								<f:param name="liga" value="#{berichtkiBean.liga}" />
+								<f:param name="gruppeUrl" value="#{berichtkiBean.gruppeUrl}" />
 							</p:commandButton>
 							<p:commandButton
 								value="#{berichtkiBean.spielplan ? 'Spielbericht ausblenden' : 'Spielbericht anzeigen'}"

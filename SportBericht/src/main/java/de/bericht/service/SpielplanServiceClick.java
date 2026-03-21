@@ -122,8 +122,8 @@ public class SpielplanServiceClick implements SpielplanProvider {
 								String ergebnisLink = (ergebnisElement != null) ? ergebnisElement.absUrl("href") : null;
 
 								fehlercode = 0;
-								spiele.add(new TischtennisSpiel(vereinnr, datum, zeit, liga, heim, gast, ergebnis,
-										ergebnisLink));
+								spiele.add(new TischtennisSpiel(vereinnr, wochentag + " " + datum + " " + zeit,
+										wochentag, datum, zeit, liga, heim, gast, ergebnis, ergebnisLink));
 							}
 						}
 					}
@@ -134,25 +134,6 @@ public class SpielplanServiceClick implements SpielplanProvider {
 			e.printStackTrace();
 		}
 
-	}
-
-	@Override
-	public String ausgabe(List<Spiel> spiele) {
-		// String-Variable, um alle Spiele zu speichern
-		StringBuilder spieleListe = new StringBuilder();
-
-		// Alle Spiele ausgeben und in String-Variable speichern
-		for (Spiel spiel : spiele) {
-			spieleListe.append(spiel.getDatumAnzeige()).append(" - ");
-			spieleListe.append(spiel.getZeitAnzeige()).append(" - ");
-			spieleListe.append(spiel.getLiga()).append(" - ");
-			spieleListe.append(spiel.getHeim()).append(" - ");
-			spieleListe.append(spiel.getGast()).append(" - ");
-			spieleListe.append(spiel.getErgebnis()).append(" - ");
-			spieleListe.append(spiel.getErgebnisLink()).append("\n");
-		}
-
-		return spieleListe.toString();
 	}
 
 	public int getFehlercode() {
@@ -166,6 +147,24 @@ public class SpielplanServiceClick implements SpielplanProvider {
 	@Override
 	public List<Spiel> getSpielplan() {
 		return spiele;
+	}
+
+	@Override
+	public String ausgabe(List<Spiel> spiele) {
+		StringBuilder tabelleListe = new StringBuilder();
+
+		for (Spiel spiel : spiele) {
+			tabelleListe.append(spiel.getDatumGesamt()).append(" - ");
+			tabelleListe.append(spiel.getWochentag()).append(" - ");
+			tabelleListe.append(spiel.getDatum()).append(" - ");
+			tabelleListe.append(spiel.getZeit()).append(" - ");
+			tabelleListe.append(spiel.getLiga()).append(" - ");
+			tabelleListe.append(spiel.getHeim()).append(" - ");
+			tabelleListe.append(spiel.getGast()).append(" - ");
+			tabelleListe.append(spiel.getErgebnis()).append(" \n ");
+		}
+
+		return tabelleListe.toString();
 	}
 
 	@Override
@@ -198,20 +197,19 @@ public class SpielplanServiceClick implements SpielplanProvider {
 				}
 			}
 			if (spielDruck) {
-				long tage = tageBisDatum(spiel.getDatumAnzeige(), heute);
+				long tage = tageBisDatum(spiel.getDatum(), heute);
 				long configTage = Long.parseLong(ConfigManager.getConfigValue(vereinnr, "spielplan.vorschau.tage"));
-				if (tage <= configTage || tage <= tageLetzterSatz + 1 || i < 2
-						|| aktDatum.equals(spiel.getDatumAnzeige())) {
-					if (!aktDatum.equals(spiel.getDatumAnzeige())) {
-						sb.append("<br><strong>" + wochentag(spiel.getDatumAnzeige()) + ", " + spiel.getDatumAnzeige()
+				if (tage <= configTage || tage <= tageLetzterSatz + 1 || i < 2 || aktDatum.equals(spiel.getDatum())) {
+					if (!aktDatum.equals(spiel.getDatum())) {
+						sb.append("<br><strong>" + wochentag(spiel.getDatum()) + ", " + spiel.getDatum()
 								+ " </strong> <br> ");
 					}
 					i++;
 					tageLetzterSatz = tage;
-					sb.append("<strong>   - " + spiel.getZeitAnzeige() + ": " + klartextLiga(spiel.getLiga())
-							+ ": </strong> " + spiel.getHeim() + " - " + spiel.getGast() + "<br>");
+					sb.append("<strong>   - " + spiel.getZeit() + ": " + klartextLiga(spiel.getLiga()) + ": </strong> "
+							+ spiel.getHeim() + " - " + spiel.getGast() + "<br>");
 
-					aktDatum = spiel.getDatumAnzeige();
+					aktDatum = spiel.getDatum();
 				}
 			}
 

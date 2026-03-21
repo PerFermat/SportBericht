@@ -16,7 +16,7 @@ public class SpielMapped {
 	private String verlierer;
 
 	public SpielMapped(Spiel original) {
-		this.datum = original.getDatumAnzeige();
+		this.datum = original.getDatum();
 		this.liga = original.getLiga();
 		this.heim = original.getHeim();
 		this.gast = original.getGast();

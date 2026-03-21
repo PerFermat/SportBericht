@@ -40,7 +40,7 @@ public class SpielplanBean implements Serializable {
 	private String vereinnr;
 	private String passwort;
 	private String liga;
-	private String url;
+	private String gruppeUrl;
 	ConfigManager config;
 	List<BerichtText> meineBerichtTexte = new ArrayList<>();
 	DatabaseService db = new DatabaseService();
@@ -54,11 +54,11 @@ public class SpielplanBean implements Serializable {
 	public void init() {
 		FacesContext context = FacesContext.getCurrentInstance();
 		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-		System.out.println("Das kommt an " + request.getParameter("v"));
 		vereinnr = BerichtHelper.bestimmenVereinnr(request.getParameter("v"));
 		liga = request.getParameter("liga");
-		url = request.getParameter("url");
+		gruppeUrl = request.getParameter("gruppeUrl");
 		passwort = request.getParameter("p");
+		System.out.println(gruppeUrl);
 
 		if (vereinnr == null) {
 			vereinnr = request.getParameter("vereinnr");
@@ -66,37 +66,31 @@ public class SpielplanBean implements Serializable {
 		if (vereinnr == null) {
 			vereinnr = "13014";
 		}
+		System.out.println(vereinnr);
 		int i = 0;
 
 		SpielplanProvider provider;
-		System.out.println("Anfang " + url + i++ + vereinnr);
 		try {
-			if (url == null) {
+			if (gruppeUrl == null) {
 				provider = SpielplanFactory.create(vereinnr);
-				url = provider.getFallbackSourceUrl();
+				gruppeUrl = provider.getFallbackSourceUrl();
 			} else {
-				System.out.println(url);
-				provider = SpielplanFactory.create(vereinnr, url);
+				System.out.println("lesen");
+				provider = SpielplanFactory.create(vereinnr, gruppeUrl);
 			}
-			System.out.println("Anfang" + i++ + vereinnr);
 			spiele = provider.getSpielplan();
 			if (ConfigManager.isTennis(vereinnr)) {
 				for (Spiel spiel : spiele) {
-					spiel.setGruppe(liga);
-					db.saveSpielplanEntries(vereinnr, spiele);
+					db.saveSpielplanEntries(vereinnr, spiele, liga);
 				}
 			}
-			System.out.println("Anfang" + i++ + vereinnr);
 			if (provider.isFallbackSourceUsed()) {
-				System.out.println("Anfang" + i++ + vereinnr);
 				FacesContext.getCurrentInstance().addMessage(null,
 						new FacesMessage(FacesMessage.SEVERITY_WARN, "Warnung", "Achtung: Die Daten konnten aus der "
-								+ url + " nicht gelesen werden. Sie können daher veraltet sein"));
+								+ gruppeUrl + " nicht gelesen werden. Sie können daher veraltet sein"));
 			}
-			System.out.println("Anfang" + i++ + vereinnr);
 
 			String was = ConfigManager.getConfigValue(vereinnr, "spielplan.vorschau.was").toUpperCase();
-			System.out.println("Anfang" + i++ + vereinnr);
 
 			if ("HEIM".equals(was) || "GAST".equals(was) || "ALLE".equals(was)) {
 				provider.generiereVorschauBericht(vereinnr, was);
@@ -104,7 +98,6 @@ public class SpielplanBean implements Serializable {
 				DatabaseService dbService = new DatabaseService(vereinnr);
 				dbService.deleteBericht(vereinnr, "31.12.2999 - Vorschaubericht");
 			}
-			System.out.println("Anfang" + i++ + vereinnr);
 		} catch (Exception e) {
 			System.out.println("Vorschaubericht fehler " + spiele.size());
 
@@ -120,7 +113,7 @@ public class SpielplanBean implements Serializable {
 
 		return spiele.stream().filter(spiel -> {
 			try {
-				LocalDate spielDatum = LocalDate.parse(spiel.getDatumAnzeige(), formatter);
+				LocalDate spielDatum = LocalDate.parse(spiel.getDatum(), formatter);
 				return !spielDatum.isBefore(vorTagen); // >= vorTagen
 			} catch (DateTimeParseException e) {
 				// Ungültiges Datum → trotzdem behalten
@@ -268,14 +261,6 @@ public class SpielplanBean implements Serializable {
 
 	}
 
-	public String getUrl() {
-		return url;
-	}
-
-	public void setUrl(String url) {
-		this.url = url;
-	}
-
 	public boolean isTennis() {
 		return ConfigManager.isTennis(vereinnr);
 	}
@@ -285,5 +270,13 @@ public class SpielplanBean implements Serializable {
 	}
 
 	public void zurueck() {
+	}
+
+	public String getGruppeUrl() {
+		return gruppeUrl;
+	}
+
+	public void setGruppeUrl(String gruppeUrl) {
+		this.gruppeUrl = gruppeUrl;
 	}
 }

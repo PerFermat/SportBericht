@@ -62,6 +62,7 @@ public class ZusammenGesamtBean implements Serializable {
 	private Spiel selectedItem;
 	private String iframeUrl;
 	private String name;
+	private String liga;
 	private StreamedContent downloadBild;
 	private List<String> selectKategorie;
 //	private String bildLink;
@@ -70,6 +71,7 @@ public class ZusammenGesamtBean implements Serializable {
 	private List<Bilddaten> bildArray = new ArrayList<>();
 	private String domain;
 	private String vereinnr;
+	private String gruppeUrl;
 	private int postid;
 	private boolean freigegebeneBerichte = true;
 	private SpielplanProvider provider;
@@ -80,6 +82,8 @@ public class ZusammenGesamtBean implements Serializable {
 	public ZusammenGesamtBean() {
 		Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
 		this.vereinnr = params.get("vereinnr");
+		this.liga = params.get("liga");
+		this.gruppeUrl = params.get("gruppeUrl");
 		freieBerichte = params.get("frei");
 		spieleFreigegeben = new ArrayList<>();
 
@@ -87,10 +91,18 @@ public class ZusammenGesamtBean implements Serializable {
 			spiele = dbService.listeFreieBerichte(vereinnr);
 		} else {
 			try {
-				provider = SpielplanFactory.create(vereinnr);
+				System.out.println(gruppeUrl);
+				if (gruppeUrl == null) {
+					provider = SpielplanFactory.create(vereinnr);
+					gruppeUrl = provider.getFallbackSourceUrl();
+				} else {
+					System.out.println(gruppeUrl);
+					provider = SpielplanFactory.create(vereinnr, gruppeUrl);
+				}
 			} catch (Exception e) {
 				spieleFreigegeben = new ArrayList<>();
 			}
+
 		}
 
 		erstellenBerichtListe(freigegebeneBerichte);
@@ -111,8 +123,8 @@ public class ZusammenGesamtBean implements Serializable {
 
 			spieleFreigegeben.sort((s1, s2) -> {
 				try {
-					Date d1 = formatter.parse(s1.getDatumAnzeige());
-					Date d2 = formatter.parse(s2.getDatumAnzeige());
+					Date d1 = formatter.parse(s1.getDatum());
+					Date d2 = formatter.parse(s2.getDatum());
 					return d1.compareTo(d2);
 				} catch (ParseException e) {
 					return 0;
@@ -148,7 +160,7 @@ public class ZusammenGesamtBean implements Serializable {
 		LocalDate vorTagen = heute.minusDays(configTage);
 
 		return spieleFreigegeben.stream().filter(spiel -> {
-			LocalDate spielDatum = LocalDate.parse(spiel.getDatumAnzeige(), formatter);
+			LocalDate spielDatum = LocalDate.parse(spiel.getDatum(), formatter);
 			return (spielDatum.isAfter(vorTagen) || spielDatum.isEqual(vorTagen));
 		}).collect(Collectors.toList());
 
@@ -276,7 +288,7 @@ public class ZusammenGesamtBean implements Serializable {
 		if (data != null && data.getBild() != null) {
 			InputStream stream = new ByteArrayInputStream(data.getBild());
 			downloadBild = DefaultStreamedContent.builder().stream(() -> stream).contentType("image/jpeg")
-					.name(spiel.getDatumAnzeige() + "_-_" + spiel.getHeim().replace(" ", "_") + "_-_"
+					.name(spiel.getDatum() + "_-_" + spiel.getHeim().replace(" ", "_") + "_-_"
 							+ spiel.getGast().replace(" ", "_") + "_-_" + spiel.getErgebnis().replace(":", "_")
 							+ ".jpg")
 					.build();
@@ -333,7 +345,7 @@ public class ZusammenGesamtBean implements Serializable {
 					text.append(" - ");
 					text.append(spiel.getGast());
 					text.append(" (");
-					text.append(spiel.getDatumAnzeige());
+					text.append(spiel.getDatum());
 					text.append(")  ");
 					text.append("</span>");
 					text.append(
@@ -349,7 +361,7 @@ public class ZusammenGesamtBean implements Serializable {
 				BerichtData data = dbService.loadBerichtData(vereinnr, spiel.getErgebnisLink());
 				if (data.getBild() != null) {
 					Bilddaten bildDaten = new Bilddaten();
-					String bildname = (spiel.getDatumAnzeige() + "_" + spiel.getHeim() + "_" + spiel.getGast())
+					String bildname = (spiel.getDatum() + "_" + spiel.getHeim() + "_" + spiel.getGast())
 							.replace(" ", "_").replace(".", "-").replace("\"", "HK") + ".jpg";
 					bildDaten.setBildName(bildname);
 					bildDaten.setBildUnterschrift(data.getBildUnterschrift() != null ? data.getBildUnterschrift() : "");
@@ -403,7 +415,7 @@ public class ZusammenGesamtBean implements Serializable {
 		for (Spiel spiel : spiele) {
 
 			try {
-				String datumTeil = spiel.getDatumAnzeige().substring(0, 10);
+				String datumTeil = spiel.getDatum().substring(0, 10);
 				LocalDate current = LocalDate.parse(datumTeil, eingabeFormat);
 				if (current.isBefore(minDatum) && spiel.isWahl()) {
 					minDatum = current;
@@ -425,7 +437,7 @@ public class ZusammenGesamtBean implements Serializable {
 
 		for (Spiel spiel : spiele) {
 			try {
-				String datumTeil = spiel.getDatumAnzeige().substring(0, 10);
+				String datumTeil = spiel.getDatum().substring(0, 10);
 				LocalDate current = LocalDate.parse(datumTeil, eingabeFormat);
 				if (current.isAfter(maxDatum) && spiel.isWahl()) {
 					maxDatum = current;
@@ -735,5 +747,21 @@ public class ZusammenGesamtBean implements Serializable {
 
 	public void zurueck() {
 
+	}
+
+	public String getGruppeUrl() {
+		return gruppeUrl;
+	}
+
+	public void setGruppeUrl(String gruppeUrl) {
+		this.gruppeUrl = gruppeUrl;
+	}
+
+	public String getLiga() {
+		return liga;
+	}
+
+	public void setLiga(String liga) {
+		this.liga = liga;
 	}
 }

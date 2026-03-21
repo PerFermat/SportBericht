@@ -33,6 +33,9 @@ public class SpielplanService implements SpielplanProvider {
 	private static final DateTimeFormatter OUTPUT_FORMAT_UHR = DateTimeFormatter.ofPattern("HH:mm", Locale.GERMANY);
 	private static final DateTimeFormatter OUTPUT_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
+	private String wochentag = "";
+	private String datum = "";
+
 	private int fehlercode = 0;
 
 	private ConfigManager config;
@@ -117,11 +120,12 @@ public class SpielplanService implements SpielplanProvider {
 					&& heimIndex < cols.size() && gastIndex < cols.size() && punkteIndex < cols.size()) {
 
 				String datumRaw = cols.get(datumIndex).text();
+				System.out.println("Datum raw" + datumRaw);
 				if (datumRaw == null || datumRaw.isBlank()) {
 					datumRaw = letztesDatum;
-				} else {
-					datumRaw = convert(datumRaw);
 				}
+
+				parseDatumOhneZeit(datumRaw);
 
 				String zeit = cols.get(zeitIndex).text();
 				String liga;
@@ -141,7 +145,8 @@ public class SpielplanService implements SpielplanProvider {
 				letztesDatum = datumRaw;
 				fehlercode = 0;
 
-				spiele.add(new TischtennisSpiel(vereinnr, datumRaw, zeit, liga, heim, gast, ergebnis, ergebnisLink));
+				spiele.add(new TischtennisSpiel(vereinnr, datumRaw + " " + zeit, wochentag, datum, zeit, liga, heim,
+						gast, ergebnis, ergebnisLink));
 			}
 
 			if (anzahl++ > 99) {
@@ -205,7 +210,7 @@ public class SpielplanService implements SpielplanProvider {
 			}
 
 			if (spielDruck) {
-				String datum = spiel.getDatumAnzeige();
+				String datum = spiel.getDatum();
 				long tage = tageBisDatum(datum, heute);
 				long configTage = Long.parseLong(ConfigManager.getConfigValue(vereinnr, "spielplan.vorschau.tage"));
 
@@ -218,7 +223,7 @@ public class SpielplanService implements SpielplanProvider {
 					i++;
 					tageLetzterSatz = tage;
 
-					sb.append("<strong>   - ").append(spiel.getZeitAnzeige()).append(": ")
+					sb.append("<strong>   - ").append(spiel.getZeit()).append(": ")
 							.append(klartextLiga(spiel.getLiga())).append(": </strong> ").append(spiel.getHeim())
 							.append(" - ").append(spiel.getGast()).append("<br>");
 
@@ -346,19 +351,20 @@ public class SpielplanService implements SpielplanProvider {
 
 	@Override
 	public String ausgabe(List<Spiel> spiele) {
-		StringBuilder spieleListe = new StringBuilder();
+		StringBuilder tabelleListe = new StringBuilder();
 
 		for (Spiel spiel : spiele) {
-			spieleListe.append(spiel.getDatumAnzeige()).append(" - ");
-			spieleListe.append(spiel.getZeitAnzeige()).append(" - ");
-			spieleListe.append(spiel.getLiga()).append(" - ");
-			spieleListe.append(spiel.getHeim()).append(" - ");
-			spieleListe.append(spiel.getGast()).append(" - ");
-			spieleListe.append(spiel.getErgebnis()).append(" - ");
-			spieleListe.append(spiel.getErgebnisLink()).append("\n");
+			tabelleListe.append(spiel.getDatumGesamt()).append(" - ");
+			tabelleListe.append(spiel.getWochentag()).append(" - ");
+			tabelleListe.append(spiel.getDatum()).append(" - ");
+			tabelleListe.append(spiel.getZeit()).append(" - ");
+			tabelleListe.append(spiel.getLiga()).append(" - ");
+			tabelleListe.append(spiel.getHeim()).append(" - ");
+			tabelleListe.append(spiel.getGast()).append(" - ");
+			tabelleListe.append(spiel.getErgebnis()).append(" \n ");
 		}
 
-		return spieleListe.toString();
+		return tabelleListe.toString();
 	}
 
 	public int getFehlercode() {
@@ -367,5 +373,70 @@ public class SpielplanService implements SpielplanProvider {
 
 	public void setFehlercode(int fehlercode) {
 		this.fehlercode = fehlercode;
+	}
+
+	public void parseDatumOhneZeit(String input) {
+		wochentag = "";
+		datum = "";
+
+		if (input == null || input.isBlank()) {
+			return;
+		}
+
+		String text = input.trim();
+
+		try {
+			// 1) Split an Komma
+			String[] parts = text.split(",", 2);
+
+			if (parts.length < 2) {
+				// ❌ Kein Wochentag vorhanden
+				datum = text;
+				return;
+			}
+
+			String wt = parts[0].trim();
+			String rest = parts[1].trim();
+
+			// Punkt am Ende entfernen (z. B. "Sa.")
+			wt = wt.replace(".", "");
+
+			// 2) Wochentag prüfen
+			if (!istGueltigerWochentag(wt)) {
+				// ❌ Ungültiger Wochentag
+				datum = text;
+				return;
+			}
+
+			wochentag = wt;
+
+			// 3) Datum prüfen
+			if (!istGueltigesDatum(rest)) {
+				// ❌ Datum ungültig
+				datum = rest;
+				return;
+			}
+
+			datum = rest;
+
+		} catch (Exception e) {
+			// Absolute Fallback-Sicherheit
+			datum = input;
+			wochentag = "";
+		}
+	}
+
+	private static boolean istGueltigerWochentag(String wt) {
+		return wt.matches("(?i)Mo|Di|Mi|Do|Fr|Sa|So");
+	}
+
+	private static boolean istGueltigesDatum(String dat) {
+		try {
+			DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+			LocalDate.parse(dat, fmt);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
 	}
 }

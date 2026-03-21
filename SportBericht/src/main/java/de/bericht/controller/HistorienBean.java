@@ -33,6 +33,7 @@ public class HistorienBean implements Serializable {
 	private String ergebnisLink;
 	private String uuid;
 	private String spielErgebnis;
+	private String gruppeUrl;
 	private List<LogEntry> logEntries;
 
 	private BerichtData aktuellerBericht;
@@ -63,6 +64,7 @@ public class HistorienBean implements Serializable {
 		this.name = params.get("name");
 		this.liga = params.get("liga");
 		this.uuid = params.get("uuid");
+		this.gruppeUrl = params.get("gruppeUrl");
 		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
 		logEntries = dbService.getLogEntries(vereinnr, ergebnisLink);
 		// Spielergebnisse abrufen
@@ -287,6 +289,14 @@ public class HistorienBean implements Serializable {
 
 	public boolean isTischtennis() {
 		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public String getGruppeUrl() {
+		return gruppeUrl;
+	}
+
+	public void setGruppeUrl(String gruppeUrl) {
+		this.gruppeUrl = gruppeUrl;
 	}
 
 }

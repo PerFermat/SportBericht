@@ -1,21 +1,23 @@
 package de.bericht.service;
 
+import de.bericht.util.TennisGruppeKurz;
+
 public class Liga {
 	String runde;
 	String mannschaft;
 	String mannschaftsführer;
-	String gruppe;
+	String liga;
 	String gruppeUrl;
 	String rang;
 	String punkte;
 
-	public Liga(String runde, String mannschaft, String mannschaftsführer, String gruppe, String gruppeUrl, String rang,
+	public Liga(String runde, String mannschaft, String mannschaftsführer, String liga, String gruppeUrl, String rang,
 			String punkte) {
 		super();
 		this.runde = runde;
 		this.mannschaft = mannschaft;
 		this.mannschaftsführer = mannschaftsführer;
-		this.gruppe = gruppe;
+		this.liga = liga;
 		this.gruppeUrl = gruppeUrl;
 		this.rang = rang;
 		this.punkte = punkte;
@@ -29,8 +31,12 @@ public class Liga {
 		return mannschaftsführer;
 	}
 
-	public String getGruppe() {
-		return gruppe;
+	public String getLiga() {
+		return liga;
+	}
+
+	public String getLigaKurz() {
+		return TennisGruppeKurz.kuerzeGruppe(liga);
 	}
 
 	public String getGruppeUrl() {
@@ -53,8 +59,8 @@ public class Liga {
 		this.mannschaftsführer = mannschaftsführer;
 	}
 
-	public void setGruppe(String gruppe) {
-		this.gruppe = gruppe;
+	public void setLiga(String liga) {
+		this.liga = liga;
 	}
 
 	public void setGruppeUrl(String gruppeUrl) {

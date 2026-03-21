@@ -32,6 +32,7 @@
 			<p:commandButton value="Veröffentlichen"
 				action="zusammenGesamt.xhtml">
 				<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
+				<f:param name="liga" value="" />
 				<f:param name="back" value="#{view.viewId}" />				
 			</p:commandButton>
 		</h:form>
@@ -52,7 +53,7 @@
 				</p:column>
 
 				<p:column headerText="Gruppe" styleClass="col-heim">
-					<h:outputText value="#{liga.gruppe}" />
+					<h:outputText value="#{liga.liga}" />
 				</p:column>
 
 				<p:column headerText="Rang" styleClass="col-ergebnis">
@@ -66,11 +67,11 @@
 				<p:column headerText="Bericht" styleClass="col-bericht">
 					<div class="buttontab-container">
 						<!-- Button "Bericht" wird nur angezeigt, wenn in der Ergebnis-Spalte ein Wert steht -->
-						<p:commandButton value="Auswählen" action="ligaBean.xhtml"
+						<p:commandButton value="Auswählen" action="spielplan.xhtml"
 							styleClass="myButton">
 							<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
-							<f:param name="url" value="#{liga.gruppeUrl}" />
-							<f:param name="liga" value="#{liga.gruppe}" />							
+							<f:param name="gruppeUrl" value="#{liga.gruppeUrl}" />
+							<f:param name="liga" value="#{liga.liga}" />							
 						</p:commandButton>
 					</div>
 				</p:column>
@@ -78,67 +79,7 @@
 			</p:dataTable>
 		</h:form>
 		<!-- Neue feste Zeile über der Tabelle -->
-		<h:form id="berichtForm">
-			<p:panel header="Freier Bericht eingeben" toggleable="true">
-				<h:outputText value="Datum:" />
-				<p:calendar id="berichtDatumCal"
-					value="#{ligaBean.berichtDatumCal}" pattern="dd.MM.yyyy"
-					styleClass="berichtDatumCal" locale="de"
-					converterMessage="Ungültiges Datum">
-					<p:ajax event="dateSelect" listener="#{ligaBean.onDateSelect}"
-						update="@form" />
-				</p:calendar>
-				<br />
-				<br />
-				<h:outputText value="Turnier:" />
-				<p:inputText id="freierText" value="#{ligaBean.freierText}"
-					styleClass="col-turnier" placeholder="zb. Turniername eingeben ...">
-					<p:ajax update="@form" />
-				</p:inputText>
-				<br />
-				<br />
-				<div class="button4-container button-container-panel-bg">
-					<p:commandButton value="Setzen"
-						rendered="#{empty ligaBean.berichtDatum or
-                             empty ligaBean.freierText }">
-						<p:ajax update="@form" />
-					</p:commandButton>
-					<p:commandButton value="Liste der vorhandenen freien Berichte"
-						action="freieBerichte.xhtml" immediate="true"
-						rendered="#{empty ligaBean.berichtDatum or
-                             empty ligaBean.freierText }">
-						<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
-					</p:commandButton>
-					<p:commandButton value="Bericht" action="bericht.xhtml"
-						rendered="#{not empty ligaBean.berichtDatum and
-                             not empty ligaBean.freierText and
-                             not ligaBean.hasFreigabe(ligaBean.freierLink)}"
-						styleClass="myButtonfrei">
-						<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
-						<f:param name="heim" value="#{ligaBean.freierText}" />
-						<f:param name="gast" value="#{ligaBean.berichtDatum} " />
-						<f:param name="datum" value="" />
-						<f:param name="ergebnis" value="" />
-						<f:param name="liga" value="" />
-						<f:param name="ergebnisLink"
-							value="#{ligaBean.berichtDatum}-#{ligaBean.freierText}" />
-					</p:commandButton>
-					<p:commandButton value="Veröffentlichen" action="zusammen.xhtml"
-						rendered="#{not empty ligaBean.berichtDatum and
-                             not empty ligaBean.freierText and
-                             ligaBean.hasFreigabe(ligaBean.freierLink)}"
-						styleClass="myButtonfrei">
-						<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
-						<f:param name="heim" value="#{ligaBean.freierText}" />
-						<f:param name="gast" value="" />
-						<f:param name="datum" value="" />
-						<f:param name="ergebnis" value="" />
-						<f:param name="liga" value="" />
-						<f:param name="ergebnisLink" value="#{ligaBean.freierLink}" />
-					</p:commandButton>
-				</div>
-			</p:panel>
-		</h:form>
+
 		<h:form id="configForm">
 			<div class="button4-container">
 				<p:commandButton value="Config ändern" action="config.xhtml">

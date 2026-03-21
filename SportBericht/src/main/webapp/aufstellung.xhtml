@@ -60,6 +60,7 @@
 			<p:commandButton value="Zurück" action="#{aufstellungBean.ruecksprung}" immediate="true"
 				rendered="#{not empty aufstellungBean.ruecksprung}">
 				<f:param name="vereinnr" value="#{aufstellungBean.vereinnr}" />
+				<f:param name="gruppeUrl" value="#{aufstellungBean.gruppeUrl}" />
 			</p:commandButton>
 		</div>
 	</h:form>

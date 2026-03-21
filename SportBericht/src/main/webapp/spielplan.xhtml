@@ -32,7 +32,7 @@
 				onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
 		</h:form>
 
-		<h2>Spielauswahl – #{spielplanBean.verein}</h2>
+		<h2>Spielauswahl – #{spielplanBean.verein} #{spielplanBean.liga}</h2>
 		<h:form>
 			<p:commandButton value="Zurück" action="index.xhtml"
 				actionListener="#{spielplanBean.zurueck}" immediate="true"
@@ -43,6 +43,10 @@
 			<p:commandButton value="Veröffentlichen"
 				action="zusammenGesamt.xhtml">
 				<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+				<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
+				<f:param name="liga"
+					value="#{empty spiel.liga ? spielplanBean.liga : spiel.liga}" />
+
 				<f:param name="back" value="#{view.viewId}" />
 			</p:commandButton>
 		</h:form>
@@ -58,7 +62,9 @@
 					<h:outputText value="#{spiel.datum} " />
 				</p:column>
 
-				<p:column headerText="Liga" styleClass="col-liga">
+				<p:column headerText="Liga" styleClass="col-liga"
+					rendered="#{empty spielplanBean.liga}">
+
 					<h:outputText value="#{spiel.liga}" />
 				</p:column>
 
@@ -118,6 +124,7 @@
 							<f:param name="ergebnisLink" value="#{spiel.ergebnisLink}" />
 							<f:param name="liga"
 								value="#{empty spiel.liga ? spielplanBean.liga : spiel.liga}" />
+							<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
 						</p:commandButton>
 						<p:commandButton value="Veröffentlichen" action="zusammen.xhtml"
 							rendered="#{not empty spiel.ergebnis and spielplanBean.hasFreigabe(spiel.ergebnisLink)}"
@@ -128,9 +135,9 @@
 							<f:param name="datum" value="#{spiel.datum}" />
 							<f:param name="ergebnis" value="#{spiel.ergebnis}" />
 							<f:param name="ergebnisLink" value="#{spiel.ergebnisLink}" />
-							<f:param name="url" value="#{spielplanBean.url}" />
 							<f:param name="liga"
 								value="#{empty spiel.liga ? spielplanBean.liga : spiel.liga}" />
+							<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
 						</p:commandButton>
 						<p:commandButton value="Aufstellung" action="aufstellung.xhtml"
 							rendered="#{empty spiel.ergebnis and spielplanBean.passwortOK}"
@@ -138,6 +145,9 @@
 							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 							<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
 							<f:param name="ruecksprung" value="index.xhtml" />
+							<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
+							<f:param name="liga"
+								value="#{empty spiel.liga ? spielplanBean.liga : spiel.liga}" />
 						</p:commandButton>
 					</div>
 				</p:column>
@@ -175,6 +185,10 @@
 						rendered="#{empty spielplanBean.berichtDatum or
                              empty spielplanBean.freierText }">
 						<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+						<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
+						<f:param name="liga"
+							value="#{empty spiel.liga ? spielplanBean.liga : spiel.liga}" />
+
 					</p:commandButton>
 					<p:commandButton value="Bericht" action="bericht.xhtml"
 						rendered="#{not empty spielplanBean.berichtDatum and
@@ -189,6 +203,7 @@
 						<f:param name="liga" value="" />
 						<f:param name="ergebnisLink"
 							value="#{spielplanBean.berichtDatum}-#{spielplanBean.freierText}" />
+						<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Veröffentlichen" action="zusammen.xhtml"
 						rendered="#{not empty spielplanBean.berichtDatum and
@@ -202,12 +217,13 @@
 						<f:param name="ergebnis" value="" />
 						<f:param name="liga" value="" />
 						<f:param name="ergebnisLink" value="#{spielplanBean.freierLink}" />
+						<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
 					</p:commandButton>
 				</div>
 			</p:panel>
 
 		</h:form>
-		<h:form id="configForm">
+		<h:form id="configForm" rendered="#{spielplanBean.tischtennis}">>
 			<div class="button4-container">
 				<p:commandButton value="Config ändern" action="config.xhtml">
 					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
@@ -219,6 +235,7 @@
 				<br />
 				<p:commandButton value="Impressum" action="impressum.xhtml">
 					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+
 				</p:commandButton>
 			</div>
 		</h:form>
