@@ -3,6 +3,7 @@ package de.bericht.service;
 import java.util.List;
 
 import de.bericht.util.ConfigManager;
+import de.bericht.util.TennisGruppeKurz;
 
 public class TennisSpiel extends Spiel {
 
@@ -125,6 +126,11 @@ public class TennisSpiel extends Spiel {
 		} else {
 			return "";
 		}
+	}
+
+	@Override
+	public String getLigaKurz() {
+		return TennisGruppeKurz.kuerzeGruppe(liga);
 	}
 
 }

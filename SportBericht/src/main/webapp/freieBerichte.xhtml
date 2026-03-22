@@ -35,8 +35,8 @@
 				<p:commandButton value="Veröffentlichen"
 					action="zusammenGesamt.xhtml">
 					<f:param name="vereinnr" value="#{freieBerichteBean.vereinnr}" />
-					<f:param name="frei" value="frei" />
-					<f:param name="back" value="#{view.viewId}" />
+					<f:param name="gruppeUrl" value="#{freieBerichteBean.gruppeUrl}" />
+					<f:param name="frei" value="Ja" />
 				</p:commandButton>
 				<p:commandButton value="Zurück" action="index.xhtml"
 					immediate="true" rendered="#{freieBerichteBean.tennis}">
@@ -123,7 +123,8 @@
 							<f:param name="ergebnis" value="#{spiel.ergebnis}" />
 							<f:param name="ergebnisLink" value="#{spiel.ergebnisLink}" />
 							<f:param name="liga" value="#{spiel.liga}" />
-							<f:param name="frei" value="frei" />
+							<f:param name="frei" value="Ja" />
+							<f:param name="gruppeUrl" value="#{freieBerichteBean.gruppeUrl}" />
 						</p:commandButton>
 					</div>
 				</p:column>
@@ -180,8 +181,10 @@
 					<f:param name="datum" value="" />
 					<f:param name="ergebnis" value="" />
 					<f:param name="liga" value="" />
+					<f:param name="frei" value="Ja" />
 					<f:param name="ergebnisLink"
 						value="#{freieBerichteBean.freierLink}" />
+					<f:param name="gruppeUrl" value="#{freieBerichteBean.gruppeUrl}" />
 				</p:commandButton>
 			</p:panel>
 

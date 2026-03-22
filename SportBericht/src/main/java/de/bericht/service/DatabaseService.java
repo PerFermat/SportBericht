@@ -130,6 +130,52 @@ public class DatabaseService {
 		return spiele;
 	}
 
+	public List<Spiel> listeBerichteMitSpielMetadaten(String vereinnr) {
+		String sql = "SELECT ergebnisLink, ueberschrift, liga, heim, gast, datum, ergebnis FROM berichte "
+				+ "WHERE vereinnr = ? AND ergebnisLink <> '-'";
+		List<Spiel> spiele = new ArrayList<>();
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, vereinnr);
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				String ergebnisLink = rs.getString("ergebnisLink");
+				if (ergebnisLink == null || ergebnisLink.isBlank()) {
+					continue;
+				}
+
+				if (ergebnisLink.startsWith("http")) {
+					String liga = rs.getString("liga");
+					String heim = rs.getString("heim");
+					String gast = rs.getString("gast");
+					String datum = rs.getString("datum");
+					String ergebnis = rs.getString("ergebnis");
+
+					if (istLeer(liga) || istLeer(heim) || istLeer(gast) || istLeer(datum) || istLeer(ergebnis)) {
+						continue;
+					}
+
+					TischtennisSpiel spiel = new TischtennisSpiel(vereinnr, "", "", datum, "", liga, heim, gast,
+							ergebnis, ergebnisLink);
+					spiele.add(spiel);
+				} else {
+					String ueberschrift = rs.getString("ueberschrift");
+					String datum = ergebnisLink.length() >= 10 ? ergebnisLink.substring(0, 10) : "";
+					TischtennisSpiel spiel = new TischtennisSpiel(vereinnr, "", "", datum, "", "", ueberschrift, "", "",
+							ergebnisLink);
+					spiele.add(spiel);
+				}
+			}
+			rs.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return spiele;
+	}
+
+	private boolean istLeer(String text) {
+		return text == null || text.isBlank();
+	}
+
 	public List<Spiel> listeSpielberichteInFreieBerichte(String vereinnr) {
 		String sql = "SELECT ergebnisLink, ueberschrift FROM berichte WHERE vereinnr = ? AND mitSpielberichte = ?";
 		List<Spiel> spiele = new ArrayList<>();

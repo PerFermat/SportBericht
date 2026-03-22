@@ -120,6 +120,8 @@ public abstract class Spiel implements Comparable<Spiel> {
 
 	public abstract String getLigaJugend();
 
+	public abstract String getLigaKurz();
+
 	public String getLiga() {
 		return liga;
 	}

@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
-import de.bericht.provider.SpielplanFactory;
 import de.bericht.provider.SpielplanProvider;
 import de.bericht.service.BerichtText;
 import de.bericht.service.Bilddaten;
@@ -87,23 +86,7 @@ public class ZusammenGesamtBean implements Serializable {
 		freieBerichte = params.get("frei");
 		spieleFreigegeben = new ArrayList<>();
 
-		if (freieBerichte != null && "frei".equals(freieBerichte)) {
-			spiele = dbService.listeFreieBerichte(vereinnr);
-		} else {
-			try {
-				System.out.println(gruppeUrl);
-				if (gruppeUrl == null) {
-					provider = SpielplanFactory.create(vereinnr);
-					gruppeUrl = provider.getFallbackSourceUrl();
-				} else {
-					System.out.println(gruppeUrl);
-					provider = SpielplanFactory.create(vereinnr, gruppeUrl);
-				}
-			} catch (Exception e) {
-				spieleFreigegeben = new ArrayList<>();
-			}
-
-		}
+		spiele = dbService.listeBerichteMitSpielMetadaten(vereinnr);
 
 		erstellenBerichtListe(freigegebeneBerichte);
 		name = BerichtHelper.getHomepageStandardZusammen(vereinnr);
@@ -111,59 +94,51 @@ public class ZusammenGesamtBean implements Serializable {
 	}
 
 	public void erstellenBerichtListe(boolean freigegeben) {
-		if (freieBerichte != null && "frei".equals(freieBerichte)) {
-			spieleFreigegeben.clear();
-			SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
+		spieleFreigegeben.clear();
+		SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
 
-			for (Spiel spiel : spiele) {
-				if (!freigegeben || hasFreigabe(spiel.getErgebnisLink())) {
-					spieleFreigegeben.add(spiel);
-				}
+		for (Spiel spiel : spiele) {
+			if (matchesLigaFilter(spiel) && (!freigegeben || hasFreigabe(spiel.getErgebnisLink()))) {
+				spieleFreigegeben.add(spiel);
 			}
-
-			spieleFreigegeben.sort((s1, s2) -> {
-				try {
-					Date d1 = formatter.parse(s1.getDatum());
-					Date d2 = formatter.parse(s2.getDatum());
-					return d1.compareTo(d2);
-				} catch (ParseException e) {
-					return 0;
-				}
-			});
-		} else {
-			spieleFreigegeben.clear();
-			if (freigegeben) {
-				spieleFreigegeben = provider.getSpielplanFreigabe(vereinnr);
-			} else {
-				spieleFreigegeben = provider.getSpielplan();
-			}
-			freieBerichte = "nein";
-
-			DatabaseService db = new DatabaseService();
-			List<Spiel> spielberichte = db.listeSpielberichteInFreieBerichte(vereinnr);
-			spieleFreigegeben.addAll(spielberichte);
-
 		}
+
+		spieleFreigegeben.sort((s1, s2) -> {
+			try {
+				Date d1 = formatter.parse(s1.getDatum());
+				Date d2 = formatter.parse(s2.getDatum());
+				return d1.compareTo(d2);
+			} catch (ParseException e) {
+				return 0;
+			}
+		});
 	}
 
 	public List<Spiel> getSpieleFreigegeben() {
-
-		long configTage;
-		if (freieBerichte != null && "frei".equals(freieBerichte)) {
-			configTage = Long.parseLong(ConfigManager.getConfigValue(vereinnr, "freierBericht.rueckschau.tage"));
-		} else {
-			configTage = Long.parseLong(ConfigManager.getConfigValue(vereinnr, "spielplan.rueckschau.tage"));
-		}
+		long spielplanRueckschauTage = Long
+				.parseLong(ConfigManager.getConfigValue(vereinnr, "spielplan.rueckschau.tage"));
+		long freierBerichtRueckschauTage = Long
+				.parseLong(ConfigManager.getConfigValue(vereinnr, "freierBericht.rueckschau.tage"));
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 		LocalDate heute = LocalDate.now();
-		LocalDate vorTagen = heute.minusDays(configTage);
+		LocalDate vorSpieltagen = heute.minusDays(spielplanRueckschauTage);
+		LocalDate vorFreienTagen = heute.minusDays(freierBerichtRueckschauTage);
 
 		return spieleFreigegeben.stream().filter(spiel -> {
 			LocalDate spielDatum = LocalDate.parse(spiel.getDatum(), formatter);
-			return (spielDatum.isAfter(vorTagen) || spielDatum.isEqual(vorTagen));
+			LocalDate grenze = spiel.getErgebnisLink().startsWith("http") ? vorSpieltagen : vorFreienTagen;
+			return (spielDatum.isAfter(grenze) || spielDatum.isEqual(grenze));
 		}).collect(Collectors.toList());
 
+	}
+
+	private boolean matchesLigaFilter(Spiel spiel) {
+		if (liga == null || liga.isBlank()) {
+			return true;
+		}
+		String spielLiga = spiel.getLiga();
+		return spielLiga != null && liga.trim().equalsIgnoreCase(spielLiga.trim());
 	}
 
 	public void setBerichtDatum(String berichtDatum) {
@@ -178,13 +153,22 @@ public class ZusammenGesamtBean implements Serializable {
 		this.freierText = freierText;
 	}
 
-	public Boolean getFreieBerichte() {
+	public String ruecksprung() {
 
-		if ("nein".equalsIgnoreCase(this.freieBerichte)) {
-			return false;
-		} else {
-			return true;
+		if ("Ja".equals(freieBerichte)) {
+			return "freieBerichte.xhtml";
 		}
+
+		if (gruppeUrl != null && !gruppeUrl.isEmpty()) {
+			return "spielplan.xhtml";
+		}
+
+		if (isTischtennis()) {
+			return "spielplan.xhtml";
+		}
+
+		return "index.xhtml";
+
 	}
 
 	public void onDateSelect() {

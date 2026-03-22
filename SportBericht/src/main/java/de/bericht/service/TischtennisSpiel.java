@@ -94,4 +94,8 @@ public class TischtennisSpiel extends Spiel {
 		return "tischtennis";
 	}
 
+	@Override
+	public String getLigaKurz() {
+		return liga;
+	}
 }

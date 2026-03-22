@@ -44,10 +44,8 @@
 				action="zusammenGesamt.xhtml">
 				<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 				<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
-				<f:param name="liga"
-					value="#{empty spiel.liga ? spielplanBean.liga : spiel.liga}" />
-
-				<f:param name="back" value="#{view.viewId}" />
+				<f:param name="liga" value="#{spielplanBean.liga}" />
+				<f:param name="frei" value="Nein" />				
 			</p:commandButton>
 		</h:form>
 	</div>
@@ -122,8 +120,7 @@
 							<f:param name="datum" value="#{spiel.datum}" />
 							<f:param name="ergebnis" value="#{spiel.ergebnis}" />
 							<f:param name="ergebnisLink" value="#{spiel.ergebnisLink}" />
-							<f:param name="liga"
-								value="#{empty spiel.liga ? spielplanBean.liga : spiel.liga}" />
+							<f:param name="liga" value="#{spielplanBean.liga}" />
 							<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
 						</p:commandButton>
 						<p:commandButton value="Veröffentlichen" action="zusammen.xhtml"
@@ -135,9 +132,9 @@
 							<f:param name="datum" value="#{spiel.datum}" />
 							<f:param name="ergebnis" value="#{spiel.ergebnis}" />
 							<f:param name="ergebnisLink" value="#{spiel.ergebnisLink}" />
-							<f:param name="liga"
-								value="#{empty spiel.liga ? spielplanBean.liga : spiel.liga}" />
+							<f:param name="liga" value="#{spielplanBean.liga}" />
 							<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
+							<f:param name="frei" value="Nein" />
 						</p:commandButton>
 						<p:commandButton value="Aufstellung" action="aufstellung.xhtml"
 							rendered="#{empty spiel.ergebnis and spielplanBean.passwortOK}"
@@ -146,8 +143,7 @@
 							<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
 							<f:param name="ruecksprung" value="index.xhtml" />
 							<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
-							<f:param name="liga"
-								value="#{empty spiel.liga ? spielplanBean.liga : spiel.liga}" />
+							<f:param name="liga" value="#{spielplanBean.liga}" />
 						</p:commandButton>
 					</div>
 				</p:column>
@@ -186,9 +182,7 @@
                              empty spielplanBean.freierText }">
 						<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 						<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
-						<f:param name="liga"
-							value="#{empty spiel.liga ? spielplanBean.liga : spiel.liga}" />
-
+						<f:param name="liga" value="#{spielplanBean.liga}" />
 					</p:commandButton>
 					<p:commandButton value="Bericht" action="bericht.xhtml"
 						rendered="#{not empty spielplanBean.berichtDatum and
@@ -218,6 +212,7 @@
 						<f:param name="liga" value="" />
 						<f:param name="ergebnisLink" value="#{spielplanBean.freierLink}" />
 						<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
+						<f:param name="frei" value="Nein" />						
 					</p:commandButton>
 				</div>
 			</p:panel>

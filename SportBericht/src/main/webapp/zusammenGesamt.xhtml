@@ -25,13 +25,11 @@
 					style="vertical-align: middle;" width="50" />
 			</h:outputLink>
 			<h2>Veröffentlichen #{zusammenGesamtBean.liga}</h2>
-			<p:button value="Zurück" outcome="#{param.back}"
-				rendered="#{not empty param.back}">
+			<p:commandButton value="Zurück" action="#{zusammenGesamtBean.ruecksprung}" immediate="true" >
 				<f:param name="vereinnr" value="#{zusammenGesamtBean.vereinnr}" />
-				<f:param name="gruppeUrl" value="#{zusammenGesamtBean.gruppeUrl}" />
 				<f:param name="liga" value="#{zusammenGesamtBean.liga}" />
-
-			</p:button>
+				<f:param name="gruppeUrl" value="#{zusammenGesamtBean.gruppeUrl}" />
+			</p:commandButton>
 		</div>
 	</h:form>
 	<br />
@@ -80,7 +78,7 @@
 				</p:column>
 
 				<p:column headerText="Liga" styleClass="col-liga" rendered="#{empty zusammenGesamtBean.liga}">
-					<h:outputText value="#{spiel.liga}" />
+					<h:outputText value="#{spiel.ligaKurz}" />
 				</p:column>
 
 				<p:column headerText="Heimmannschaft" styleClass="col-heim">
