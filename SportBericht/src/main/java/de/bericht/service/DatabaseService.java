@@ -2214,5 +2214,43 @@ public class DatabaseService {
 			throw new IllegalStateException("Versendete Mail konnte nicht gelöscht werden.", e);
 		}
 	}
+	
+
+	public SpielcodeEintrag ladeSpielcodeEintrag(String uniqueKey, String vereinnr) {
+		String sql = "SELECT t.liga, t.datum, t.zeit, t.heim, t.gast, s.spiel_code, s.pin "
+				+ "FROM spielplan_tabelle t "
+				+ "LEFT JOIN spielcodes s ON s.unique_key = t.unique_key "
+				+ "WHERE t.unique_key = ?";
+		if (vereinnr != null && !vereinnr.isBlank()) {
+			sql += " AND t.vereinnr = ?";
+		}
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, uniqueKey);
+			if (vereinnr != null && !vereinnr.isBlank()) {
+				pstmt.setString(2, vereinnr);
+			}
+			try (ResultSet rs = pstmt.executeQuery()) {
+				if (rs.next()) {
+					SpielcodeEintrag eintrag = new SpielcodeEintrag();
+					eintrag.setLiga(rs.getString("liga"));
+					eintrag.setDatum(rs.getString("datum"));
+					eintrag.setZeit(rs.getString("zeit"));
+					eintrag.setHeim(rs.getString("heim"));
+					eintrag.setGast(rs.getString("gast"));
+					String spielCode = rs.getString("spiel_code");
+					String pin = rs.getString("pin");
+					eintrag.setSpielCode(spielCode);
+					eintrag.setPin(pin);
+					eintrag.setSpielcodeGefunden((spielCode != null && !spielCode.isBlank())
+							|| (pin != null && !pin.isBlank()));
+					return eintrag;
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 
 }

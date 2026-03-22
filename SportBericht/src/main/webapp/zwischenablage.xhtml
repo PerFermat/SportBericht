@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>Zwischenablage</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{zwischenablageBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet name="css/styles.css" />
+</h:head>
+
+<h:body>
+	<div class="zwischenablage-wrapper">
+		<h:panelGroup rendered="#{zwischenablageBean.spielGefunden}">
+			<div class="zwischenablage-box">
+				<p>
+					<strong>Spiel:</strong> #{zwischenablageBean.spiel.heim} -
+					#{zwischenablageBean.spiel.gast}
+				</p>
+				<p>
+					<strong>Liga:</strong> #{zwischenablageBean.spiel.liga}
+				</p>
+				<p>
+					<strong>Datum:</strong> #{zwischenablageBean.spiel.datum}
+				</p>
+				<p>
+					<strong>Zeit:</strong> #{zwischenablageBean.spiel.zeit}
+				</p>
+			</div>
+
+			<h:panelGroup rendered="#{zwischenablageBean.spielcodeVorhanden}">
+				<div class="zwischenablage-box zwischenablage-code-box">
+					<p class="zwischenablage-copy-row">
+						<strong>Spielcode:</strong>
+					</p>
+					<h:panelGroup rendered="#{not empty zwischenablageBean.spiel.spielCode}"
+						layout="block" styleClass="zwischenablage-copy-value"
+						title="Zum Kopieren klicken"
+						pt:data-original="#{zwischenablageBean.spiel.spielCode}"
+						pt:onclick="copyZwischenablageValue(this);">
+						<h:outputText value="#{zwischenablageBean.spiel.spielCode}" />
+					</h:panelGroup>
+					<h:outputText rendered="#{empty zwischenablageBean.spiel.spielCode}"
+						styleClass="zwischenablage-copy-value zwischenablage-copy-value-static"
+						value="-" />
+
+					<p class="zwischenablage-copy-row">
+						<strong>PIN:</strong>
+					</p>
+					<h:panelGroup rendered="#{not empty zwischenablageBean.spiel.pin}"
+						layout="block" styleClass="zwischenablage-copy-value"
+						title="Zum Kopieren klicken"
+						pt:data-original="#{zwischenablageBean.spiel.pin}"
+						pt:onclick="copyZwischenablageValue(this);">
+						<h:outputText value="#{zwischenablageBean.spiel.pin}" />
+					</h:panelGroup>
+					<h:outputText rendered="#{empty zwischenablageBean.spiel.pin}"
+						styleClass="zwischenablage-copy-value zwischenablage-copy-value-static"
+						value="-" />
+				</div>
+			</h:panelGroup>
+
+			<div class="zwischenablage-image-wrap">
+				<a href="https://ttde-apps.liga.nu/nuliga/nuscore-tt/welcome"
+					target="_blank" rel="noopener noreferrer"> <h:graphicImage
+						library="images" name="nuscore.png" alt="nuScore" styleClass="zwischenablage-image" />
+				</a>
+			</div>
+		</h:panelGroup>
+
+		<h:panelGroup rendered="#{not zwischenablageBean.spielGefunden}">
+			<div class="zwischenablage-box">Kein Spiel zum angegebenen Key gefunden.</div>
+		</h:panelGroup>
+	</div>
+
+	<h:outputScript target="body">
+		function fallbackCopyZwischenablage(value) {
+			var tempInput = document.createElement("textarea");
+			tempInput.value = value;
+			tempInput.setAttribute("readonly", "");
+			tempInput.style.position = "fixed";
+			tempInput.style.top = "0";
+			tempInput.style.left = "-9999px";
+			document.body.appendChild(tempInput);
+			tempInput.focus();
+			tempInput.select();
+			document.execCommand("copy");
+			document.body.removeChild(tempInput);
+		}
+
+		function markAsCopied(element) {
+			var original = element.getAttribute("data-original");
+			if (!original) {
+				return;
+			}
+			element.textContent = "Kopiert";
+			element.classList.add("is-copied");
+			window.setTimeout(function() {
+				element.textContent = original;
+				element.classList.remove("is-copied");
+			}, 1800);
+		}
+
+		function copyZwischenablageValue(element) {
+			if (!element) {
+				return;
+			}
+			var value = element.getAttribute("data-original");
+			if (!value) {
+				return;
+			}
+
+			if (navigator.clipboard &amp;&amp; navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(value).then(function() {
+					markAsCopied(element);
+				}).catch(function() {
+					fallbackCopyZwischenablage(value);
+					markAsCopied(element);
+				});
+				return;
+			}
+
+			fallbackCopyZwischenablage(value);
+			markAsCopied(element);
+		}
+	</h:outputScript>
+</h:body>
+</html>
