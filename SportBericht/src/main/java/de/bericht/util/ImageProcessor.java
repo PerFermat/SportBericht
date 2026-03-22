@@ -19,13 +19,34 @@ public class ImageProcessor {
 		if (image == null) {
 			throw new IOException("Ungültiges Bildformat oder leere Eingabe.");
 		}
+		
+		int imageWidth = image.getWidth();
+		int imageHeight = image.getHeight();
+
+		if (imageWidth <= 0 || imageHeight <= 0) {
+			throw new IOException("Bild hat keine gültigen Dimensionen.");
+		}
+
+		int safeX = clamp(cropX, 0, imageWidth - 1);
+		int safeY = clamp(cropY, 0, imageHeight - 1);
+
+		int maxCropWidth = imageWidth - safeX;
+		int maxCropHeight = imageHeight - safeY;
+
+		int safeWidth = clamp(cropWidth, 1, maxCropWidth);
+		int safeHeight = clamp(cropHeight, 1, maxCropHeight);
 
 		// Randbeschneidung durchführen
-		BufferedImage croppedImage = image.getSubimage(cropX, cropY, cropWidth, cropHeight);
+		BufferedImage croppedImage = image.getSubimage(safeX, safeY, safeWidth, safeHeight);
 
 		// In Byte-Array zurückkonvertieren
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		ImageIO.write(croppedImage, "jpg", outputStream);
 		return outputStream.toByteArray();
 	}
+
+	private static int clamp(int value, int min, int max) {
+		return Math.max(min, Math.min(value, max));
+	}
+
 }

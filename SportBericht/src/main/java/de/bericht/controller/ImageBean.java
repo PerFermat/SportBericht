@@ -133,7 +133,7 @@ public class ImageBean extends HttpServlet implements Serializable {
 			processedImage = ImageProcessor.processImage(originalImage, x, y, width, height);
 			dbService.saveBerichtData(vereinnr, ergebnisLink, processedImage);
 			imagePath = "data:image/jpg;base64," + java.util.Base64.getEncoder().encodeToString(processedImage);
-		} catch (IOException e) {
+		} catch (NumberFormatException | IOException e) {
 			e.printStackTrace();
 		}
 	}
