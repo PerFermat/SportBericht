@@ -98,7 +98,8 @@ public class ZusammenGesamtBean implements Serializable {
 		SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
 
 		for (Spiel spiel : spiele) {
-			if (matchesLigaFilter(spiel) && (!freigegeben || hasFreigabe(spiel.getErgebnisLink()))) {
+			if (matchesLigaFilter(spiel) && matchesFreiFilter(spiel)
+					&& (!freigegeben || hasFreigabe(spiel.getErgebnisLink()))) {
 				spieleFreigegeben.add(spiel);
 			}
 		}
@@ -112,6 +113,14 @@ public class ZusammenGesamtBean implements Serializable {
 				return 0;
 			}
 		});
+	}
+
+	private boolean matchesFreiFilter(Spiel spiel) {
+		boolean istSpielbericht = spiel.getErgebnisLink().startsWith("http");
+		if ("Ja".equalsIgnoreCase(freieBerichte)) {
+			return !istSpielbericht;
+		}
+		return istSpielbericht || spiel.isMitSpielberichte();
 	}
 
 	public List<Spiel> getSpieleFreigegeben() {

@@ -24,6 +24,7 @@ public abstract class Spiel implements Comparable<Spiel> {
 	protected boolean wahl = true;
 	protected boolean bericht;
 	protected boolean bild;
+	protected boolean mitSpielberichte;
 
 	public String getVereinnr() {
 		return vereinnr;
@@ -156,6 +157,14 @@ public abstract class Spiel implements Comparable<Spiel> {
 
 	public String getDatumGesamt() {
 		return datumGesamt;
+	}
+
+	public boolean isMitSpielberichte() {
+		return mitSpielberichte;
+	}
+
+	public void setMitSpielberichte(boolean mitSpielberichte) {
+		this.mitSpielberichte = mitSpielberichte;
 	}
 
 }

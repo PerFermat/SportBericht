@@ -130,6 +130,8 @@ public class TennisSpiel extends Spiel {
 
 	@Override
 	public String getLigaKurz() {
+		System.out.println("getLigaKurz " + liga);
+		System.out.println("getLigaKurz " + TennisGruppeKurz.kuerzeGruppe(liga));
 		return TennisGruppeKurz.kuerzeGruppe(liga);
 	}
 

@@ -30,6 +30,7 @@ import de.bericht.service.BerichtText;
 import de.bericht.service.DatabaseService;
 import de.bericht.service.LogEntry;
 import de.bericht.service.Spiel;
+import de.bericht.service.TennisSpiel;
 import de.bericht.service.TischtennisSpiel;
 import de.bericht.service.WordpressMedia;
 import de.bericht.util.BerichtData;
@@ -115,8 +116,14 @@ public class ZusammenBean implements Serializable {
 		String mail = params.get("mail");
 		name = BerichtHelper.getHomepageStandardEinzel(vereinnr);
 		if (datum != null) {
-			this.selectedItem = new TischtennisSpiel(vereinnr, "", "", datum, "", liga, heim, gast, ergebnis,
-					ergebnisLink);
+			if (ConfigManager.isTischtennis(vereinnr)) {
+				this.selectedItem = new TischtennisSpiel(vereinnr, "", "", datum, "", liga, heim, gast, ergebnis,
+						ergebnisLink);
+			} else {
+				this.selectedItem = new TennisSpiel(vereinnr, "", "", "", datum, "", heim, "", gast, "", "", ergebnis,
+						"", "", ergebnisLink, true);
+			}
+
 			ladeIframe(selectedItem);
 		}
 		freieBerichte = params.get("frei");
@@ -136,7 +143,8 @@ public class ZusammenBean implements Serializable {
 
 		spieleFreigegeben.clear();
 		for (Spiel spiel : spiele) {
-			if (matchesLigaFilter(spiel) && (!freigegeben || hasFreigabe(spiel.getErgebnisLink()))) {
+			if (matchesLigaFilter(spiel) && matchesFreiFilter(spiel)
+					&& (!freigegeben || hasFreigabe(spiel.getErgebnisLink()))) {
 				spieleFreigegeben.add(spiel);
 			}
 		}
@@ -150,6 +158,14 @@ public class ZusammenBean implements Serializable {
 				return 0;
 			}
 		});
+	}
+
+	private boolean matchesFreiFilter(Spiel spiel) {
+		boolean istSpielbericht = spiel.getErgebnisLink().startsWith("http");
+		if ("Ja".equalsIgnoreCase(freieBerichte)) {
+			return !istSpielbericht;
+		}
+		return istSpielbericht || spiel.isMitSpielberichte();
 	}
 
 	private void berichtLaden() {

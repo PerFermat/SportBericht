@@ -131,7 +131,7 @@ public class DatabaseService {
 	}
 
 	public List<Spiel> listeBerichteMitSpielMetadaten(String vereinnr) {
-		String sql = "SELECT ergebnisLink, ueberschrift, liga, heim, gast, datum, ergebnis FROM berichte "
+		String sql = "SELECT ergebnisLink, ueberschrift, liga, heim, gast, datum, ergebnis, mitSpielberichte FROM berichte "
 				+ "WHERE vereinnr = ? AND ergebnisLink <> '-'";
 		List<Spiel> spiele = new ArrayList<>();
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -153,15 +153,23 @@ public class DatabaseService {
 					if (istLeer(liga) || istLeer(heim) || istLeer(gast) || istLeer(datum) || istLeer(ergebnis)) {
 						continue;
 					}
-
-					TischtennisSpiel spiel = new TischtennisSpiel(vereinnr, "", "", datum, "", liga, heim, gast,
-							ergebnis, ergebnisLink);
-					spiele.add(spiel);
+					if (ConfigManager.isTischtennis(vereinnr)) {
+						TischtennisSpiel spiel = new TischtennisSpiel(vereinnr, "", "", datum, "", liga, heim, gast,
+								ergebnis, ergebnisLink);
+						spiel.setMitSpielberichte(rs.getBoolean("mitSpielberichte"));
+						spiele.add(spiel);
+					} else {
+						TennisSpiel spiel = new TennisSpiel(vereinnr, "", "", "", datum, "", heim, "", gast, "", "",
+								ergebnis, "", "", ergebnisLink, true);
+						spiel.setMitSpielberichte(rs.getBoolean("mitSpielberichte"));
+						spiele.add(spiel);
+					}
 				} else {
 					String ueberschrift = rs.getString("ueberschrift");
 					String datum = ergebnisLink.length() >= 10 ? ergebnisLink.substring(0, 10) : "";
 					TischtennisSpiel spiel = new TischtennisSpiel(vereinnr, "", "", datum, "", "", ueberschrift, "", "",
 							ergebnisLink);
+					spiel.setMitSpielberichte(rs.getBoolean("mitSpielberichte"));
 					spiele.add(spiel);
 				}
 			}
