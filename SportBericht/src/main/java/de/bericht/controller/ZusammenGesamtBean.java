@@ -307,8 +307,14 @@ public class ZusammenGesamtBean implements Serializable {
 			text.append("</p><br>");
 		}
 		IgnorierteWoerte ignorieren = new IgnorierteWoerte();
-		ueberschrift = "Tischtennis Spielberichte "
-				+ berechneKalenderwoche(findeFruehestesDatum(getSpieleFreigegeben()));
+		if (ConfigManager.isTennis(vereinnr)) {
+			ueberschrift = "Tennis Spielberichte "
+					+ berechneKalenderwoche(findeFruehestesDatum(getSpieleFreigegeben()));
+		} else {
+			ueberschrift = "Tischtennis Spielberichte "
+					+ berechneKalenderwoche(findeFruehestesDatum(getSpieleFreigegeben()));
+			
+		}
 		int bildnr = 0;
 		for (Spiel spiel : getSpieleFreigegeben()) {
 

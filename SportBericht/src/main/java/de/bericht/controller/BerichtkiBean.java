@@ -66,6 +66,7 @@ public class BerichtkiBean implements Serializable {
 	private double presencePenalty = 0.5;
 	private boolean spielplan = false;
 	private String liga;
+	private String ligaSpiel;	
 	private String uuid;
 	private String ersetzungen;
 	private List<String> wirkungen = new ArrayList<>();
@@ -106,6 +107,7 @@ public class BerichtkiBean implements Serializable {
 		this.heim = params.get("heim");
 		this.gast = params.get("gast");
 		this.datum = params.get("datum");
+		this.ligaSpiel = params.get("ligaSpiel");		
 		this.ergebnis = params.get("ergebnis");
 		this.ergebnisLink = params.get("ergebnisLink");
 		this.gruppeUrl = params.get("gruppeUrl");
@@ -1051,6 +1053,14 @@ public class BerichtkiBean implements Serializable {
 
 	public String getVereinHomepage() {
 		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
+	}
+
+	public String getLigaSpiel() {
+		return ligaSpiel;
+	}
+
+	public void setLigaSpiel(String ligaSpiel) {
+		this.ligaSpiel = ligaSpiel;
 	}
 
 }

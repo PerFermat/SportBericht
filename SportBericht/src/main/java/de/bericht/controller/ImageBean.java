@@ -35,6 +35,7 @@ public class ImageBean extends HttpServlet implements Serializable {
 	private byte[] processedImage;
 	private String imagePath;
 	private String liga;
+	private String ligaSpiel;	
 	private String uuid;
 	private DatabaseService dbService = new DatabaseService();
 	private String gruppeUrl;
@@ -51,6 +52,7 @@ public class ImageBean extends HttpServlet implements Serializable {
 		this.ergebnisLink = params.get("ergebnisLink");
 		this.berichtText = params.get("berichtText");
 		this.liga = params.get("liga");
+		this.ligaSpiel = params.get("ligaSpiel");		
 		this.uuid = params.get("uuid");
 		this.gruppeUrl = params.get("gruppeUrl");
 		imagePath = "data:image/jpg;base64," + java.util.Base64.getEncoder().encodeToString(loadImageFromDatabase());
@@ -232,6 +234,14 @@ public class ImageBean extends HttpServlet implements Serializable {
 
 	public void setGruppeUrl(String gruppeUrl) {
 		this.gruppeUrl = gruppeUrl;
+	}
+
+	public String getLigaSpiel() {
+		return ligaSpiel;
+	}
+
+	public void setLigaSpiel(String ligaSpiel) {
+		this.ligaSpiel = ligaSpiel;
 	}
 
 }

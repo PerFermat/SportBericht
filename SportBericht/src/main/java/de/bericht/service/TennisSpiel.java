@@ -128,9 +128,5 @@ public class TennisSpiel extends Spiel {
 		}
 	}
 
-	@Override
-	public String getLigaKurz() {
-		return TennisGruppeKurz.kuerzeGruppe(liga);
-	}
 
 }

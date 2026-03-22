@@ -58,7 +58,6 @@ public class SpielplanBean implements Serializable {
 		liga = request.getParameter("liga");
 		gruppeUrl = request.getParameter("gruppeUrl");
 		passwort = request.getParameter("p");
-		System.out.println(gruppeUrl);
 
 		if (vereinnr == null) {
 			vereinnr = request.getParameter("vereinnr");
@@ -66,7 +65,6 @@ public class SpielplanBean implements Serializable {
 		if (vereinnr == null) {
 			vereinnr = "13014";
 		}
-		System.out.println(vereinnr);
 		int i = 0;
 
 		SpielplanProvider provider;
@@ -75,7 +73,6 @@ public class SpielplanBean implements Serializable {
 				provider = SpielplanFactory.create(vereinnr);
 				gruppeUrl = provider.getFallbackSourceUrl();
 			} else {
-				System.out.println("lesen");
 				provider = SpielplanFactory.create(vereinnr, gruppeUrl);
 			}
 			spiele = provider.getSpielplan();

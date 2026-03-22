@@ -1905,7 +1905,6 @@ public class DatabaseService {
 				}
 				pstmt.executeBatch();
 			}
-			System.out.println("Die Spielplan wurde erfolgreich gespeichert.");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

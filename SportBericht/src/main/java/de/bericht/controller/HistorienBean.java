@@ -30,6 +30,7 @@ public class HistorienBean implements Serializable {
 	private String ergebnis;
 	private String name;
 	private String liga;
+	private String ligaSpiel;	
 	private String ergebnisLink;
 	private String uuid;
 	private String spielErgebnis;
@@ -63,6 +64,7 @@ public class HistorienBean implements Serializable {
 		this.ergebnisLink = params.get("ergebnisLink");
 		this.name = params.get("name");
 		this.liga = params.get("liga");
+		this.ligaSpiel = params.get("ligaSpiel");		
 		this.uuid = params.get("uuid");
 		this.gruppeUrl = params.get("gruppeUrl");
 		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
@@ -297,6 +299,14 @@ public class HistorienBean implements Serializable {
 
 	public void setGruppeUrl(String gruppeUrl) {
 		this.gruppeUrl = gruppeUrl;
+	}
+
+	public String getLigaSpiel() {
+		return ligaSpiel;
+	}
+
+	public void setLigaSpiel(String ligaSpiel) {
+		this.ligaSpiel = ligaSpiel;
 	}
 
 }

@@ -7,6 +7,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import de.bericht.util.BerichtHelper;
+import de.bericht.util.ConfigManager;
+import de.bericht.util.TennisGruppeKurz;
 
 public abstract class Spiel implements Comparable<Spiel> {
 
@@ -121,10 +123,15 @@ public abstract class Spiel implements Comparable<Spiel> {
 
 	public abstract String getLigaJugend();
 
-	public abstract String getLigaKurz();
-
 	public String getLiga() {
 		return liga;
+	}
+
+	public String getLigaKurz() {
+
+		if (ConfigManager.isTennis(vereinnr))
+			return TennisGruppeKurz.kuerzeGruppe(getLiga());
+		return getLiga();
 	}
 
 	public String getWochentag() {
@@ -158,6 +165,7 @@ public abstract class Spiel implements Comparable<Spiel> {
 	public String getDatumGesamt() {
 		return datumGesamt;
 	}
+
 	public boolean isMitSpielberichte() {
 		return mitSpielberichte;
 	}

@@ -120,7 +120,6 @@ public class ZusammenBean implements Serializable {
 			ladeIframe(selectedItem);
 		}
 		freieBerichte = params.get("frei");
-		System.out.println(freieBerichte);
 
 		spiele = dbService.listeBerichteMitSpielMetadaten(vereinnr);
 

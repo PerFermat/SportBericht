@@ -44,6 +44,7 @@ public class AenderungBean implements Serializable {
 	private String ergebnisLink;
 	private String berichtMannschaft;
 	private String liga;
+	private String ligaSpiel;	
 	private String vereinnr;
 	private String uuid;
 	private String berichtText;
@@ -66,6 +67,7 @@ public class AenderungBean implements Serializable {
 		this.ergebnis = params.get("ergebnis");
 		this.ergebnisLink = params.get("ergebnisLink");
 		this.liga = params.get("liga");
+		this.ligaSpiel = params.get("ligaSpiel");		
 		this.uuid = params.get("uuid");
 		this.gruppeUrl = params.get("gruppeUrl");
 		if (uuid == null) {
@@ -823,6 +825,14 @@ public class AenderungBean implements Serializable {
 
 	public void setGruppeUrl(String gruppeUrl) {
 		this.gruppeUrl = gruppeUrl;
+	}
+
+	public String getLigaSpiel() {
+		return ligaSpiel;
+	}
+
+	public void setLigaSpiel(String ligaSpiel) {
+		this.ligaSpiel = ligaSpiel;
 	}
 
 }

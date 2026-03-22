@@ -64,6 +64,7 @@ public class BerichtBean implements Serializable {
 	private String ergebnisLink;
 	private String name = "";
 	private String liga;
+	private String ligaSpiel;
 	private boolean pruefKI;
 	private boolean spielplan = true;
 	private String spielErgebnis; // Für die Anzeige der Spielergebnisse
@@ -128,15 +129,19 @@ public class BerichtBean implements Serializable {
 		this.ergebnisLink = params.get("ergebnisLink");
 		this.name = params.get("name");
 		this.liga = params.get("liga");
+		this.ligaSpiel = params.get("ligaSpiel");
 		this.uuid = params.get("uuid");
 		this.gruppeUrl = params.get("gruppeUrl");
 
 		if (vereinnr == null) {
 			vereinnr = "13014";
 		}
-
 		if (ergebnisLink != null && !ergebnisLink.isBlank()) {
-			dbService.saveSpielMetadaten(vereinnr, ergebnisLink, liga, heim, gast, datum, ergebnis);
+			if (this.ligaSpiel == null || this.ligaSpiel.isEmpty()) {
+				dbService.saveSpielMetadaten(vereinnr, ergebnisLink, liga, heim, gast, datum, ergebnis);
+			} else {
+				dbService.saveSpielMetadaten(vereinnr, ergebnisLink, ligaSpiel, heim, gast, datum, ergebnis);
+			}
 		}
 
 		if (dbService.anzahlFreigabe(vereinnr, ergebnisLink) >= 1) {
@@ -979,6 +984,14 @@ public class BerichtBean implements Serializable {
 
 	public String getVereinHomepage() {
 		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
+	}
+
+	public String getLigaSpiel() {
+		return ligaSpiel;
+	}
+
+	public void setLigaSpiel(String ligaSpiel) {
+		this.ligaSpiel = ligaSpiel;
 	}
 
 }

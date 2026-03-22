@@ -73,6 +73,7 @@
 						<f:param name="ergebnis" value="#{berichtBean.ergebnis}" />
 						<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
+						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />						
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
@@ -147,6 +148,7 @@
 							<f:param name="ergebnis" value="#{berichtBean.ergebnis}" />
 							<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
 							<f:param name="liga" value="#{berichtBean.liga}" />
+							<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />													
 							<f:param name="uuid" value="#{berichtBean.uuid}" />
 							<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 						</p:commandButton>
@@ -203,6 +205,7 @@
 						<f:param name="ergebnis" value="#{berichtBean.ergebnis}" />
 						<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
+						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />							
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
@@ -211,12 +214,14 @@
 						actionListener="#{berichtBean.freigabe}" immediate="true">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
+						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />							
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Freigeben" action="freieBerichte.xhtml"
 						rendered="#{berichtBean.anzFreigabe and not berichtBean.ergebnisLink.startsWith('http')}"
 						actionListener="#{berichtBean.freigabe}" immediate="true">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
+						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />							
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Zurück"
@@ -226,6 +231,7 @@
 
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
+						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />							
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Zurück" action="freieBerichte.xhtml"
@@ -430,6 +436,7 @@
 						<f:param name="ergebnis" value="#{berichtBean.ergebnis}" />
 						<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
+						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />						
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
