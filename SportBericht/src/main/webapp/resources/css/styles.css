@@ -1400,9 +1400,12 @@ max-width
 
 }
 
+}
+
 @media ( max-width : 650px) {
 	.adress-toolbar {
-		flex-direction: column;
+			flex-direction: column;
+
 		align-items: stretch;
 		gap: 8px;
 	}
@@ -1582,4 +1585,3 @@ max-width
 }
 
 
-}
