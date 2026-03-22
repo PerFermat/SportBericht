@@ -135,6 +135,10 @@ public class BerichtBean implements Serializable {
 			vereinnr = "13014";
 		}
 
+		if (ergebnisLink != null && !ergebnisLink.isBlank()) {
+			dbService.saveSpielMetadaten(vereinnr, ergebnisLink, liga, heim, gast, datum, ergebnis);
+		}
+
 		if (dbService.anzahlFreigabe(vereinnr, ergebnisLink) >= 1) {
 			try {
 

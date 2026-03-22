@@ -472,8 +472,8 @@ public class DatabaseService {
 			byte[] neuesBild, boolean bildSetzen, String neueUnterschrift, boolean unterschriftSetzen,
 			String neueUeberschrift, boolean ueberschriftSetzen, boolean speichernHistorie) {
 
-		String selectSql = "SELECT berichtText, bild, bildUnterschrift, ueberschrift FROM berichte WHERE vereinnr = ? and ergebnisLink = ?";
-		String insertHistorieSql = "INSERT INTO berichte_historie (vereinnr, ergebnisLink, berichtText, bild, bildUnterschrift, ueberschrift ,timestamp) VALUES (? , ?, ?, ?, ?,?, NOW())";
+		String selectSql = "SELECT berichtText, bild, bildUnterschrift, ueberschrift, liga, heim, gast, datum, ergebnis FROM berichte WHERE vereinnr = ? and ergebnisLink = ?";
+		String insertHistorieSql = "INSERT INTO berichte_historie (vereinnr, ergebnisLink, berichtText, bild, bildUnterschrift, ueberschrift, liga, heim, gast, datum, ergebnis, timestamp) VALUES (? , ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
 		String upsertSql = "INSERT INTO berichte (vereinnr, ergebnisLink, berichtText, bild, bildUnterschrift , ueberschrift) VALUES (? , ?, ?, ?, ? , ?) "
 				+ "ON DUPLICATE KEY UPDATE berichtText = VALUES(berichtText), bild = VALUES(bild), bildUnterschrift = VALUES(bildUnterschrift) , ueberschrift = VALUES(ueberschrift)";
 
@@ -485,6 +485,11 @@ public class DatabaseService {
 				byte[] altesBild = null;
 				String alteUnterschrift = null;
 				String alteUeberschrift = null;
+				String alteLiga = null;
+				String alteHeim = null;
+				String alteGast = null;
+				String altesDatum = null;
+				String altesErgebnis = null;
 
 				boolean existiert = false;
 				boolean hatSichGeaendert = false;
@@ -499,6 +504,12 @@ public class DatabaseService {
 							altesBild = rs.getBytes("bild");
 							alteUnterschrift = rs.getString("bildUnterschrift");
 							alteUeberschrift = rs.getString("ueberschrift");
+							alteLiga = rs.getString("liga");
+							alteHeim = rs.getString("heim");
+							alteGast = rs.getString("gast");
+							altesDatum = rs.getString("datum");
+							altesErgebnis = rs.getString("ergebnis");
+
 						}
 					}
 				}
@@ -529,6 +540,12 @@ public class DatabaseService {
 							insertHistStmt.setBytes(4, altesBild);
 							insertHistStmt.setString(5, alteUnterschrift);
 							insertHistStmt.setString(6, alteUeberschrift);
+							insertHistStmt.setString(7, alteLiga);
+							insertHistStmt.setString(8, alteHeim);
+							insertHistStmt.setString(9, alteGast);
+							insertHistStmt.setString(10, altesDatum);
+							insertHistStmt.setString(11, altesErgebnis);
+
 							insertHistStmt.executeUpdate();
 						}
 					}
@@ -572,6 +589,24 @@ public class DatabaseService {
 				upsertStmt.executeUpdate();
 			}
 			BerichtHelper.refreshCachedBerichtData(vereinnr, ergebnisLink);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void saveSpielMetadaten(String vereinnr, String ergebnisLink, String liga, String heim, String gast,
+			String datum, String ergebnis) {
+		String upsertSql = "INSERT INTO berichte (vereinnr, ergebnisLink, liga, heim, gast, datum, ergebnis) VALUES (?, ?, ?, ?, ?, ?, ?) "
+				+ "ON DUPLICATE KEY UPDATE liga = VALUES(liga), heim = VALUES(heim), gast = VALUES(gast), datum = VALUES(datum), ergebnis = VALUES(ergebnis)";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(upsertSql)) {
+			pstmt.setString(1, vereinnr);
+			pstmt.setString(2, ergebnisLink);
+			pstmt.setString(3, liga);
+			pstmt.setString(4, heim);
+			pstmt.setString(5, gast);
+			pstmt.setString(6, datum);
+			pstmt.setString(7, ergebnis);
+			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
