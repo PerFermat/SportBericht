@@ -100,6 +100,7 @@ public class ZusammenGesamtBean implements Serializable {
 		for (Spiel spiel : spiele) {
 			if (matchesLigaFilter(spiel) && matchesFreiFilter(spiel)
 					&& (!freigegeben || hasFreigabe(spiel.getErgebnisLink()))) {
+
 				spieleFreigegeben.add(spiel);
 			}
 		}
@@ -113,14 +114,6 @@ public class ZusammenGesamtBean implements Serializable {
 				return 0;
 			}
 		});
-	}
-
-	private boolean matchesFreiFilter(Spiel spiel) {
-		boolean istSpielbericht = spiel.getErgebnisLink().startsWith("http");
-		if ("Ja".equalsIgnoreCase(freieBerichte)) {
-			return !istSpielbericht;
-		}
-		return istSpielbericht || spiel.isMitSpielberichte();
 	}
 
 	public List<Spiel> getSpieleFreigegeben() {
@@ -149,6 +142,15 @@ public class ZusammenGesamtBean implements Serializable {
 		String spielLiga = spiel.getLiga();
 		return spielLiga != null && liga.trim().equalsIgnoreCase(spielLiga.trim());
 	}
+
+	private boolean matchesFreiFilter(Spiel spiel) {
+		boolean istSpielbericht = spiel.getErgebnisLink().startsWith("http");
+		if ("Ja".equalsIgnoreCase(freieBerichte)) {
+			return !istSpielbericht;
+		}
+		return istSpielbericht || spiel.isMitSpielberichte();
+	}
+
 
 	public void setBerichtDatum(String berichtDatum) {
 		this.berichtDatum = berichtDatum;

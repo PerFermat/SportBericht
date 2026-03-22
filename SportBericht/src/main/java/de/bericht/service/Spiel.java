@@ -158,7 +158,6 @@ public abstract class Spiel implements Comparable<Spiel> {
 	public String getDatumGesamt() {
 		return datumGesamt;
 	}
-
 	public boolean isMitSpielberichte() {
 		return mitSpielberichte;
 	}

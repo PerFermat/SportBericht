@@ -153,17 +153,11 @@ public class DatabaseService {
 					if (istLeer(liga) || istLeer(heim) || istLeer(gast) || istLeer(datum) || istLeer(ergebnis)) {
 						continue;
 					}
-					if (ConfigManager.isTischtennis(vereinnr)) {
-						TischtennisSpiel spiel = new TischtennisSpiel(vereinnr, "", "", datum, "", liga, heim, gast,
-								ergebnis, ergebnisLink);
-						spiel.setMitSpielberichte(rs.getBoolean("mitSpielberichte"));
-						spiele.add(spiel);
-					} else {
-						TennisSpiel spiel = new TennisSpiel(vereinnr, "", "", "", datum, "", heim, "", gast, "", "",
-								ergebnis, "", "", ergebnisLink, true);
-						spiel.setMitSpielberichte(rs.getBoolean("mitSpielberichte"));
-						spiele.add(spiel);
-					}
+
+					TischtennisSpiel spiel = new TischtennisSpiel(vereinnr, "", "", datum, "", liga, heim, gast,
+							ergebnis, ergebnisLink);
+					spiel.setMitSpielberichte(rs.getBoolean("mitSpielberichte"));					
+					spiele.add(spiel);
 				} else {
 					String ueberschrift = rs.getString("ueberschrift");
 					String datum = ergebnisLink.length() >= 10 ? ergebnisLink.substring(0, 10) : "";
