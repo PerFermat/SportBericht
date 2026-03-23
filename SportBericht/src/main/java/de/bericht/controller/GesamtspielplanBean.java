@@ -183,11 +183,13 @@ public class GesamtspielplanBean implements Serializable {
 			spalten.add(new AnzeigeSpalte(def.key(), def.mannschaft(), def.liga(), def.jugend(), sourceKeys));
 		}
 
-		datumsListe.addAll(datumsSet);
-		datumsListe.sort(Comparator.comparing(this::parseDatumSafe));
+		List<String> sortierteDaten = new ArrayList<>(datumsSet);
+		sortierteDaten.sort(Comparator.comparing(this::parseDatumSafe));
 
-		for (String datum : datumsListe) {
+		for (String datum : sortierteDaten) {
+
 			Map<String, List<GesamtspielplanEintrag>> rowMap = new LinkedHashMap<>();
+			boolean hatMindestensEinSpiel = false;			
 			for (AnzeigeSpalte spalte : spalten) {
 				List<GesamtspielplanEintrag> gesammelt = new ArrayList<>();
 				Map<String, List<GesamtspielplanEintrag>> datumMap = basisEintraege.getOrDefault(datum, Map.of());
@@ -198,8 +200,16 @@ public class GesamtspielplanBean implements Serializable {
 						.comparing(GesamtspielplanEintrag::getZeit, Comparator.nullsLast(String::compareTo))
 						.thenComparing(GesamtspielplanEintrag::getGegner, Comparator.nullsLast(String::compareTo)));
 				rowMap.put(spalte.getKey(), gesammelt);
+				if (!gesammelt.isEmpty()) {
+					hatMindestensEinSpiel = true;
+				}
 			}
-			spieleByDatumUndSpalte.put(datum, rowMap);
+			if (hatMindestensEinSpiel) {
+				datumsListe.add(datum);
+				spieleByDatumUndSpalte.put(datum, rowMap);
+				
+				
+			}
 		}
 
 		ladeVerfuegbarkeitsdaten();

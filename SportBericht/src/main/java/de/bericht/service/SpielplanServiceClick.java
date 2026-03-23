@@ -105,13 +105,9 @@ public class SpielplanServiceClick implements SpielplanProvider {
 								String liga = cols.get(ligaIndex + korrektur).text();
 								String heim = cols.get(heimIndex + korrektur).text();
 								String gast = cols.get(gastIndex + korrektur).text();
-								if ((liga.startsWith("H") || liga.startsWith("E")) && heim.equals("TSGV Hattenhofen")) {
-									heim += " I";
-								}
+								gast = BerichtHelper.vereinsnummer(vereinnr, gast, liga);
+								heim = BerichtHelper.vereinsnummer(vereinnr, heim, liga);
 
-								if ((liga.startsWith("H") || liga.startsWith("E")) && gast.equals("TSGV Hattenhofen")) {
-									gast += " I";
-								}
 								String ergebnis = cols.get(punkteIndex + korrektur).text();
 								if ("0:0".equals(ergebnis)) {
 									ergebnis = "";
