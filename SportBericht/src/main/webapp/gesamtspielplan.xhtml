@@ -50,6 +50,15 @@
 
 	<div class="gesamtspielplan-wrapper">
 		<h:form id="gesamtspielplanForm">
+			<h:panelGroup
+				rendered="#{gesamtspielplanBean.konfigurationErforderlich}"
+				layout="block" styleClass="ui-message ui-message-warn"
+				style="margin-bottom: 12px; padding: 10px;">
+				<span class="ui-message-warn-icon pi pi-exclamation-triangle"
+					style="margin-right: 8px;" />
+				<span class="ui-message-warn-detail">Es sind noch keine
+					Spielplan-Daten vorhanden. Bitte zuerst die Konfiguration anlegen.</span>
+			</h:panelGroup>
 			<div class="gesamtspielplan-scroll">
 				<table class="gesamtspielplan">
 					<thead>
@@ -262,56 +271,70 @@
 						</div>
 					</h:panelGroup>
 				</p:dialog>
-			<p:dialog widgetVar="gesamtspielplanConfigDialog"
+				<p:dialog widgetVar="gesamtspielplanConfigDialog"
 					header="Konfiguration Gesamtspielplan" modal="true"
 					resizable="false" appendTo="@form" width="900">
-					<h:panelGroup id="gesamtspielplanConfigDialogContent" layout="block">
-						<ui:repeat value="#{gesamtspielplanBean.configSpalten}" var="configSpalte">
+					<h:panelGroup id="gesamtspielplanConfigDialogContent"
+						layout="block">
+						<ui:repeat value="#{gesamtspielplanBean.configSpalten}"
+							var="configSpalte">
 							<div class="gesamt-config-spalte">
 								<div class="gesamt-config-header">
-									<p:commandButton icon="#{configSpalte.expanded ? 'pi pi-minus' : 'pi pi-plus'}"
+									<p:commandButton
+										icon="#{configSpalte.expanded ? 'pi pi-minus' : 'pi pi-plus'}"
 										styleClass="ui-button-flat config-expand-button"
 										actionListener="#{gesamtspielplanBean.toggleConfigSpalte(configSpalte)}"
-										process="@this"
+										process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
 										update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
 									<h:panelGroup styleClass="gesamt-config-header-fields">
-										<h:outputText value="Spalte #{configSpalte.spalte}" styleClass="config-spalte-label" />
-										<p:inputText value="#{configSpalte.ligaAnzeige}" placeholder="Liga_Anzeige" />
-										<p:inputText value="#{configSpalte.mannschaftAnzeige}" placeholder="Mannschaft_Anzeige" />
+										<h:outputText value="Spalte #{configSpalte.spalte}"
+											styleClass="config-spalte-label" />
+										<p:inputText value="#{configSpalte.ligaAnzeige}"
+											placeholder="Liga_Anzeige" />
+										<p:inputText value="#{configSpalte.mannschaftAnzeige}"
+											placeholder="Mannschaft_Anzeige" />
 										<h:panelGroup styleClass="config-betreuer-group">
 											<h:outputText value="Betreuer notwendig:" />
-											<p:selectOneRadio value="#{configSpalte.betreuer}" layout="lineDirection">
+											<p:selectOneRadio value="#{configSpalte.betreuer}"
+												layout="lineDirection">
 												<f:selectItem itemLabel="Ja" itemValue="true" />
 												<f:selectItem itemLabel="Nein" itemValue="false" />
 											</p:selectOneRadio>
 										</h:panelGroup>
 									</h:panelGroup>
-									<p:commandButton icon="pi pi-trash" styleClass="ui-button-danger"
+									<p:commandButton icon="pi pi-trash"
+										styleClass="ui-button-danger"
 										actionListener="#{gesamtspielplanBean.removeConfigSpalte(configSpalte)}"
-										process="@this"
+										process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
 										update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
 								</div>
 								<h:panelGroup rendered="#{configSpalte.expanded}">
 									<div class="gesamt-config-details">
-										<ui:repeat value="#{configSpalte.mannschaften}" var="configMannschaft">
+										<ui:repeat value="#{configSpalte.mannschaften}"
+											var="configMannschaft">
 											<div class="gesamt-config-detail-row">
 												<p:selectOneMenu value="#{configMannschaft.liga}">
-													<f:selectItem itemLabel="Liga wählen" itemValue="" noSelectionOption="true" />
-													<f:selectItems value="#{gesamtspielplanBean.verfuegbareLigen}" />
+													<f:selectItem itemLabel="Liga wählen" itemValue=""
+														noSelectionOption="true" />
+													<f:selectItems
+														value="#{gesamtspielplanBean.verfuegbareLigen}" />
 												</p:selectOneMenu>
 												<p:selectOneMenu value="#{configMannschaft.mannschaft}">
-													<f:selectItem itemLabel="Mannschaft wählen" itemValue="" noSelectionOption="true" />
-													<f:selectItems value="#{gesamtspielplanBean.verfuegbareMannschaften}" />
+													<f:selectItem itemLabel="Mannschaft wählen" itemValue=""
+														noSelectionOption="true" />
+													<f:selectItems
+														value="#{gesamtspielplanBean.verfuegbareMannschaften}" />
 												</p:selectOneMenu>
-												<p:commandButton icon="pi pi-trash" styleClass="ui-button-danger"
+												<p:commandButton icon="pi pi-trash"
+													styleClass="ui-button-danger"
 													actionListener="#{gesamtspielplanBean.removeConfigMannschaft(configSpalte, configMannschaft)}"
-													process="@this"
+													process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
 													update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
 											</div>
 										</ui:repeat>
 										<p:commandButton value="Mannschaft hinzufügen"
 											actionListener="#{gesamtspielplanBean.addConfigMannschaft(configSpalte)}"
-											process="@this"
+											process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
 											update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
 									</div>
 								</h:panelGroup>
@@ -319,7 +342,8 @@
 						</ui:repeat>
 						<div class="gesamt-config-actions-top">
 							<p:commandButton value="Neue Spalte hinzufügen"
-								actionListener="#{gesamtspielplanBean.addConfigSpalte}" process="@this"
+								actionListener="#{gesamtspielplanBean.addConfigSpalte}"
+								process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
 								update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
 						</div>
 						<div class="dialog-footer-buttons" style="margin-top: 16px;">
@@ -335,7 +359,7 @@
 								oncomplete="PF('gesamtspielplanConfigDialog').hide();" />
 						</div>
 					</h:panelGroup>
-				</p:dialog>				
+				</p:dialog>
 			</div>
 		</h:form>
 		<h:form id="configForm">
@@ -392,6 +416,8 @@
 			}
 
 			scheduleHeightUpdate();
+			
+			
 		})();
 	</h:outputScript>
 </h:body>

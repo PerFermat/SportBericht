@@ -97,6 +97,7 @@ public class GesamtspielplanBean implements Serializable {
 	private final List<SpielerRueckmeldung> offeneSpieler = new ArrayList<>();
 	private final List<SpielerRueckmeldung> zusatzZugesagtSpieler = new ArrayList<>();
 	private final Map<String, VerfuegbarkeitsSnapshot> verfuegbarkeitBySpielKey = new HashMap<>();
+	private boolean konfigurationErforderlich;
 
 	@PostConstruct
 	public void init() {
@@ -115,6 +116,7 @@ public class GesamtspielplanBean implements Serializable {
 
 		halbserie = defaultHalbserie();
 		ladeGesamtspielplan();
+		aktualisiereKonfigurationErforderlich();
 	}
 
 	public void ladeGesamtspielplan() {
@@ -1044,6 +1046,7 @@ public class GesamtspielplanBean implements Serializable {
 		reindexConfigSpalten();
 		uebernehmeDefinitionenAusConfigSpalten();
 		ladeGesamtspielplan();
+		aktualisiereKonfigurationErforderlich();
 	}
 
 	public void saveConfig() {
@@ -1068,6 +1071,12 @@ public class GesamtspielplanBean implements Serializable {
 		databaseService.speichereGesamtspielplanKonfiguration(vereinnr, dbSpalten);
 		ladePersistierteGesamtspielplanKonfiguration();
 		ladeGesamtspielplan();
+		aktualisiereKonfigurationErforderlich();
+	}
+
+	private void aktualisiereKonfigurationErforderlich() {
+		konfigurationErforderlich = configSpalten.isEmpty() || datumsListe.isEmpty();
+		
 	}
 
 	private void reindexConfigSpalten() {
@@ -1268,6 +1277,11 @@ public class GesamtspielplanBean implements Serializable {
 		return spalten;
 	}
 
+	public boolean isKonfigurationErforderlich() {
+		return konfigurationErforderlich;
+	}
+
+	
 	public List<ConfigSpalteModel> getConfigSpalten() {
 		return configSpalten;
 	}

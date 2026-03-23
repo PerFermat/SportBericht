@@ -2,6 +2,7 @@ package de.bericht.filter;
 
 import java.io.IOException;
 
+import de.bericht.service.DatabaseSchemaInitializer;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import jakarta.servlet.Filter;
@@ -23,6 +24,7 @@ public class IndexForwardFilter implements Filter {
 
 		HttpServletRequest req = (HttpServletRequest) request;
 		HttpServletResponse resp = (HttpServletResponse) response;
+		DatabaseSchemaInitializer.initializeIfNeeded();
 
 		String uri = req.getRequestURI();
 		String contextPath = req.getContextPath();
