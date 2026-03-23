@@ -1139,6 +1139,7 @@ body.dark-mode .dark-mode-download-button:hover .ui-button-icon-left {
 	align-items: center;
 	gap: 12px;
 	flex-wrap: wrap;
+position: relative;	
 }
 .betreuer-status-confirmed {
 	color: #1b7f1b;
@@ -1163,6 +1164,65 @@ body.dark-mode .dark-mode-download-button:hover .ui-button-icon-left {
 	display: inline-block;
 	margin-right: 12px;
 }
+
+.config-trigger-button.ui-button {
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+
+.gesamt-config-spalte {
+	border: 1px solid #d8d8d8;
+	border-radius: 6px;
+	padding: 8px;
+	margin-bottom: 10px;
+}
+
+.gesamt-config-header {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+}
+
+.gesamt-config-header-fields {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+	flex: 1;
+}
+
+.config-spalte-label {
+	font-weight: 600;
+	min-width: 70px;
+}
+
+.config-betreuer-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.gesamt-config-details {
+	margin-top: 8px;
+	padding-left: 34px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.gesamt-config-detail-row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.gesamt-config-actions-top {
+	margin-top: 10px;
+}
+
+
+
 
 .info-popup-trigger.ui-button {
 	border-radius: 50% !important;

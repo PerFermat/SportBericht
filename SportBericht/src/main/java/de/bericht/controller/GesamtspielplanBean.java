@@ -51,6 +51,8 @@ import com.lowagie.text.pdf.draw.VerticalPositionMark;
 
 import de.bericht.service.AnzeigeSpalte;
 import de.bericht.service.DatabaseService;
+import de.bericht.service.GesamtspielplanConfigMannschaft;
+import de.bericht.service.GesamtspielplanConfigSpalte;
 import de.bericht.service.GesamtspielplanEintrag;
 import de.bericht.service.SpielerRueckmeldung;
 import de.bericht.util.BerichtHelper;
@@ -69,10 +71,10 @@ public class GesamtspielplanBean implements Serializable {
 	private static final DateTimeFormatter DATUM_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 	private static String verein_prefix;
 
-	private String spalten_definition;
-	private static final Pattern SPALTEN_PATTERN = Pattern.compile("^\\s*(sp\\d+)\\s*\\(([^)]*)\\)\\s*:\\s*(.+)$",
-			Pattern.CASE_INSENSITIVE);
-	private static List<SpaltenDefinition> fixe_spalten = new ArrayList<>();
+	private final List<SpaltenDefinition> aktiveSpaltenDefinitionen = new ArrayList<>();
+	private final List<ConfigSpalteModel> configSpalten = new ArrayList<>();
+	private final List<String> verfuegbareLigen = new ArrayList<>();
+	private final List<String> verfuegbareMannschaften = new ArrayList<>();
 
 	private final ConfigManager configManager = ConfigManager.getInstance();
 	private final DatabaseService databaseService = new DatabaseService();
@@ -108,8 +110,9 @@ public class GesamtspielplanBean implements Serializable {
 			vereinnr = "13014";
 		}
 		verein_prefix = ConfigManager.getSpielplanVerein(vereinnr);
-		spalten_definition = ConfigManager.getConfigValue(vereinnr, "gesamtspielplan.spalten");
-		fixe_spalten = parseSpaltenDefinition(spalten_definition);
+		ladePersistierteGesamtspielplanKonfiguration();
+		ladeAuswahlwerte();
+
 		halbserie = defaultHalbserie();
 		ladeGesamtspielplan();
 	}
@@ -165,9 +168,7 @@ public class GesamtspielplanBean implements Serializable {
 			}
 		}
 
-		for (
-
-		SpaltenDefinition def : fixe_spalten) {
+		for (SpaltenDefinition def : aktiveSpaltenDefinitionen) {
 			List<String> sourceKeys = new ArrayList<>();
 			for (BasisSpalte basisSpalte : basisSpalten.values()) {
 				for (QuellenDefinition quelle : def.quellen()) {
@@ -950,52 +951,133 @@ public class GesamtspielplanBean implements Serializable {
 		return wochentag + " " + datum;
 	}
 
-	private static List<SpaltenDefinition> parseSpaltenDefinition(String input) {
-		List<SpaltenDefinition> result = new ArrayList<>();
-		if (input == null || input.isBlank()) {
-			return result;
+	private void ladePersistierteGesamtspielplanKonfiguration() {
+		configSpalten.clear();
+		Map<Integer, ConfigSpalteModel> byId = new LinkedHashMap<>();
+		for (GesamtspielplanConfigSpalte row : databaseService.ladeGesamtspielplanConfigSpalten(vereinnr)) {
+			ConfigSpalteModel model = new ConfigSpalteModel();
+			model.setId(row.getId());
+			model.setSpalte(row.getSpalte());
+			model.setLigaAnzeige(row.getLigaAnzeige());
+			model.setMannschaftAnzeige(row.getMannschaftAnzeige());
+			model.setBetreuer(row.isBetreuer());
+			byId.put(row.getId(), model);
+			configSpalten.add(model);
 		}
-
-		for (String rawSpalte : input.split("\\|")) {
-			Matcher matcher = SPALTEN_PATTERN.matcher(rawSpalte.trim());
-			if (!matcher.matches()) {
+		for (GesamtspielplanConfigMannschaft row : databaseService.ladeGesamtspielplanConfigMannschaften(vereinnr)) {
+			ConfigSpalteModel spalte = byId.get(row.getIdSpalte());
+			if (spalte == null) {
 				continue;
 			}
-
-			String spaltenKey = matcher.group(1).trim();
-			String anzeigeLiga = matcher.group(2).trim();
-			String quellenTeil = matcher.group(3).trim();
-
-			List<QuellenDefinition> quellen = new ArrayList<>();
-			String anzeigeMannschaft = "";
-
-			for (String rawQuelle : quellenTeil.split(";")) {
-				String quelleText = rawQuelle.trim();
-				if (quelleText.isBlank()) {
-					continue;
-				}
-				String[] ligaUndTeam = quelleText.split("/", 2);
-				if (ligaUndTeam.length != 2) {
-					continue;
-				}
-				String liga = ligaUndTeam[0].trim();
-				String team = ligaUndTeam[1].trim();
-				if (liga.isBlank() || team.isBlank()) {
-					continue;
-				}
-				if (anzeigeMannschaft.isBlank()) {
-					anzeigeMannschaft = team;
-				}
-				quellen.add(new QuellenDefinition(liga, team));
-			}
-
-			if (!quellen.isEmpty()) {
-				boolean jugend = anzeigeLiga.toUpperCase().startsWith("J");
-				result.add(new SpaltenDefinition(spaltenKey, anzeigeMannschaft, anzeigeLiga, jugend, quellen));
-			}
+			ConfigMannschaftModel mannschaft = new ConfigMannschaftModel();
+			mannschaft.setId(row.getId());
+			mannschaft.setIdSpalte(row.getIdSpalte());
+			mannschaft.setLiga(row.getLiga());
+			mannschaft.setMannschaft(row.getMannschaft());
+			spalte.getMannschaften().add(mannschaft);
 		}
+		reindexConfigSpalten();
+		uebernehmeDefinitionenAusConfigSpalten();
+	}
 
-		return result;
+	private void ladeAuswahlwerte() {
+		verfuegbareLigen.clear();
+		verfuegbareLigen.addAll(databaseService.ladeGesamtspielplanLigen(vereinnr, verein_prefix));
+		verfuegbareMannschaften.clear();
+		verfuegbareMannschaften.addAll(databaseService.ladeGesamtspielplanMannschaften(vereinnr, verein_prefix));
+	}
+
+	private void uebernehmeDefinitionenAusConfigSpalten() {
+		aktiveSpaltenDefinitionen.clear();
+		for (ConfigSpalteModel model : configSpalten) {
+			List<QuellenDefinition> quellen = new ArrayList<>();
+			for (ConfigMannschaftModel mannschaft : model.getMannschaften()) {
+				if (istLeer(mannschaft.getLiga()) || istLeer(mannschaft.getMannschaft())) {
+					continue;
+				}
+				quellen.add(new QuellenDefinition(mannschaft.getLiga().trim(), mannschaft.getMannschaft().trim()));
+			}
+			aktiveSpaltenDefinitionen
+					.add(new SpaltenDefinition("sp" + model.getSpalte(), nullSafe(model.getMannschaftAnzeige()),
+							nullSafe(model.getLigaAnzeige()), model.isBetreuer(), quellen));
+		}
+	}
+
+	public void addConfigSpalte() {
+		ConfigSpalteModel model = new ConfigSpalteModel();
+		model.setSpalte(configSpalten.size() + 1);
+		model.setExpanded(true);
+		configSpalten.add(model);
+	}
+
+	public void removeConfigSpalte(ConfigSpalteModel spalte) {
+		if (spalte == null) {
+			return;
+		}
+		configSpalten.remove(spalte);
+		reindexConfigSpalten();
+	}
+
+	public void toggleConfigSpalte(ConfigSpalteModel spalte) {
+		if (spalte == null) {
+			return;
+		}
+		spalte.setExpanded(!spalte.isExpanded());
+	}
+
+	public void addConfigMannschaft(ConfigSpalteModel spalte) {
+		if (spalte == null) {
+			return;
+		}
+		spalte.getMannschaften().add(new ConfigMannschaftModel());
+		spalte.setExpanded(true);
+	}
+
+	public void removeConfigMannschaft(ConfigSpalteModel spalte, ConfigMannschaftModel mannschaft) {
+		if (spalte == null || mannschaft == null) {
+			return;
+		}
+		spalte.getMannschaften().remove(mannschaft);
+	}
+
+	public void applyTempConfig() {
+		reindexConfigSpalten();
+		uebernehmeDefinitionenAusConfigSpalten();
+		ladeGesamtspielplan();
+	}
+
+	public void saveConfig() {
+		reindexConfigSpalten();
+		List<GesamtspielplanConfigSpalte> dbSpalten = new ArrayList<>();
+		for (ConfigSpalteModel model : configSpalten) {
+			GesamtspielplanConfigSpalte row = new GesamtspielplanConfigSpalte();
+			row.setVereinnr(vereinnr);
+			row.setSpalte(model.getSpalte());
+			row.setLigaAnzeige(nullSafe(model.getLigaAnzeige()));
+			row.setMannschaftAnzeige(nullSafe(model.getMannschaftAnzeige()));
+			row.setBetreuer(model.isBetreuer());
+			for (ConfigMannschaftModel mannschaft : model.getMannschaften()) {
+				GesamtspielplanConfigMannschaft child = new GesamtspielplanConfigMannschaft();
+				child.setVereinnr(vereinnr);
+				child.setLiga(nullSafe(mannschaft.getLiga()));
+				child.setMannschaft(nullSafe(mannschaft.getMannschaft()));
+				row.getMannschaften().add(child);
+			}
+			dbSpalten.add(row);
+		}
+		databaseService.speichereGesamtspielplanKonfiguration(vereinnr, dbSpalten);
+		ladePersistierteGesamtspielplanKonfiguration();
+		ladeGesamtspielplan();
+	}
+
+	private void reindexConfigSpalten() {
+		for (int i = 0; i < configSpalten.size(); i++) {
+			configSpalten.get(i).setSpalte(i + 1);
+		}
+	}
+
+	private String nullSafe(String value) {
+		return value == null ? "" : value.trim();
 	}
 
 	private boolean passtZurHalbserie(String datum) {
@@ -1186,6 +1268,18 @@ public class GesamtspielplanBean implements Serializable {
 		return spalten;
 	}
 
+	public List<ConfigSpalteModel> getConfigSpalten() {
+		return configSpalten;
+	}
+
+	public List<String> getVerfuegbareLigen() {
+		return verfuegbareLigen;
+	}
+
+	public List<String> getVerfuegbareMannschaften() {
+		return verfuegbareMannschaften;
+	}
+
 	public List<String> getDatumsListe() {
 		return datumsListe;
 	}
@@ -1250,6 +1344,109 @@ public class GesamtspielplanBean implements Serializable {
 
 	private record VerfuegbarkeitsSnapshot(List<SpielerRueckmeldung> zugesagt, List<SpielerRueckmeldung> abgesagt,
 			List<SpielerRueckmeldung> zusatzZugesagt, List<SpielerRueckmeldung> offen) {
+	}
+
+	public static class ConfigSpalteModel implements Serializable {
+		private static final long serialVersionUID = 1L;
+		private Integer id;
+		private int spalte;
+		private String ligaAnzeige;
+		private String mannschaftAnzeige;
+		private boolean betreuer;
+		private boolean expanded;
+		private final List<ConfigMannschaftModel> mannschaften = new ArrayList<>();
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public int getSpalte() {
+			return spalte;
+		}
+
+		public void setSpalte(int spalte) {
+			this.spalte = spalte;
+		}
+
+		public String getLigaAnzeige() {
+			return ligaAnzeige;
+		}
+
+		public void setLigaAnzeige(String ligaAnzeige) {
+			this.ligaAnzeige = ligaAnzeige;
+		}
+
+		public String getMannschaftAnzeige() {
+			return mannschaftAnzeige;
+		}
+
+		public void setMannschaftAnzeige(String mannschaftAnzeige) {
+			this.mannschaftAnzeige = mannschaftAnzeige;
+		}
+
+		public boolean isBetreuer() {
+			return betreuer;
+		}
+
+		public void setBetreuer(boolean betreuer) {
+			this.betreuer = betreuer;
+		}
+
+		public boolean isExpanded() {
+			return expanded;
+		}
+
+		public void setExpanded(boolean expanded) {
+			this.expanded = expanded;
+		}
+
+		public List<ConfigMannschaftModel> getMannschaften() {
+			return mannschaften;
+		}
+	}
+
+	public static class ConfigMannschaftModel implements Serializable {
+		private static final long serialVersionUID = 1L;
+		private Integer id;
+		private Integer idSpalte;
+		private String liga;
+		private String mannschaft;
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public Integer getIdSpalte() {
+			return idSpalte;
+		}
+
+		public void setIdSpalte(Integer idSpalte) {
+			this.idSpalte = idSpalte;
+		}
+
+		public String getLiga() {
+			return liga;
+		}
+
+		public void setLiga(String liga) {
+			this.liga = liga;
+		}
+
+		public String getMannschaft() {
+			return mannschaft;
+		}
+
+		public void setMannschaft(String mannschaft) {
+			this.mannschaft = mannschaft;
+		}
 	}
 
 	private Boolean parseBooleanObj(String value) {

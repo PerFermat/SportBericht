@@ -1561,6 +1561,150 @@ public class DatabaseService {
 				+ "WHERE t.vereinnr = ? and ( t.heim LIKE ? OR t.gast LIKE ? )";
 		return ladeStringRows(sql, vereinnr, vereinPrefix + "%", vereinPrefix + "%");
 	}
+	public List<GesamtspielplanConfigSpalte> ladeGesamtspielplanConfigSpalten(String vereinnr) {
+		List<GesamtspielplanConfigSpalte> result = new ArrayList<>();
+		String sql = "SELECT id, vereinnr, spalte, liga_anzeige, mannschaft_anzeige, betreuer FROM config_gesamtspielplan WHERE vereinnr = ? ORDER BY spalte ASC";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql);
+				) {
+			pstmt.setString(1, vereinnr);
+			try (ResultSet rs = pstmt.executeQuery()) {
+			while (rs.next()) {
+				GesamtspielplanConfigSpalte spalte = new GesamtspielplanConfigSpalte();
+				spalte.setId(rs.getInt("id"));
+				spalte.setVereinnr(rs.getString("vereinnr"));
+				spalte.setSpalte(rs.getInt("spalte"));
+				spalte.setLigaAnzeige(rs.getString("liga_anzeige"));
+				spalte.setMannschaftAnzeige(rs.getString("mannschaft_anzeige"));
+				spalte.setBetreuer(rs.getBoolean("betreuer"));
+				result.add(spalte);
+			}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	public List<GesamtspielplanConfigMannschaft> ladeGesamtspielplanConfigMannschaften(String vereinnr) {
+		List<GesamtspielplanConfigMannschaft> result = new ArrayList<>();
+		String sql = "SELECT id, vereinnr, id_spalte, liga, mannschaft FROM config_gesamtspielplan_mannschaft WHERE vereinnr = ? ORDER BY id_spalte ASC, id ASC";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql);
+				) {
+			pstmt.setString(1, vereinnr);
+			try (ResultSet rs = pstmt.executeQuery()) {
+			while (rs.next()) {
+				GesamtspielplanConfigMannschaft mannschaft = new GesamtspielplanConfigMannschaft();
+				mannschaft.setId(rs.getInt("id"));
+				mannschaft.setVereinnr(rs.getString("vereinnr"));
+				mannschaft.setIdSpalte(rs.getInt("id_spalte"));
+				mannschaft.setLiga(rs.getString("liga"));
+				mannschaft.setMannschaft(rs.getString("mannschaft"));
+				result.add(mannschaft);
+			}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	public void speichereGesamtspielplanKonfiguration(String vereinnr, List<GesamtspielplanConfigSpalte> spalten) {
+		String deleteKinder = "DELETE FROM config_gesamtspielplan_mannschaft WHERE vereinnr = ?";
+		String deleteSpalten = "DELETE FROM config_gesamtspielplan WHERE vereinnr = ?";
+		String insertSpalte = "INSERT INTO config_gesamtspielplan (vereinnr, spalte, liga_anzeige, mannschaft_anzeige, betreuer) VALUES (?, ?, ?, ?, ?)";
+		String insertMannschaft = "INSERT INTO config_gesamtspielplan_mannschaft (vereinnr, id_spalte, liga, mannschaft) VALUES (?, ?, ?, ?)";
+
+		try (Connection conn = openConnection()) {
+			conn.setAutoCommit(false);
+			try (PreparedStatement deleteKinderStmt = conn.prepareStatement(deleteKinder);
+					PreparedStatement deleteSpaltenStmt = conn.prepareStatement(deleteSpalten);
+					PreparedStatement insertSpalteStmt = conn.prepareStatement(insertSpalte, Statement.RETURN_GENERATED_KEYS);
+					PreparedStatement insertMannschaftStmt = conn.prepareStatement(insertMannschaft)) {
+
+				deleteKinderStmt.setString(1, vereinnr);
+				deleteKinderStmt.executeUpdate();
+				deleteSpaltenStmt.setString(1, vereinnr);
+				deleteSpaltenStmt.executeUpdate();
+
+				int index = 1;
+				for (GesamtspielplanConfigSpalte spalte : spalten) {
+						insertSpalteStmt.setString(1, vereinnr);
+						insertSpalteStmt.setInt(2, index++);
+						insertSpalteStmt.setString(3, spalte.getLigaAnzeige());
+						insertSpalteStmt.setString(4, spalte.getMannschaftAnzeige());
+						insertSpalteStmt.setBoolean(5, spalte.isBetreuer());
+						insertSpalteStmt.executeUpdate();
+					try (ResultSet keys = insertSpalteStmt.getGeneratedKeys()) {
+						if (!keys.next()) {
+							continue;
+						}
+						int idSpalte = keys.getInt(1);
+						for (GesamtspielplanConfigMannschaft mannschaft : spalte.getMannschaften()) {
+								insertMannschaftStmt.setString(1, vereinnr);
+								insertMannschaftStmt.setInt(2, idSpalte);
+								insertMannschaftStmt.setString(3, mannschaft.getLiga());
+								insertMannschaftStmt.setString(4, mannschaft.getMannschaft());
+							insertMannschaftStmt.addBatch();
+						}
+					}
+				}
+				insertMannschaftStmt.executeBatch();
+				conn.commit();
+			} catch (SQLException ex) {
+				conn.rollback();
+				throw ex;
+			} finally {
+				conn.setAutoCommit(true);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public List<String> ladeGesamtspielplanLigen(String vereinnr, String vereinPrefix) {
+		List<String> result = new ArrayList<>();
+		String sql = "SELECT DISTINCT liga FROM spielplan_tabelle WHERE vereinnr = ? AND (heim LIKE ? OR gast LIKE ?) AND liga IS NOT NULL AND TRIM(liga) <> '' ORDER BY liga";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, vereinnr);
+			pstmt.setString(2, vereinPrefix + "%");
+			pstmt.setString(3, vereinPrefix + "%");
+			try (ResultSet rs = pstmt.executeQuery()) {
+				while (rs.next()) {
+					String liga = rs.getString("liga");
+					if (liga != null && !liga.isBlank()) {
+						result.add(liga);
+					}
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	public List<String> ladeGesamtspielplanMannschaften(String vereinnr, String vereinPrefix) {
+		List<String> result = new ArrayList<>();
+		String sql = "SELECT heim AS team FROM spielplan_tabelle WHERE vereinnr = ? AND heim LIKE ? "
+				+ "UNION SELECT gast AS team FROM spielplan_tabelle WHERE vereinnr = ? AND gast LIKE ? ORDER BY team";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, vereinnr);
+			pstmt.setString(2, vereinPrefix + "%");
+			pstmt.setString(3, vereinnr);
+			pstmt.setString(4, vereinPrefix + "%");
+			try (ResultSet rs = pstmt.executeQuery()) {
+				while (rs.next()) {
+					String team = rs.getString("team");
+					if (team != null && !team.isBlank()) {
+						result.add(team);
+					}
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
 
 	public List<Map<String, String>> ladeAufstellungLigaRangName(String vereinnr) {
 		String sql = "SELECT mannschaft, rang, name FROM aufstellung WHERE vereinnr = ?";
