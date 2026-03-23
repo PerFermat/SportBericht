@@ -1,2 +1,18 @@
+# Maven
 /target/
+
+# Compiled class files
+*.class
+
+# Eclipse
 /bin/
+/.settings/
+/.project
+/.classpath
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
