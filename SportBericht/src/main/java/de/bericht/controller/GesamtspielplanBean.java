@@ -62,6 +62,7 @@ import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.TreeSet;
 
 @Named("gesamtspielplanBean")
 @ViewScoped
@@ -75,6 +76,9 @@ public class GesamtspielplanBean implements Serializable {
 	private final List<ConfigSpalteModel> configSpalten = new ArrayList<>();
 	private final List<String> verfuegbareLigen = new ArrayList<>();
 	private final List<String> verfuegbareMannschaften = new ArrayList<>();
+	private final Map<String, List<String>> mannschaftenByLiga = new LinkedHashMap<>();
+	private final Map<String, List<String>> ligenByMannschaft = new LinkedHashMap<>();
+
 
 	private final ConfigManager configManager = ConfigManager.getInstance();
 	private final DatabaseService databaseService = new DatabaseService();
@@ -113,6 +117,7 @@ public class GesamtspielplanBean implements Serializable {
 		verein_prefix = ConfigManager.getSpielplanVerein(vereinnr);
 		ladePersistierteGesamtspielplanKonfiguration();
 		ladeAuswahlwerte();
+		setzeAnzeigeDefaultsWennLeer();
 
 		halbserie = defaultHalbserie();
 		ladeGesamtspielplan();
@@ -997,7 +1002,40 @@ public class GesamtspielplanBean implements Serializable {
 		verfuegbareLigen.addAll(databaseService.ladeGesamtspielplanLigen(vereinnr, verein_prefix));
 		verfuegbareMannschaften.clear();
 		verfuegbareMannschaften.addAll(databaseService.ladeGesamtspielplanMannschaften(vereinnr, verein_prefix));
+		aktualisiereLigaMannschaftZuordnung();		
 	}
+	
+	private void aktualisiereLigaMannschaftZuordnung() {
+		mannschaftenByLiga.clear();
+		ligenByMannschaft.clear();
+		Map<String, Set<String>> teamsByLiga = new LinkedHashMap<>();
+		Map<String, Set<String>> leaguesByTeam = new LinkedHashMap<>();
+
+		List<Map<String, String>> rows = databaseService.ladeGesamtspielplanRows(vereinnr, verein_prefix);
+		for (Map<String, String> row : rows) {
+			String liga = trimToNull(row.get("liga"));
+			if (liga == null) {
+				continue;
+			}
+			String heim = trimToNull(row.get("heim"));
+			String gast = trimToNull(row.get("gast"));
+			if (startsWithIgnoreCase(heim, verein_prefix)) {
+				teamsByLiga.computeIfAbsent(liga, key -> new TreeSet<>()).add(heim);
+				leaguesByTeam.computeIfAbsent(heim, key -> new TreeSet<>()).add(liga);
+			}
+			if (startsWithIgnoreCase(gast, verein_prefix)) {
+				teamsByLiga.computeIfAbsent(liga, key -> new TreeSet<>()).add(gast);
+				leaguesByTeam.computeIfAbsent(gast, key -> new TreeSet<>()).add(liga);
+			}
+		}
+		for (Map.Entry<String, Set<String>> entry : teamsByLiga.entrySet()) {
+			mannschaftenByLiga.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+		}
+		for (Map.Entry<String, Set<String>> entry : leaguesByTeam.entrySet()) {
+			ligenByMannschaft.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+		}
+	}
+
 
 	private void uebernehmeDefinitionenAusConfigSpalten() {
 		aktiveSpaltenDefinitionen.clear();
@@ -1044,6 +1082,46 @@ public class GesamtspielplanBean implements Serializable {
 		spalte.getMannschaften().add(new ConfigMannschaftModel());
 		spalte.setExpanded(true);
 	}
+	public void onLigaChange(ConfigMannschaftModel mannschaft) {
+		if (mannschaft == null) {
+			return;
+		}
+		String liga = trimToNull(mannschaft.getLiga());
+		mannschaft.setLiga(liga);
+		if (liga == null) {
+			return;
+		}
+		String ausgewaehlteMannschaft = trimToNull(mannschaft.getMannschaft());
+		if (ausgewaehlteMannschaft == null) {
+			return;
+		}
+		List<String> gefilterteMannschaften = getVerfuegbareMannschaften(mannschaft);
+		if (!gefilterteMannschaften.contains(ausgewaehlteMannschaft)) {
+			mannschaft.setMannschaft(null);
+		}
+		synchronisiereAnzeigeMitErsterAuswahl();
+	}
+
+	public void onMannschaftChange(ConfigMannschaftModel mannschaft) {
+		if (mannschaft == null) {
+			return;
+		}
+		String team = trimToNull(mannschaft.getMannschaft());
+		mannschaft.setMannschaft(team);
+		if (team == null) {
+			return;
+		}
+		String ausgewaehlteLiga = trimToNull(mannschaft.getLiga());
+		if (ausgewaehlteLiga == null) {
+			return;
+		}
+		List<String> gefilterteLigen = getVerfuegbareLigen(mannschaft);
+		if (!gefilterteLigen.contains(ausgewaehlteLiga)) {
+			mannschaft.setLiga(null);
+		}
+		synchronisiereAnzeigeMitErsterAuswahl();
+	}
+
 
 	public void removeConfigMannschaft(ConfigSpalteModel spalte, ConfigMannschaftModel mannschaft) {
 		if (spalte == null || mannschaft == null) {
@@ -1054,6 +1132,7 @@ public class GesamtspielplanBean implements Serializable {
 
 	public void applyTempConfig() {
 		reindexConfigSpalten();
+		setzeAnzeigeDefaultsWennLeer();
 		uebernehmeDefinitionenAusConfigSpalten();
 		ladeGesamtspielplan();
 		aktualisiereKonfigurationErforderlich();
@@ -1061,6 +1140,7 @@ public class GesamtspielplanBean implements Serializable {
 
 	public void saveConfig() {
 		reindexConfigSpalten();
+		setzeAnzeigeDefaultsWennLeer();
 		List<GesamtspielplanConfigSpalte> dbSpalten = new ArrayList<>();
 		for (ConfigSpalteModel model : configSpalten) {
 			GesamtspielplanConfigSpalte row = new GesamtspielplanConfigSpalte();
@@ -1098,7 +1178,58 @@ public class GesamtspielplanBean implements Serializable {
 	private String nullSafe(String value) {
 		return value == null ? "" : value.trim();
 	}
+	private String trimToNull(String value) {
+		if (value == null) {
+			return null;
+		}
+		String trimmed = value.trim();
+		return trimmed.isEmpty() ? null : trimmed;
+	}
 
+	private void setzeAnzeigeDefaultsWennLeer() {
+		for (ConfigSpalteModel configSpalte : configSpalten) {
+			setzeAnzeigeDefaultsWennLeer(configSpalte);
+		}
+	}
+
+	private void setzeAnzeigeDefaultsWennLeer(ConfigSpalteModel configSpalte) {
+		if (configSpalte == null) {
+			return;
+		}
+		ConfigMannschaftModel ersteMitAuswahl = findeErsteAusgewaehlteMannschaft(configSpalte);
+		if (ersteMitAuswahl == null) {
+			return;
+		}
+		if (istLeer(configSpalte.getLigaAnzeige()) && !istLeer(ersteMitAuswahl.getLiga())) {
+			configSpalte.setLigaAnzeige(ersteMitAuswahl.getLiga().trim());
+		}
+		if (istLeer(configSpalte.getMannschaftAnzeige()) && !istLeer(ersteMitAuswahl.getMannschaft())) {
+			configSpalte.setMannschaftAnzeige(ersteMitAuswahl.getMannschaft().trim());
+		}
+	}
+
+	private ConfigMannschaftModel findeErsteAusgewaehlteMannschaft(ConfigSpalteModel configSpalte) {
+		if (configSpalte == null) {
+			return null;
+		}
+		for (ConfigMannschaftModel mannschaft : configSpalte.getMannschaften()) {
+			if (mannschaft == null) {
+				continue;
+			}
+			if (!istLeer(mannschaft.getLiga()) && !istLeer(mannschaft.getMannschaft())) {
+				return mannschaft;
+			}
+		}
+		return null;
+	}
+
+	private void synchronisiereAnzeigeMitErsterAuswahl() {
+		for (ConfigSpalteModel configSpalte : configSpalten) {
+			setzeAnzeigeDefaultsWennLeer(configSpalte);
+		}
+	}
+
+	
 	private boolean passtZurHalbserie(String datum) {
 		LocalDate d = parseDatumSafe(datum);
 		if (d.getYear() == 2999) {
@@ -1298,6 +1429,30 @@ public class GesamtspielplanBean implements Serializable {
 
 	public List<String> getVerfuegbareLigen() {
 		return verfuegbareLigen;
+	}
+
+	public List<String> getVerfuegbareLigen(ConfigMannschaftModel mannschaft) {
+		String team = mannschaft == null ? null : trimToNull(mannschaft.getMannschaft());
+		if (team == null) {
+			return verfuegbareLigen;
+		}
+		return ligenByMannschaft.getOrDefault(team, Collections.emptyList());
+	}
+
+	public List<String> verfuegbareLigen(ConfigMannschaftModel mannschaft) {
+		return getVerfuegbareLigen(mannschaft);
+	}
+
+	public List<String> getVerfuegbareMannschaften(ConfigMannschaftModel mannschaft) {
+		String liga = mannschaft == null ? null : trimToNull(mannschaft.getLiga());
+		if (liga == null) {
+			return verfuegbareMannschaften;
+		}
+		return mannschaftenByLiga.getOrDefault(liga, Collections.emptyList());
+	}
+
+	public List<String> verfuegbareMannschaften(ConfigMannschaftModel mannschaft) {
+		return getVerfuegbareMannschaften(mannschaft);
 	}
 
 	public List<String> getVerfuegbareMannschaften() {

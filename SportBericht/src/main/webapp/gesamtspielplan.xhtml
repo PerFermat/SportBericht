@@ -317,13 +317,21 @@
 													<f:selectItem itemLabel="Liga wählen" itemValue=""
 														noSelectionOption="true" />
 													<f:selectItems
-														value="#{gesamtspielplanBean.verfuegbareLigen}" />
+														value="#{gesamtspielplanBean.verfuegbareLigen(configMannschaft)}" />
+													<p:ajax
+														listener="#{gesamtspielplanBean.onLigaChange(configMannschaft)}"
+														process="@this"
+														update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
 												</p:selectOneMenu>
 												<p:selectOneMenu value="#{configMannschaft.mannschaft}">
 													<f:selectItem itemLabel="Mannschaft wählen" itemValue=""
 														noSelectionOption="true" />
 													<f:selectItems
-														value="#{gesamtspielplanBean.verfuegbareMannschaften}" />
+														value="#{gesamtspielplanBean.verfuegbareMannschaften(configMannschaft)}" />
+													<p:ajax
+														listener="#{gesamtspielplanBean.onMannschaftChange(configMannschaft)}"
+														process="@this"
+														update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
 												</p:selectOneMenu>
 												<p:commandButton icon="pi pi-trash"
 													styleClass="ui-button-danger"
