@@ -22,7 +22,7 @@ class SpielergebnisServiceTest {
 	SpielergebnisProvider provider;
 	NamensSpeicher ns = new NamensSpeicher();
 
-	@Disabled("temporär deaktiviert")
+	//@Disabled("temporär deaktiviert")
 	@BeforeEach
 	void setUp() {
 		config = ConfigManager.getInstance();
@@ -39,7 +39,7 @@ class SpielergebnisServiceTest {
 
 	}
 
-	@Disabled("temporär deaktiviert")
+	//@Disabled("temporär deaktiviert")
 	@Test
 	void spielplan_darf_nicht_null_und_soll_nicht_leer_sein() {
 		assertNotNull(ergebnis, "Spielplan darf nicht null sein");

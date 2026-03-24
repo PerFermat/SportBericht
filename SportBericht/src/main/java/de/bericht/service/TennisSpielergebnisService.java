@@ -31,7 +31,8 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 
 			List<TennisEinzelErgebnis> einzel = new ArrayList<>();
 			List<TennisDoppelErgebnis> doppel = new ArrayList<>();
-			parseMatches(doc, vereinnr, ns, verschluesseln, einzel, doppel);
+			parseMatches(doc, einzel, doppel);
+
 
 			List<SpielDetail> alleSpiele = new ArrayList<>();
 			alleSpiele.addAll(einzel);
@@ -182,9 +183,7 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 
 	}
 
-	private void parseMatches(Document doc, String vereinnr, NamensSpeicher ns, Boolean verschluesseln,
-			List<TennisEinzelErgebnis> einzel, List<TennisDoppelErgebnis> doppel) {
-
+	private void parseMatches(Document doc, List<TennisEinzelErgebnis> einzel, List<TennisDoppelErgebnis> doppel) {
 		Element tabelle = doc.selectFirst("table.table-condensed");
 		if (tabelle == null) {
 			return;
@@ -218,116 +217,15 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 			String games = tds.get(7).text();
 
 			if ("EINZEL".equals(aktuellerModus)) {
-				String heimSpieler = normalisiereSpielername(vereinnr, ns, verschluesseln, tds.get(0).text());
-				String gastSpieler = normalisiereSpielername(vereinnr, ns, verschluesseln, tds.get(1).text());
-
-				einzel.add(new TennisEinzelErgebnis(heimSpieler, gastSpieler, satz1, satz2, satz3, matches, saetze,
-						games));
+				einzel.add(new TennisEinzelErgebnis(tds.get(0), tds.get(1), satz1, satz2, satz3, matches, saetze, games));
 			} else {
-				String[] heim = splitDoppelAusZelle(tds.get(0), vereinnr, ns, verschluesseln);
-				String[] gast = splitDoppelAusZelle(tds.get(1), vereinnr, ns, verschluesseln);
-
-				doppel.add(new TennisDoppelErgebnis(heim[0], heim[1], gast[0], gast[1], satz1, satz2, satz3, matches,
-						saetze, games));
+				doppel.add(new TennisDoppelErgebnis(tds.get(0), tds.get(1), satz1, satz2, satz3, matches, saetze, games));
 			}
+			
+			System.out.println("---------------------------");
 		}
 	}
 
-	private String normalisiereSpielername(String vereinnr, NamensSpeicher ns, boolean verschluesseln, String text) {
-		if (!verschluesseln) {
-			return text == null ? "" : text.trim();
-		}
-		return ns.formatName(vereinnr, text == null ? "" : text.trim(), ns);
-	}
-
-	private String[] splitDoppel(String text) {
-		if (text == null || text.isBlank()) {
-			return new String[] { "", "" };
-		}
-		String normalized = text.replace('\u00A0', ' ').trim();
-		normalized = normalized.replaceAll("/+$", "").trim();
-
-		List<String> spielerTokens = extrahiereKompakteSpieler(normalized);
-		if (spielerTokens.size() >= 2) {
-			return new String[] { spielerTokens.get(0), spielerTokens.get(1) };
-		}
-
-		String[] parts;
-		if (normalized.contains("/")) {
-			parts = normalized.split("\\s*/\\s*");
-		} else if (normalized.contains("&")) {
-			parts = normalized.split("\\s*&\\s*");
-
-		} else {
-			parts = new String[] { normalized, "" };
-		}
-
-		if (parts.length == 1) {
-			return new String[] { parts[0].trim(), "" };
-		}
-		return new String[] { parts[0].trim(), parts[1].trim() };
-	}
-
-	private String[] splitDoppelAusZelle(Element spielerZelle, String vereinnr, NamensSpeicher ns,
-			boolean verschluesseln) {
-		String[] ausHtml = extrahiereDoppelSpielerMitMetadaten(spielerZelle, vereinnr, ns, verschluesseln);
-		if (!ausHtml[0].isBlank() && !ausHtml[1].isBlank()) {
-			return ausHtml;
-
-		}
-
-		String normalisiert = normalisiereSpielername(vereinnr, ns, verschluesseln, spielerZelle.text());
-		return splitDoppel(normalisiert);
-	}
-
-	private String[] extrahiereDoppelSpielerMitMetadaten(Element spielerZelle, String vereinnr, NamensSpeicher ns,
-			boolean verschluesseln) {
-		if (spielerZelle == null) {
-			return new String[] { "", "" };
-		}
-
-		String[] teile = spielerZelle.html().split("(?i)<br\\s*/?>");
-		List<String> spieler = new ArrayList<>();
-		for (String teil : teile) {
-			String text = Jsoup.parse(teil).text();
-			if (text == null) {
-				continue;
-			}
-			String bereinigt = text.replace('\u00A0', ' ').trim();
-			if (bereinigt.isBlank() || bereinigt.toLowerCase().contains("quersumme")) {
-				continue;
-			}
-			if (!enthaeltSpielerNamen(bereinigt)) {
-				continue;
-			}
-			spieler.add(normalisiereSpielername(vereinnr, ns, verschluesseln, bereinigt));
-			if (spieler.size() == 2) {
-				break;
-			}
-		}
-
-		if (spieler.size() >= 2) {
-			return new String[] { spieler.get(0), spieler.get(1) };
-		}
-		return new String[] { "", "" };
-	}
-
-	private boolean enthaeltSpielerNamen(String text) {
-		return text != null && text.matches(".*\\p{L}{2,}.*");
-	}
-
-	private List<String> extrahiereKompakteSpieler(String text) {
-		List<String> tokens = new ArrayList<>();
-		Matcher matcher = Pattern.compile("\\d{1,2}\\s*.*?\\d{1,2}\\s*[·.]?\\s*LK\\s*\\d{1,2,3}(?=\\s|$)")
-				.matcher(text);
-		while (matcher.find()) {
-			String token = matcher.group();
-			if (token != null && !token.isBlank()) {
-				tokens.add(token.trim());
-			}
-		}
-		return tokens;
-	}
 
 	private String dreheErgebnis(String ergebnis) {
 		if (ergebnis == null || !ergebnis.contains(":")) {

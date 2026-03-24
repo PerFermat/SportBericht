@@ -1,5 +1,7 @@
 package de.bericht.service;
 
+import org.jsoup.nodes.Element;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import de.bericht.util.SpielDetail;
@@ -10,6 +12,9 @@ public class TennisDoppelErgebnis implements SpielDetail {
 	private String heim2;
 	private String gast1;
 	private String gast2;
+	private TennisDoppelInfo heimInfo;
+	private TennisDoppelInfo gastInfo;
+	
 	private String satz1;
 	private String satz2;
 	private String satz3;
@@ -23,6 +28,8 @@ public class TennisDoppelErgebnis implements SpielDetail {
 		this.heim2 = heim2;
 		this.gast1 = gast1;
 		this.gast2 = gast2;
+		this.heimInfo = new TennisDoppelInfo(TennisSpielerInfo.parse(heim1), TennisSpielerInfo.parse(heim2));
+		this.gastInfo = new TennisDoppelInfo(TennisSpielerInfo.parse(gast1), TennisSpielerInfo.parse(gast2));
 		this.satz1 = satz1;
 		this.satz2 = satz2;
 		this.satz3 = satz3;
@@ -30,6 +37,19 @@ public class TennisDoppelErgebnis implements SpielDetail {
 		this.saetze = saetze;
 		this.games = games;
 	}
+	
+	public TennisDoppelErgebnis(Element heimZelle, Element gastZelle, String satz1, String satz2, String satz3,
+			String matches, String saetze, String games) {
+		this(TennisDoppelInfo.fromCell(heimZelle).getSpieler1().getName(),
+				TennisDoppelInfo.fromCell(heimZelle).getSpieler2().getName(),
+				TennisDoppelInfo.fromCell(gastZelle).getSpieler1().getName(),
+				TennisDoppelInfo.fromCell(gastZelle).getSpieler2().getName(), satz1, satz2, satz3, matches, saetze,
+				games);
+		this.heimInfo = TennisDoppelInfo.fromCell(heimZelle);
+		this.gastInfo = TennisDoppelInfo.fromCell(gastZelle);
+	}
+
+
 
 	@Override
 	@JsonIgnore
@@ -113,25 +133,25 @@ public class TennisDoppelErgebnis implements SpielDetail {
 	public String getPosition() {
 		return "Doppel";
 	}
-
 	@JsonIgnore
 	public TennisSpielerInfo getHeimSpieler1() {
-		return TennisSpielerInfo.parse(heim1);
+		return heimInfo == null ? TennisSpielerInfo.parse(heim1) : heimInfo.getSpieler1();
 	}
 
 	@JsonIgnore
 	public TennisSpielerInfo getHeimSpieler2() {
-		return TennisSpielerInfo.parse(heim2);
+		return heimInfo == null ? TennisSpielerInfo.parse(heim2) : heimInfo.getSpieler2();
 	}
 
 	@JsonIgnore
 	public TennisSpielerInfo getGastSpieler1() {
-		return TennisSpielerInfo.parse(gast1);
+		return gastInfo == null ? TennisSpielerInfo.parse(gast1) : gastInfo.getSpieler1();
 	}
 
 	@JsonIgnore
 	public TennisSpielerInfo getGastSpieler2() {
-		return TennisSpielerInfo.parse(gast2);
+		return gastInfo == null ? TennisSpielerInfo.parse(gast2) : gastInfo.getSpieler2();
 	}
+
 
 }
