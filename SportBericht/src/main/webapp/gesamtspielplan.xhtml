@@ -30,7 +30,7 @@
 				value="#{gesamtspielplanBean.halbserie}">
 				<p:ajax listener="#{gesamtspielplanBean.ladeGesamtspielplan}"
 					update=":gesamtspielplanForm :controlsForm" process="@this" />
-			<f:selectItems value="#{gesamtspielplanBean.rundenNamen}" />
+				<f:selectItems value="#{gesamtspielplanBean.rundenNamen}" />
 			</p:selectOneMenu>
 		</span>
 		<div class="button-container">
@@ -274,26 +274,26 @@
 					header="Konfiguration Gesamtspielplan" modal="true"
 					resizable="false" appendTo="@form" width="900">
 					<h:panelGroup id="gesamtspielplanConfigDialogContent"
-						layout="block">
-					<p:panel header="Runde" toggleable="true" collapsed="false"
+						layout="block" styleClass="gesamt-config-dialog-content">
+						<p:panel header="Runde" toggleable="true" collapsed="true"
 							styleClass="gesamt-config-runde-panel">
-							<ui:repeat value="#{gesamtspielplanBean.configRunden}" var="configRunde">
+							<ui:repeat value="#{gesamtspielplanBean.configRunden}"
+								var="configRunde">
 								<div class="gesamt-config-runde">
 									<div class="gesamt-config-header">
-										<p:commandButton
-											icon="#{configRunde.expanded ? 'pi pi-minus' : 'pi pi-plus'}"
-											styleClass="ui-button-flat config-expand-button"
-											actionListener="#{gesamtspielplanBean.toggleConfigRunde(configRunde)}"
-											process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
-											update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
-										<h:panelGroup styleClass="gesamt-config-header-fields">
-											<p:inputText value="#{configRunde.name}" placeholder="Name" />
-											<p:datePicker value="#{configRunde.datumVon}" pattern="dd.MM.yyyy"
-												showIcon="true" placeholder="Datum_von" />
-											<p:datePicker value="#{configRunde.datumBis}" pattern="dd.MM.yyyy"
-												showIcon="true" placeholder="Datum_bis" />
+										<h:panelGroup
+											styleClass="gesamt-config-header-fields gesamt-config-runde-fields">
+											<p:inputText value="#{configRunde.name}" placeholder="Name"
+												styleClass="gesamt-config-runde-name" />
+											<p:datePicker value="#{configRunde.datumVon}"
+												pattern="dd.MM.yyyy" showIcon="false" placeholder="Datum_von"
+												styleClass="gesamt-config-runde-datum" />
+											<p:datePicker value="#{configRunde.datumBis}"
+												pattern="dd.MM.yyyy" showIcon="false" placeholder="Datum_bis"
+												styleClass="gesamt-config-runde-datum" />
 										</h:panelGroup>
-										<p:commandButton icon="pi pi-trash" styleClass="ui-button-danger"
+										<p:commandButton icon="pi pi-trash"
+											styleClass="ui-button-danger"
 											actionListener="#{gesamtspielplanBean.removeConfigRunde(configRunde)}"
 											process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
 											update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
@@ -304,7 +304,7 @@
 								actionListener="#{gesamtspielplanBean.addConfigRunde}"
 								process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
 								update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
-						</p:panel>						
+						</p:panel>
 						<ui:repeat value="#{gesamtspielplanBean.configSpalten}"
 							var="configSpalte">
 							<div class="gesamt-config-spalte">

@@ -1178,6 +1178,12 @@ position: relative;
 	margin-bottom: 10px;
 }
 
+.gesamt-config-dialog-content {
+	max-height: min(1000px, calc(100vh - 120px));
+	overflow-y: auto;
+	padding-right: 4px;
+}
+
 .gesamt-config-header {
 	display: flex;
 	gap: 10px;
@@ -1201,6 +1207,18 @@ position: relative;
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
+}
+
+.gesamt-config-runde-fields {
+	flex-wrap: nowrap;
+}
+
+.gesamt-config-runde-name {
+	width: 230px;
+}
+
+.gesamt-config-runde-datum {
+	max-width: 160px;
 }
 
 .gesamt-config-details {
