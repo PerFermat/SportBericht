@@ -222,7 +222,7 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 				doppel.add(new TennisDoppelErgebnis(tds.get(0), tds.get(1), satz1, satz2, satz3, matches, saetze, games));
 			}
 			
-			System.out.println("---------------------------");
+
 		}
 	}
 

@@ -134,11 +134,11 @@ public class TennisMatchSummary extends MatchSummary {
 
 	public static class TennisEinzelJson {
 		@JsonProperty("BerichtSpieler")
-		public TennisSpielerNameJson berichtSpieler;
+		public TennisSpielerMitPositionJson berichtSpieler;
 		@JsonProperty("Heim Spieler")
-		public TennisSpielerNameJson heimSpieler;
+		public TennisSpielerMitPositionJson heimSpieler;
 		@JsonProperty("Gast Spieler")
-		public TennisSpielerNameJson gastSpieler;
+		public TennisSpielerMitPositionJson gastSpieler;
 		@JsonProperty("Satz 1")
 		public String satz1;
 		@JsonProperty("Satz 2")
@@ -158,8 +158,9 @@ public class TennisMatchSummary extends MatchSummary {
 
 		static TennisEinzelJson from(TennisEinzelErgebnis e, boolean berichtIstHeim) {
 			TennisEinzelJson json = new TennisEinzelJson();
-			json.heimSpieler = TennisSpielerNameJson.from(e.getHeimSpieler());
-			json.gastSpieler = TennisSpielerNameJson.from(e.getGastSpieler());
+			json.heimSpieler = TennisSpielerMitPositionJson.from(e.getHeimSpieler());
+			json.gastSpieler = TennisSpielerMitPositionJson.from(e.getGastSpieler());
+
 
 			json.berichtSpieler = berichtIstHeim ? json.heimSpieler : json.gastSpieler;
 			json.satz1 = e.getSatz1();
@@ -179,13 +180,13 @@ public class TennisMatchSummary extends MatchSummary {
 		@JsonProperty("BerichtSpieler")
 		public String berichtSpieler;
 		@JsonProperty("Heim - Doppelpartner 1")
-		public TennisSpielerOhnePositionJson heim1;
+		public TennisSpielerMitPositionJson heim1;
 		@JsonProperty("Heim - Doppelpartner 2")
-		public TennisSpielerOhnePositionJson heim2;
+		public TennisSpielerMitPositionJson heim2;
 		@JsonProperty("Gast - Doppelpartner 1")
-		public TennisSpielerOhnePositionJson gast1;
+		public TennisSpielerMitPositionJson gast1;
 		@JsonProperty("Gast - Doppelpartner 2")
-		public TennisSpielerOhnePositionJson gast2;
+		public TennisSpielerMitPositionJson gast2;
 		@JsonProperty("Satz 1")
 		public String satz1;
 		@JsonProperty("Satz 2")
@@ -210,10 +211,11 @@ public class TennisMatchSummary extends MatchSummary {
 			TennisSpielerInfo gast1 = d.getGastSpieler1();
 			TennisSpielerInfo gast2 = d.getGastSpieler2();
 
-			json.heim1 = TennisSpielerOhnePositionJson.from(heim1);
-			json.heim2 = TennisSpielerOhnePositionJson.from(heim2);
-			json.gast1 = TennisSpielerOhnePositionJson.from(gast1);
-			json.gast2 = TennisSpielerOhnePositionJson.from(gast2);
+			json.heim1 = TennisSpielerMitPositionJson.from(heim1);
+			json.heim2 = TennisSpielerMitPositionJson.from(heim2);
+			json.gast1 = TennisSpielerMitPositionJson.from(gast1);
+			json.gast2 = TennisSpielerMitPositionJson.from(gast2);
+
 			json.berichtSpieler = berichtIstHeim ? nachname(heim1) + "/" + nachname(heim2)
 					: nachname(gast1) + "/" + nachname(gast2);
 
@@ -230,18 +232,10 @@ public class TennisMatchSummary extends MatchSummary {
 		}
 	}
 
-	public static class TennisSpielerNameJson {
-		@JsonProperty("name")
-		public String name;
+	public static class TennisSpielerMitPositionJson {
+		@JsonProperty("position")
+		public String position;
 
-		static TennisSpielerNameJson from(TennisSpielerInfo info) {
-			TennisSpielerNameJson json = new TennisSpielerNameJson();
-			json.name = info.getName();
-			return json;
-		}
-	}
-
-	public static class TennisSpielerOhnePositionJson {
 		@JsonProperty("name")
 		public String name;
 		@JsonProperty("meldeliste")
@@ -249,8 +243,10 @@ public class TennisMatchSummary extends MatchSummary {
 		@JsonProperty("leistungsklasse")
 		public String leistungsklasse;
 
-		static TennisSpielerOhnePositionJson from(TennisSpielerInfo info) {
-			TennisSpielerOhnePositionJson json = new TennisSpielerOhnePositionJson();
+		static TennisSpielerMitPositionJson from(TennisSpielerInfo info) {
+			TennisSpielerMitPositionJson json = new TennisSpielerMitPositionJson();
+			json.position = info.getPosition();
+
 			json.name = info.getName();
 			json.meldeliste = info.getMeldeliste();
 			json.leistungsklasse = info.getLeistungsklasse();

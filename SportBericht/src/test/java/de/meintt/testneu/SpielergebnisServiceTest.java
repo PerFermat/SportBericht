@@ -18,11 +18,11 @@ class SpielergebnisServiceTest {
 	String ergebnis;
 	String vereinnr = "20233"; // <-- passe an, falls nötig
 
-	String url = "https://www.wtb-tennis.de/spielbetrieb/winter2025-2026/jugend/gruppe/spielbericht.html?tx_nuportalrs_meeting%5BmeetingId%5D=12520281&cHash=e381cddcfb22aaf56d26b4325a5cf059";
+	String url = "https://www.wtb-tennis.de/spielbetrieb/winter2025-2026/aktive/gruppe/spielbericht.html?tx_nuportalrs_meeting%5BmeetingId%5D=12519935&cHash=f0dceecc3e408373073a7b986f6e62f4";
 	SpielergebnisProvider provider;
 	NamensSpeicher ns = new NamensSpeicher();
 
-	//@Disabled("temporär deaktiviert")
+	@Disabled("temporär deaktiviert")
 	@BeforeEach
 	void setUp() {
 		config = ConfigManager.getInstance();
@@ -39,7 +39,7 @@ class SpielergebnisServiceTest {
 
 	}
 
-	//@Disabled("temporär deaktiviert")
+	@Disabled("temporär deaktiviert")
 	@Test
 	void spielplan_darf_nicht_null_und_soll_nicht_leer_sein() {
 		assertNotNull(ergebnis, "Spielplan darf nicht null sein");

@@ -14,7 +14,6 @@ public class TennisDoppelInfo {
 
 	public static TennisDoppelInfo fromCell(Element cell) {
 		String html = cell == null ? "" : cell.html();
-		System.out.println("Doppel" );
 		return new TennisDoppelInfo(TennisSpielerInfo.parseCellHtml(html, 0), TennisSpielerInfo.parseCellHtml(html, 1));
 	}
 

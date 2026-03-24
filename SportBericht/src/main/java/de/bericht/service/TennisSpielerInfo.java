@@ -102,7 +102,6 @@ public class TennisSpielerInfo {
 		if (root == null) {
 			return new TennisSpielerInfo("", "", "", "");
 		}
-		System.out.println("Einzel:" );
 		String normalizedText = root.text().replace('\u00A0', ' ').replaceAll("\\s+", " ").trim();
 
 		String position = textVonAbbr(root, "platzziffer");
@@ -113,7 +112,6 @@ public class TennisSpielerInfo {
 				position = m.group(1);
 			}
 		}
-		System.out.println("Postition" + position);
 
 		String meldeliste = textVonAbbr(root, "meldeliste");
 		if (meldeliste.isBlank()) {
@@ -123,7 +121,6 @@ public class TennisSpielerInfo {
 				meldeliste = m.group(1);
 			}
 		}
-		System.out.println(meldeliste);
 
 		String lk = textVonAbbr(root, "leistungsklasse");
 		if (lk.isBlank()) {
@@ -134,7 +131,6 @@ public class TennisSpielerInfo {
 		} else if (!lk.toUpperCase().startsWith("LK")) {
 			lk = "LK " + lk;
 		}
-		System.out.println("Leistungsklasse " + lk);
 		String name = "";
 		Element link = root.selectFirst("a");
 		if (link != null) {
@@ -148,7 +144,6 @@ public class TennisSpielerInfo {
 			working = working.replaceAll("\\s+", " ").trim();
 			name = normalisiereName(working);
 		}
-		System.out.println("name " + name);
 		return new TennisSpielerInfo(position, name, meldeliste, lk);
 	}
 
