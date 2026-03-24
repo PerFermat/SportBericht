@@ -154,14 +154,16 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 
 		Elements fusstabellen = doc.select("table.table-condensed tfoot");
 		if (!fusstabellen.isEmpty()) {
-			Element letzteFusszeile = fusstabellen.last();
-			Elements tds = letzteFusszeile.select("td.text-center");
-
-			if (tds.size() >= 3) {
-				gesamtErgebnis = tds.get(0).text();
-				gesamtSaetze = tds.get(1).text();
-				gesamtGames = tds.get(2).text();
+			Element gesamtZeile = findeGesamtZeile(fusstabellen.last());
+			if (gesamtZeile != null) {
+				Elements tds = gesamtZeile.select("td.text-center");
+				if (tds.size() >= 3) {
+					gesamtErgebnis = tds.get(0).text();
+					gesamtSaetze = tds.get(1).text();
+					gesamtGames = tds.get(2).text();
+				}
 			}
+
 		}
 
 		String berichtMannschaftNormalisiert = berichtMannschaft;
@@ -182,6 +184,30 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 		return text.toLowerCase().contains(part.toLowerCase());
 
 	}
+	static Element findeGesamtZeile(Element foot) {
+		if (foot == null) {
+			return null;
+		}
+		Element fallback = null;
+		for (Element row : foot.select("tr")) {
+			Element labelCell = row.selectFirst("td");
+			if (labelCell == null) {
+				continue;
+			}
+			String label = labelCell.text().trim().toLowerCase();
+			if (label.contains("strafwertung")) {
+				continue;
+			}
+			if (label.contains("gesamt")) {
+				return row;
+			}
+			if (fallback == null) {
+				fallback = row;
+			}
+		}
+		return fallback;
+	}
+
 
 	private void parseMatches(Document doc, List<TennisEinzelErgebnis> einzel, List<TennisDoppelErgebnis> doppel) {
 		Element tabelle = doc.selectFirst("table.table-condensed");

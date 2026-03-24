@@ -13,6 +13,7 @@ public class TennisSpielerInfo {
 	private static final Pattern LK_PATTERN = Pattern.compile("\\bLK\\s*(\\d{1,3})\\b", Pattern.CASE_INSENSITIVE);
 	private static final Pattern POSITION_PATTERN = Pattern.compile("^\\s*(\\d{1,2})\\b");
 	private static final Pattern MELDELISTE_PATTERN = Pattern.compile("(\\d{1,3})\\s*$");
+	private static final Pattern STRAFWERTUNG_PATTERN = Pattern.compile("\\(\\s*(SW)\\s*\\)", Pattern.CASE_INSENSITIVE);
 
 	@JsonProperty("position")
 	private final String position;
@@ -26,22 +27,35 @@ public class TennisSpielerInfo {
 	@JsonProperty("leistungsklasse")
 	private final String leistungsklasse;
 
+	@JsonProperty("strafwertung")
+	private final boolean strafwertung;
+
 	public TennisSpielerInfo(String position, String name, String meldeliste, String leistungsklasse) {
+		this(position, name, meldeliste, leistungsklasse, false);
+	}
+
+	public TennisSpielerInfo(String position, String name, String meldeliste, String leistungsklasse,
+			boolean strafwertung) {
+
 		this.position = position;
 		this.name = name;
 		this.meldeliste = meldeliste;
 		this.leistungsklasse = leistungsklasse;
+		this.strafwertung = strafwertung;		
 	}
+
 
 	public static TennisSpielerInfo parse(String text) {
 		if (text == null || text.isBlank()) {
 			return new TennisSpielerInfo("", "", "", "");
 		}
+		boolean istStrafwertung = istStrafwertung(text);
 		if (text.contains("<") && text.contains(">")) {
-			return parseHtml(text);
+			return markiereStrafwertung(parseHtml(text), istStrafwertung);
 		}
-		return parseLegacyText(text);
+		return markiereStrafwertung(parseLegacyText(text), istStrafwertung);
 	}
+
 
 	public static TennisSpielerInfo parseHtml(String html) {
 		if (html == null || html.isBlank()) {
@@ -66,12 +80,14 @@ public class TennisSpielerInfo {
 		if (body == null) {
 			return parseHtml(html);
 		}
+		boolean istStrafwertung = istStrafwertung(body.text());
 		Element segment = extrahiereSpielerSegment(body, playerIndex);
 		if (segment == null) {
-			return parseHtml(html);
+			return markiereStrafwertung(parseHtml(html), istStrafwertung);
 		}
-		return parseElement(segment);
+		return markiereStrafwertung(parseElement(segment), istStrafwertung);
 	}
+
 
 	private static Element extrahiereSpielerSegment(Element cellRoot, int playerIndex) {
 		if (cellRoot == null) {
@@ -97,6 +113,22 @@ public class TennisSpielerInfo {
 		}
 		return null;
 	}
+	private static TennisSpielerInfo markiereStrafwertung(TennisSpielerInfo info, boolean strafwertung) {
+		if (info == null) {
+			return new TennisSpielerInfo("", "", "", "", strafwertung);
+		}
+		if (!strafwertung) {
+			return info;
+		}
+		return new TennisSpielerInfo(info.position, info.name, info.meldeliste, info.leistungsklasse, true);
+	}
+
+	private static boolean istStrafwertung(String text) {
+		if (text == null || text.isBlank()) {
+			return false;
+		}
+		return STRAFWERTUNG_PATTERN.matcher(text).find();
+	}
 
 	private static TennisSpielerInfo parseElement(Element root) {
 		if (root == null) {
@@ -105,7 +137,7 @@ public class TennisSpielerInfo {
 		String normalizedText = root.text().replace('\u00A0', ' ').replaceAll("\\s+", " ").trim();
 
 		String position = textVonAbbr(root, "platzziffer");
-		
+
 		if (position.isBlank()) {
 			Matcher m = POSITION_PATTERN.matcher(normalizedText);
 			if (m.find()) {
@@ -202,7 +234,6 @@ public class TennisSpielerInfo {
 		return "";
 	}
 
-
 	private static String normalisiereName(String raw) {
 		if (raw == null || raw.isBlank()) {
 			return "";
@@ -228,4 +259,9 @@ public class TennisSpielerInfo {
 	public String getLeistungsklasse() {
 		return leistungsklasse;
 	}
+	
+	public boolean isStrafwertung() {
+		return strafwertung;
+	}
+
 }
