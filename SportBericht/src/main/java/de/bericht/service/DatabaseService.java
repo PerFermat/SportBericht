@@ -1608,23 +1608,56 @@ public class DatabaseService {
 		return result;
 	}
 
-	public void speichereGesamtspielplanKonfiguration(String vereinnr, List<GesamtspielplanConfigSpalte> spalten) {
+	public List<GesamtspielplanConfigRunde> ladeGesamtspielplanConfigRunden(String vereinnr) {
+		List<GesamtspielplanConfigRunde> result = new ArrayList<>();
+		String sql = "SELECT id, vereinnr, name, datum_von, datum_bis FROM config_gesamtspielplan_runde WHERE vereinnr = ? ORDER BY datum_von ASC, id ASC";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, vereinnr);
+			try (ResultSet rs = pstmt.executeQuery()) {
+				while (rs.next()) {
+					GesamtspielplanConfigRunde runde = new GesamtspielplanConfigRunde();
+					runde.setId(rs.getInt("id"));
+					runde.setVereinnr(rs.getString("vereinnr"));
+					runde.setName(rs.getString("name"));
+					Date datumVon = rs.getDate("datum_von");
+					Date datumBis = rs.getDate("datum_bis");
+					runde.setDatumVon(datumVon == null ? null : datumVon.toLocalDate());
+					runde.setDatumBis(datumBis == null ? null : datumBis.toLocalDate());
+					result.add(runde);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	public void speichereGesamtspielplanKonfiguration(String vereinnr, List<GesamtspielplanConfigSpalte> spalten,
+			List<GesamtspielplanConfigRunde> runden) {
 		String deleteKinder = "DELETE FROM config_gesamtspielplan_mannschaft WHERE vereinnr = ?";
 		String deleteSpalten = "DELETE FROM config_gesamtspielplan WHERE vereinnr = ?";
+		String deleteRunden = "DELETE FROM config_gesamtspielplan_runde WHERE vereinnr = ?";		
 		String insertSpalte = "INSERT INTO config_gesamtspielplan (vereinnr, spalte, liga_anzeige, mannschaft_anzeige, betreuer) VALUES (?, ?, ?, ?, ?)";
 		String insertMannschaft = "INSERT INTO config_gesamtspielplan_mannschaft (vereinnr, id_spalte, liga, mannschaft) VALUES (?, ?, ?, ?)";
-
+		String insertRunde = "INSERT INTO config_gesamtspielplan_runde (vereinnr, name, datum_von, datum_bis) VALUES (?, ?, ?, ?)";
+		
 		try (Connection conn = openConnection()) {
 			conn.setAutoCommit(false);
 			try (PreparedStatement deleteKinderStmt = conn.prepareStatement(deleteKinder);
+					PreparedStatement deleteRundenStmt = conn.prepareStatement(deleteRunden);					
 					PreparedStatement deleteSpaltenStmt = conn.prepareStatement(deleteSpalten);
 					PreparedStatement insertSpalteStmt = conn.prepareStatement(insertSpalte, Statement.RETURN_GENERATED_KEYS);
-					PreparedStatement insertMannschaftStmt = conn.prepareStatement(insertMannschaft)) {
+					PreparedStatement insertMannschaftStmt = conn.prepareStatement(insertMannschaft);
+					PreparedStatement insertRundeStmt = conn.prepareStatement(insertRunde)) {
+
 
 				deleteKinderStmt.setString(1, vereinnr);
 				deleteKinderStmt.executeUpdate();
 				deleteSpaltenStmt.setString(1, vereinnr);
 				deleteSpaltenStmt.executeUpdate();
+				deleteRundenStmt.setString(1, vereinnr);
+				deleteRundenStmt.executeUpdate();
+				
 
 				int index = 1;
 				for (GesamtspielplanConfigSpalte spalte : spalten) {
@@ -1649,6 +1682,29 @@ public class DatabaseService {
 					}
 				}
 				insertMannschaftStmt.executeBatch();
+				for (GesamtspielplanConfigRunde runde : runden) {
+					String name = runde == null ? null : runde.getName();
+					if (name == null || name.isBlank()) {
+						continue;
+					}
+					insertRundeStmt.setString(1, vereinnr);
+					insertRundeStmt.setString(2, name.trim());
+					LocalDate datumVon = runde.getDatumVon();
+					LocalDate datumBis = runde.getDatumBis();
+					if (datumVon == null) {
+						insertRundeStmt.setNull(3, java.sql.Types.DATE);
+					} else {
+						insertRundeStmt.setDate(3, Date.valueOf(datumVon));
+					}
+					if (datumBis == null) {
+						insertRundeStmt.setNull(4, java.sql.Types.DATE);
+					} else {
+						insertRundeStmt.setDate(4, Date.valueOf(datumBis));
+					}
+					insertRundeStmt.addBatch();
+				}
+				insertRundeStmt.executeBatch();
+				
 				conn.commit();
 			} catch (SQLException ex) {
 				conn.rollback();
@@ -1659,6 +1715,10 @@ public class DatabaseService {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void speichereGesamtspielplanKonfiguration(String vereinnr, List<GesamtspielplanConfigSpalte> spalten) {
+		speichereGesamtspielplanKonfiguration(vereinnr, spalten, List.of());
 	}
 
 	public List<String> ladeGesamtspielplanLigen(String vereinnr, String vereinPrefix) {

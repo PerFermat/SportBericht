@@ -1644,4 +1644,15 @@ max-width
 	height: auto;
 }
 
+.gesamt-config-runde-panel {
+	background: #efefef;
+	border: 1px solid #d0d0d0;
+	border-radius: 6px;
+	margin-bottom: 12px;
+}
+
+.gesamt-config-runde {
+	margin-bottom: 8px;
+}
+
 

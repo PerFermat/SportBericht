@@ -52,6 +52,7 @@ import com.lowagie.text.pdf.draw.VerticalPositionMark;
 import de.bericht.service.AnzeigeSpalte;
 import de.bericht.service.DatabaseService;
 import de.bericht.service.GesamtspielplanConfigMannschaft;
+import de.bericht.service.GesamtspielplanConfigRunde;
 import de.bericht.service.GesamtspielplanConfigSpalte;
 import de.bericht.service.GesamtspielplanEintrag;
 import de.bericht.service.SpielerRueckmeldung;
@@ -84,6 +85,7 @@ public class GesamtspielplanBean implements Serializable {
 	private final DatabaseService databaseService = new DatabaseService();
 	private String vereinnr;
 	private String halbserie;
+	private final List<ConfigRundeModel> configRunden = new ArrayList<>();
 
 	private final List<AnzeigeSpalte> spalten = new ArrayList<>();
 	private final List<String> datumsListe = new ArrayList<>();
@@ -119,7 +121,7 @@ public class GesamtspielplanBean implements Serializable {
 		ladeAuswahlwerte();
 		setzeAnzeigeDefaultsWennLeer();
 
-		halbserie = defaultHalbserie();
+		halbserie = defaultRundeName();
 		ladeGesamtspielplan();
 		aktualisiereKonfigurationErforderlich();
 	}
@@ -138,7 +140,7 @@ public class GesamtspielplanBean implements Serializable {
 		for (Map<String, String> row : rows) {
 			String datum = row.get("datum");
 			String wochentag = row.get("wochentag");
-			if (!passtZurHalbserie(datum)) {
+			if (!passtZurRunde(datum)) {
 				continue;
 			}
 			String heim = row.get("heim");
@@ -970,6 +972,16 @@ public class GesamtspielplanBean implements Serializable {
 
 	private void ladePersistierteGesamtspielplanKonfiguration() {
 		configSpalten.clear();
+		configRunden.clear();
+		for (GesamtspielplanConfigRunde row : databaseService.ladeGesamtspielplanConfigRunden(vereinnr)) {
+			ConfigRundeModel model = new ConfigRundeModel();
+			model.setId(row.getId());
+			model.setName(row.getName());
+			model.setDatumVon(row.getDatumVon());
+			model.setDatumBis(row.getDatumBis());
+			configRunden.add(model);
+		}
+		
 		Map<Integer, ConfigSpalteModel> byId = new LinkedHashMap<>();
 		for (GesamtspielplanConfigSpalte row : databaseService.ladeGesamtspielplanConfigSpalten(vereinnr)) {
 			ConfigSpalteModel model = new ConfigSpalteModel();
@@ -1052,6 +1064,27 @@ public class GesamtspielplanBean implements Serializable {
 							nullSafe(model.getLigaAnzeige()), model.isBetreuer(), quellen));
 		}
 	}
+	
+	public void addConfigRunde() {
+		ConfigRundeModel model = new ConfigRundeModel();
+		model.setExpanded(true);
+		configRunden.add(model);
+	}
+
+	public void removeConfigRunde(ConfigRundeModel runde) {
+		if (runde == null) {
+			return;
+		}
+		configRunden.remove(runde);
+	}
+
+	public void toggleConfigRunde(ConfigRundeModel runde) {
+		if (runde == null) {
+			return;
+		}
+		runde.setExpanded(!runde.isExpanded());
+	}
+
 
 	public void addConfigSpalte() {
 		ConfigSpalteModel model = new ConfigSpalteModel();
@@ -1141,6 +1174,20 @@ public class GesamtspielplanBean implements Serializable {
 	public void saveConfig() {
 		reindexConfigSpalten();
 		setzeAnzeigeDefaultsWennLeer();
+		List<GesamtspielplanConfigRunde> dbRunden = new ArrayList<>();
+		for (ConfigRundeModel model : configRunden) {
+			String name = trimToNull(model.getName());
+			if (name == null) {
+				continue;
+			}
+			GesamtspielplanConfigRunde row = new GesamtspielplanConfigRunde();
+			row.setVereinnr(vereinnr);
+			row.setName(name);
+			row.setDatumVon(model.getDatumVon());
+			row.setDatumBis(model.getDatumBis());
+			dbRunden.add(row);
+		}
+		
 		List<GesamtspielplanConfigSpalte> dbSpalten = new ArrayList<>();
 		for (ConfigSpalteModel model : configSpalten) {
 			GesamtspielplanConfigSpalte row = new GesamtspielplanConfigSpalte();
@@ -1158,7 +1205,7 @@ public class GesamtspielplanBean implements Serializable {
 			}
 			dbSpalten.add(row);
 		}
-		databaseService.speichereGesamtspielplanKonfiguration(vereinnr, dbSpalten);
+		databaseService.speichereGesamtspielplanKonfiguration(vereinnr, dbSpalten, dbRunden);
 		ladePersistierteGesamtspielplanKonfiguration();
 		ladeGesamtspielplan();
 		aktualisiereKonfigurationErforderlich();
@@ -1230,22 +1277,71 @@ public class GesamtspielplanBean implements Serializable {
 	}
 
 	
-	private boolean passtZurHalbserie(String datum) {
-		LocalDate d = parseDatumSafe(datum);
-		if (d.getYear() == 2999) {
+	private boolean passtZurRunde(String datum) {
+		if (istLeer(halbserie)) {
 			return true;
 		}
-		boolean vorrunde = Month.JULY.getValue() <= d.getMonthValue();
-		if ("Rückrunde".equalsIgnoreCase(halbserie)) {
-			return !vorrunde;
+		ConfigRundeModel ausgewaehlteRunde = findeRundeByName(halbserie);
+		if (ausgewaehlteRunde == null) {
+			return true;
 		}
-		return vorrunde;
+		LocalDate spielDatum = parseDatumSafe(datum);
+		if (spielDatum.getYear() == 2999) {
+			return false;
+		}
+		LocalDate datumVon = ausgewaehlteRunde.getDatumVon();
+		LocalDate datumBis = ausgewaehlteRunde.getDatumBis();
+		if (datumVon != null && spielDatum.isBefore(datumVon)) {
+			return false;
+		}
+		if (datumBis != null && spielDatum.isAfter(datumBis)) {
+			return false;
+
+		}
+		return true;
 	}
 
-	private String defaultHalbserie() {
-		int month = LocalDate.now().getMonthValue();
-		return month >= 7 ? "Vorrunde" : "Rückrunde";
+	private ConfigRundeModel findeRundeByName(String rundenName) {
+		if (rundenName == null) {
+			return null;
+		}
+		for (ConfigRundeModel runde : configRunden) {
+			if (runde == null || istLeer(runde.getName())) {
+				continue;
+			}
+			if (runde.getName().trim().equals(rundenName.trim())) {
+				return runde;
+			}
+		}
+		return null;
 	}
+
+	private String defaultRundeName() {
+		if (configRunden.isEmpty()) {
+			return "";
+		}
+		LocalDate heute = LocalDate.now();
+		for (ConfigRundeModel runde : configRunden) {
+			LocalDate von = runde.getDatumVon();
+			LocalDate bis = runde.getDatumBis();
+			if (von != null && heute.isBefore(von)) {
+				continue;
+			}
+			if (bis != null && heute.isAfter(bis)) {
+				continue;
+			}
+			if (!istLeer(runde.getName())) {
+				return runde.getName().trim();
+			}
+		}
+		for (ConfigRundeModel runde : configRunden) {
+			if (!istLeer(runde.getName())) {
+				return runde.getName().trim();
+			}
+		}
+		return "";
+	}
+
 
 	public void saveBetreuer(GesamtspielplanEintrag eintrag) {
 		if (eintrag == null || eintrag.getUniqueKey() == null || eintrag.getUniqueKey().isBlank()) {
@@ -1409,6 +1505,21 @@ public class GesamtspielplanBean implements Serializable {
 	public String getHalbserie() {
 		return halbserie;
 	}
+	public List<String> getRundenNamen() {
+		List<String> result = new ArrayList<>();
+		for (ConfigRundeModel runde : configRunden) {
+			String name = trimToNull(runde.getName());
+			if (name != null) {
+				result.add(name);
+			}
+		}
+		return result;
+	}
+
+	public List<ConfigRundeModel> getConfigRunden() {
+		return configRunden;
+	}
+
 
 	public void setHalbserie(String halbserie) {
 		this.halbserie = halbserie;
@@ -1525,6 +1636,58 @@ public class GesamtspielplanBean implements Serializable {
 			List<SpielerRueckmeldung> zusatzZugesagt, List<SpielerRueckmeldung> offen) {
 	}
 
+
+
+	public static class ConfigRundeModel implements Serializable {
+		private static final long serialVersionUID = 1L;
+		private Integer id;
+		private String name;
+		private LocalDate datumVon;
+		private LocalDate datumBis;
+		private boolean expanded = true;
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public LocalDate getDatumVon() {
+			return datumVon;
+		}
+
+		public void setDatumVon(LocalDate datumVon) {
+			this.datumVon = datumVon;
+		}
+
+		public LocalDate getDatumBis() {
+			return datumBis;
+		}
+
+		public void setDatumBis(LocalDate datumBis) {
+			this.datumBis = datumBis;
+		}
+
+		public boolean isExpanded() {
+			return expanded;
+		}
+
+		public void setExpanded(boolean expanded) {
+			this.expanded = expanded;
+		}
+	}
+
+	
 	public static class ConfigSpalteModel implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private Integer id;
