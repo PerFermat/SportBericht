@@ -20,6 +20,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import de.bericht.service.DatabaseService;
+import de.bericht.util.enums.SportartVerein;
 
 public class ConfigManager {
 	private static ConfigManager instance;
@@ -349,17 +350,11 @@ public class ConfigManager {
 	}
 
 	public static boolean isTischtennis(String vereinnr) {
-		if ("TISCHTENNIS".equals(getConfigValue(vereinnr, "sportart.verein"))) {
-			return true;
-		}
-		return false;
+		return SportartVerein.TISCHTENNIS == SportartVerein.fromConfig(getConfigValue(vereinnr, "sportart.verein"));
 	}
 
 	public static boolean isTennis(String vereinnr) {
-		if ("TENNIS".equals(getConfigValue(vereinnr, "sportart.verein"))) {
-			return true;
-		}
-		return false;
+		return SportartVerein.TENNIS == SportartVerein.fromConfig(getConfigValue(vereinnr, "sportart.verein"));
 	}
 
 }

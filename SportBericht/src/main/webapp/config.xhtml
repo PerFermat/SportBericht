@@ -74,9 +74,24 @@
 	</h:form>
 	<h:form id="configTabelle">
 		<p:panel header="Konfiguration">
-			<p:dataTable id="configTable" value="#{configBean.configEintraege}"
-				var="eintrag" editable="true" styleClass="config-table"
-				style="width: 100%">
+			<h:panelGrid columns="4" style="width:100%; margin-bottom:10px;">
+				<h:outputLabel for="suchfeld" value="Suche:" />
+				<p:inputText id="suchfeld" value="#{configBean.suchText}"
+					style="width:100%;">
+					<p:ajax event="keyup" update="configTable" />
+				</p:inputText>
+				<h:outputLabel for="kategorie" value="Kategorie:" />
+				<p:selectOneMenu id="kategorie"
+					value="#{configBean.ausgewaehlteKategorie}" style="width:100%;">
+					<f:selectItem itemLabel="Alle" itemValue="" />
+					<f:selectItems value="#{configBean.verfuegbareKategorien}" />
+					<p:ajax event="change" update="configTable" />
+				</p:selectOneMenu>
+			</h:panelGrid>
+
+			<p:dataTable id="configTable"
+				value="#{configBean.gefilterteConfigEintraege}" var="eintrag"
+				editable="true" styleClass="config-table" style="width: 100%">
 
 				<p:column headerText="Key" style="width: 30%;">
 					<h:outputText value="#{eintrag.eintrag}" />

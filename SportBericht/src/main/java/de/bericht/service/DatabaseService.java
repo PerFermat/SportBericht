@@ -39,7 +39,9 @@ import javax.sql.DataSource;
 import de.bericht.util.AdressEintrag;
 import de.bericht.util.BerichtData;
 import de.bericht.util.BerichtHelper;
+import de.bericht.util.ConfigBedeutung;
 import de.bericht.util.ConfigEintrag;
+import de.bericht.util.ConfigKategorie;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.ErgebnisCache;
 import de.bericht.util.Stil;
@@ -994,6 +996,42 @@ public class DatabaseService {
 		}
 
 		return eintraege;
+	}
+	public Map<String, ConfigBedeutung> ladeConfigBedeutungen() {
+		String sql = "SELECT config_eintrag, bedeutung, inhaltformat, wertebereich FROM config_Bedeutung";
+		Map<String, ConfigBedeutung> bedeutungen = new HashMap<>();
+
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				String configEintrag = rs.getString("config_eintrag");
+				ConfigBedeutung bedeutung = new ConfigBedeutung(configEintrag, rs.getString("bedeutung"),
+						rs.getString("inhaltformat"), rs.getString("wertebereich"));
+				bedeutungen.put(configEintrag, bedeutung);
+			}
+			rs.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return bedeutungen;
+	}
+
+	public List<ConfigKategorie> ladeConfigKategorien() {
+		String sql = "SELECT config_eintrag, kategorie FROM config_Kategorie ORDER BY config_eintrag, kategorie";
+		List<ConfigKategorie> kategorien = new ArrayList<>();
+
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				kategorien.add(new ConfigKategorie(rs.getString("config_eintrag"), rs.getString("kategorie")));
+			}
+			rs.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return kategorien;
 	}
 
 	public void speichereConfigEintraege(String vereinnr, List<ConfigEintrag> eintraege) {

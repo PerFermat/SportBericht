@@ -19,6 +19,7 @@ import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.ErgebnisCache;
 import de.bericht.util.WebCache;
+import de.bericht.util.enums.SpielplanVorschauWas;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -87,10 +88,13 @@ public class SpielplanBean implements Serializable {
 								+ gruppeUrl + " nicht gelesen werden. Sie können daher veraltet sein"));
 			}
 
-			String was = ConfigManager.getConfigValue(vereinnr, "spielplan.vorschau.was").toUpperCase();
+			String wasRaw = ConfigManager.getConfigValue(vereinnr, "spielplan.vorschau.was");
+			SpielplanVorschauWas was = SpielplanVorschauWas.fromConfig(wasRaw);
 
-			if ("HEIM".equals(was) || "GAST".equals(was) || "ALLE".equals(was)) {
-				provider.generiereVorschauBericht(vereinnr, was);
+
+			if (was != null) {
+				provider.generiereVorschauBericht(vereinnr, was.name());
+
 			} else {
 				DatabaseService dbService = new DatabaseService(vereinnr);
 				dbService.deleteBericht(vereinnr, "31.12.2999 - Vorschaubericht");

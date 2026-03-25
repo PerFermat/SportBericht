@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.bericht.service.Bilddaten;
 import de.bericht.service.WordpressMedia;
+import de.bericht.util.enums.WordpressBeitragsbildOption;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 
@@ -142,7 +143,9 @@ public class WordPressAPIClient {
 		String catId = getCategoryIdByName(categoryName);
 
 		String url = this.domain + "/wp-json/wp/v2/posts";
-		String bildVariante = ConfigManager.getWordpressValue(vereinnr, name, "beitragsbild");
+		WordpressBeitragsbildOption bildVariante = WordpressBeitragsbildOption
+				.fromConfig(ConfigManager.getWordpressValue(vereinnr, name, "beitragsbild"));
+
 
 		String escapedUeberschrift = ueberschrift.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
 		String escapedInhalt = BerichtHelper.convertQuillClassesToInlineStyles(inhalt);
@@ -154,7 +157,7 @@ public class WordPressAPIClient {
 				.append("\"date\":\"").append(datum).append("\",").append("\"categories\":").append(catId);
 
 		if (mediaId > 0) {
-			if ("immerStandard".equals(bildVariante)) {
+			if (WordpressBeitragsbildOption.IMMER_STANDARD == bildVariante) {
 				int pos = ConfigManager.findePosition(ConfigManager.getWordpressValue(vereinnr, name, "filter"),
 						categoryName.get(0));
 				if (!"-1".equals(ConfigManager.getWordpressValue(vereinnr, name, "symbol", pos))) {

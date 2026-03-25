@@ -1,8 +1,11 @@
 package de.bericht.service;
 
 import java.util.List;
+import java.util.Map;
 
+import de.bericht.util.ConfigBedeutung;
 import de.bericht.util.ConfigEintrag;
+import de.bericht.util.ConfigKategorie;
 
 
 
@@ -21,4 +24,14 @@ public class ConfigService {
 	public void speichereConfigEintraege(String vereinnr, List<ConfigEintrag> eintraege) {
 		db.speichereConfigEintraege(vereinnr, eintraege);
 	}
+	
+
+	public Map<String, ConfigBedeutung> ladeConfigBedeutungen() {
+		return db.ladeConfigBedeutungen();
+	}
+
+	public List<ConfigKategorie> ladeConfigKategorien() {
+		return db.ladeConfigKategorien();
+	}
+
 }

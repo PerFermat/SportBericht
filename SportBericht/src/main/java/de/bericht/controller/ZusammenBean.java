@@ -36,6 +36,8 @@ import de.bericht.util.BerichtData;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.WordPressAPIClient;
+import de.bericht.util.enums.WordpressBeitragsbildOption;
+import de.bericht.util.enums.WordpressDatumOption;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
@@ -460,7 +462,10 @@ public class ZusammenBean implements Serializable {
 
 	public void veroeffentlichen() throws URISyntaxException, IOException, InterruptedException {
 		String wordpressDatum;
-		if ("Spieldatum".equals(ConfigManager.getWordpressValue(vereinnr, name, "datum"))) {
+		WordpressDatumOption datumOption = WordpressDatumOption
+				.fromConfig(ConfigManager.getWordpressValue(vereinnr, name, "datum"));
+		if (WordpressDatumOption.SPIELDATUM == datumOption) {
+
 			wordpressDatum = konvertiereDatum(datum);
 		} else {
 			wordpressDatum = createWordPressDateString();
@@ -490,12 +495,14 @@ public class ZusammenBean implements Serializable {
 		}
 
 		String body = getBerichtWerbungHomepage();
-		String bildVariante = ConfigManager.getWordpressValue(vereinnr, name, "beitragsbild");
+		WordpressBeitragsbildOption bildVariante = WordpressBeitragsbildOption
+				.fromConfig(ConfigManager.getWordpressValue(vereinnr, name, "beitragsbild"));
+
 
 		// falls ein Bild vorhanden ist, füge es in den Content ein
-		if (image != null && image.getMediaId() != -1 && !"nurBeitragsbild".equals(bildVariante)) {
+		if (image != null && image.getMediaId() != -1 && WordpressBeitragsbildOption.NUR_BEITRAGSBILD != bildVariante) {
 			body = image.getHtml() + body;
-		} else if ("nurBeitragsbild".equals(bildVariante) && (bildUnterschrift != null)) {
+		} else if (WordpressBeitragsbildOption.NUR_BEITRAGSBILD == bildVariante && (bildUnterschrift != null)) {
 			StringBuilder text = new StringBuilder();
 			text.append("<p style=\"text-align: center; font-style: italic; font-size: 0.8em;\"> \n\n");
 			text.append(escapeHtml(getBildUnterschrift()));

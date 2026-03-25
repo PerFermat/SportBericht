@@ -37,6 +37,8 @@ import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.IgnorierteWoerte;
 import de.bericht.util.WordPressAPIClient;
+import de.bericht.util.enums.WordpressBeitragsbildOption;
+import de.bericht.util.enums.WordpressDatumOption;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
@@ -300,8 +302,10 @@ public class ZusammenGesamtBean implements Serializable {
 		bildArray.clear();
 
 		StringBuilder text = new StringBuilder();
-		String bildVariante = ConfigManager.getWordpressValue(vereinnr, name, "beitragsbild");
-		if ("nurBeitragsbild".equals(bildVariante)) {
+		WordpressBeitragsbildOption bildVariante = WordpressBeitragsbildOption
+				.fromConfig(ConfigManager.getWordpressValue(vereinnr, name, "beitragsbild"));
+		if (WordpressBeitragsbildOption.NUR_BEITRAGSBILD == bildVariante) {
+
 			text.append("<p style=\"text-align: center; font-style: italic; font-size: 0.8em;\"> <br>");
 			text.append("[UNTERSCHRIFT0]");
 			text.append("</p><br>");
@@ -370,7 +374,7 @@ public class ZusammenGesamtBean implements Serializable {
 					bildDaten.setBildLink(
 							"data:image/jpeg;base64," + Base64.getEncoder().encodeToString(data.getBild()));
 					bildArray.add(bildDaten);
-					if (!"nurBeitragsbild".equals(bildVariante) || bildnr > 0) {
+					if (WordpressBeitragsbildOption.NUR_BEITRAGSBILD != bildVariante || bildnr > 0) {
 						text.append("[BILD" + bildnr + "]" + "<br><br>");
 					}
 					bildnr++;
@@ -528,7 +532,10 @@ public class ZusammenGesamtBean implements Serializable {
 
 	public void veroeffentlichen() throws URISyntaxException, IOException, InterruptedException {
 		String wordpressDatum;
-		if ("Spieldatum".equals(ConfigManager.getWordpressValue(vereinnr, name, "datum"))) {
+		WordpressDatumOption datumOption = WordpressDatumOption
+				.fromConfig(ConfigManager.getWordpressValue(vereinnr, name, "datum"));
+		if (WordpressDatumOption.SPIELDATUM == datumOption) {
+
 			wordpressDatum = konvertiereDatum(findeSpaetestesDatum(spieleFreigegeben));
 		} else {
 			wordpressDatum = createWordPressDateString();
