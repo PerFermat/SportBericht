@@ -112,7 +112,7 @@ public class ConfigBean implements Serializable {
 		if (eintrag == null || eintrag.getEintrag() == null || eintrag.getEintrag().isBlank()) {
 			return Collections.emptyList();
 		}
-		return enumWerteCache.computeIfAbsent(eintrag.getEintrag(), service::ladeDistinctConfigWerteByEintrag);
+		return enumWerteCache.computeIfAbsent(eintrag.getEintrag(), key -> enumWerteAusWertebereichUndDaten(key, eintrag));
 	}
 
 	public List<String> getChatGptModelle() {
@@ -135,15 +135,15 @@ public class ConfigBean implements Serializable {
 	public void openPasswortDialog(ConfigEintrag eintrag) {
 		passwortDialogEintrag = eintrag;
 		passwortDialogInput = "";
-		passwortDialogAnzeige = "******";
+		passwortDialogAnzeige = "";
 		if (eintrag == null || !isNotBlank(eintrag.getWert())) {
 			return;
 		}
 		try {
 			String entschluesselt = ConfigManager.decryptPassword(vereinnr, eintrag.getWert());
-			passwortDialogAnzeige = maskierePasswort(entschluesselt);
+			passwortDialogInput = defaultString(entschluesselt);
 		} catch (Exception e) {
-			passwortDialogAnzeige = "******";
+			passwortDialogInput = defaultString(eintrag.getWert());
 		}
 	}
 
@@ -154,8 +154,7 @@ public class ConfigBean implements Serializable {
 		try {
 			String verschluesselt = ConfigManager.encryptPassword(vereinnr, passwortDialogInput);
 			passwortDialogEintrag.setWert(verschluesselt);
-			passwortDialogAnzeige = maskierePasswort(passwortDialogInput);
-			passwortDialogInput = "";
+			passwortDialogAnzeige = passwortDialogInput;
 		} catch (Exception e) {
 			// absichtlich leer, Anzeige bleibt unverändert
 		}
@@ -194,7 +193,6 @@ public class ConfigBean implements Serializable {
 	public void openNeuerKeyDialog() {
 		neuerDialog = true;
 		dialogKey = "";
-		dialogInhalt = "";
 		dialogBedeutung = "";
 		dialogWertebereich = "";
 		dialogInhaltformat = verfuegbareInhaltformate.isEmpty() ? "" : verfuegbareInhaltformate.get(0);
@@ -205,7 +203,6 @@ public class ConfigBean implements Serializable {
 	public void openBearbeitenDialog(ConfigEintrag eintrag) {
 		neuerDialog = false;
 		dialogKey = eintrag.getEintrag();
-		dialogInhalt = eintrag.getWert();
 		dialogBedeutung = defaultString(eintrag.getBedeutung());
 		dialogInhaltformat = defaultString(eintrag.getInhaltformat());
 		dialogWertebereich = defaultString(eintrag.getWertebereich());
@@ -231,9 +228,6 @@ public class ConfigBean implements Serializable {
 			return;
 		}
 		dialogKategorien.remove(index);
-		if (dialogKategorien.isEmpty()) {
-			dialogKategorien.add("");
-		}
 	}
 
 	public void speichereDialog() {
@@ -243,7 +237,7 @@ public class ConfigBean implements Serializable {
 
 		List<String> vereine = service.ladeAlleVereine();
 		for (String verein : vereine) {
-			service.insertOrUpdateConfigEintrag(verein, dialogKey.trim(), defaultString(dialogInhalt));
+			service.insertOrUpdateConfigEintrag(verein, dialogKey.trim(), "");
 		}
 
 		service.upsertConfigBedeutung(dialogKey.trim(), defaultString(dialogBedeutung),
@@ -252,6 +246,30 @@ public class ConfigBean implements Serializable {
 		ladeConfigEintraegeMitBedeutung();
 	}
 
+	private List<String> enumWerteAusWertebereichUndDaten(String key, ConfigEintrag eintrag) {
+		LinkedHashSet<String> zusammengefuehrteWerte = new LinkedHashSet<>();
+		if (eintrag != null && isNotBlank(eintrag.getWertebereich())) {
+			String[] wertebereichWerte = eintrag.getWertebereich().split(",");
+			for (String wert : wertebereichWerte) {
+				String bereinigt = defaultString(wert).trim();
+				if (isNotBlank(bereinigt)) {
+					zusammengefuehrteWerte.add(bereinigt);
+				}
+			}
+		}
+		List<String> vorhandeneWerte = service.ladeDistinctConfigWerteByEintrag(key);
+		if (vorhandeneWerte != null) {
+			for (String wert : vorhandeneWerte) {
+				String bereinigt = defaultString(wert).trim();
+				if (isNotBlank(bereinigt)) {
+					zusammengefuehrteWerte.add(bereinigt);
+				}
+			}
+		}
+		return new ArrayList<>(zusammengefuehrteWerte);
+	}
+
+	
 	// Getter & Setter
 	public String getVereinnr() {
 		return vereinnr;
@@ -354,12 +372,6 @@ public class ConfigBean implements Serializable {
 		return new int[] { min, max };
 	}
 
-	private String maskierePasswort(String klartext) {
-		if (!isNotBlank(klartext)) {
-			return "******";
-		}
-		return "*".repeat(Math.max(6, klartext.length()));
-	}
 
 	private boolean passtZurSuche(ConfigEintrag eintrag) {
 		if (suchText == null || suchText.isBlank()) {
@@ -418,13 +430,6 @@ public class ConfigBean implements Serializable {
 		this.dialogKey = dialogKey;
 	}
 
-	public String getDialogInhalt() {
-		return dialogInhalt;
-	}
-
-	public void setDialogInhalt(String dialogInhalt) {
-		this.dialogInhalt = dialogInhalt;
-	}
 
 	public String getDialogBedeutung() {
 		return dialogBedeutung;
