@@ -158,7 +158,7 @@ public class DatabaseService {
 
 					TischtennisSpiel spiel = new TischtennisSpiel(vereinnr, "", "", datum, "", liga, heim, gast,
 							ergebnis, ergebnisLink);
-					spiel.setMitSpielberichte(rs.getBoolean("mitSpielberichte"));					
+					spiel.setMitSpielberichte(rs.getBoolean("mitSpielberichte"));
 					spiele.add(spiel);
 				} else {
 					String ueberschrift = rs.getString("ueberschrift");
@@ -997,6 +997,25 @@ public class DatabaseService {
 
 		return eintraege;
 	}
+
+	public List<String> ladeDistinctConfigWerteByEintrag(String eintrag) {
+		String sql = "SELECT DISTINCT wert FROM config WHERE eintrag = ? AND wert IS NOT NULL AND TRIM(wert) <> '' ORDER BY wert";
+		List<String> werte = new ArrayList<>();
+
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, eintrag);
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				werte.add(rs.getString("wert"));
+			}
+			rs.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return werte;
+	}
+
 	public Map<String, ConfigBedeutung> ladeConfigBedeutungen() {
 		String sql = "SELECT config_eintrag, bedeutung, inhaltformat, wertebereich FROM config_Bedeutung";
 		Map<String, ConfigBedeutung> bedeutungen = new HashMap<>();
@@ -1168,7 +1187,8 @@ public class DatabaseService {
 		}
 	}
 
-	public void upsertConfigBedeutung(String configEintrag, String bedeutung, String inhaltformat, String wertebereich) {
+	public void upsertConfigBedeutung(String configEintrag, String bedeutung, String inhaltformat,
+			String wertebereich) {
 		String sql = "INSERT INTO config_Bedeutung (config_eintrag, bedeutung, inhaltformat, wertebereich) "
 				+ "VALUES (?, ?, ?, ?) "
 				+ "ON DUPLICATE KEY UPDATE bedeutung = VALUES(bedeutung), inhaltformat = VALUES(inhaltformat), wertebereich = VALUES(wertebereich)";
@@ -1214,8 +1234,6 @@ public class DatabaseService {
 		}
 	}
 
-
-	
 	public void saveOrUpdateSpielstatistik(String vereinnr, String ergebnisLink, String spielstatistik) {
 
 		String selectSql = "SELECT spielstatistik FROM berichte WHERE vereinnr = ? AND ergebnisLink = ?";
@@ -1647,23 +1665,23 @@ public class DatabaseService {
 				+ "WHERE t.vereinnr = ? and ( t.heim LIKE ? OR t.gast LIKE ? )";
 		return ladeStringRows(sql, vereinnr, vereinPrefix + "%", vereinPrefix + "%");
 	}
+
 	public List<GesamtspielplanConfigSpalte> ladeGesamtspielplanConfigSpalten(String vereinnr) {
 		List<GesamtspielplanConfigSpalte> result = new ArrayList<>();
 		String sql = "SELECT id, vereinnr, spalte, liga_anzeige, mannschaft_anzeige, betreuer FROM config_gesamtspielplan WHERE vereinnr = ? ORDER BY spalte ASC";
-		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql);
-				) {
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql);) {
 			pstmt.setString(1, vereinnr);
 			try (ResultSet rs = pstmt.executeQuery()) {
-			while (rs.next()) {
-				GesamtspielplanConfigSpalte spalte = new GesamtspielplanConfigSpalte();
-				spalte.setId(rs.getInt("id"));
-				spalte.setVereinnr(rs.getString("vereinnr"));
-				spalte.setSpalte(rs.getInt("spalte"));
-				spalte.setLigaAnzeige(rs.getString("liga_anzeige"));
-				spalte.setMannschaftAnzeige(rs.getString("mannschaft_anzeige"));
-				spalte.setBetreuer(rs.getBoolean("betreuer"));
-				result.add(spalte);
-			}
+				while (rs.next()) {
+					GesamtspielplanConfigSpalte spalte = new GesamtspielplanConfigSpalte();
+					spalte.setId(rs.getInt("id"));
+					spalte.setVereinnr(rs.getString("vereinnr"));
+					spalte.setSpalte(rs.getInt("spalte"));
+					spalte.setLigaAnzeige(rs.getString("liga_anzeige"));
+					spalte.setMannschaftAnzeige(rs.getString("mannschaft_anzeige"));
+					spalte.setBetreuer(rs.getBoolean("betreuer"));
+					result.add(spalte);
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -1674,19 +1692,18 @@ public class DatabaseService {
 	public List<GesamtspielplanConfigMannschaft> ladeGesamtspielplanConfigMannschaften(String vereinnr) {
 		List<GesamtspielplanConfigMannschaft> result = new ArrayList<>();
 		String sql = "SELECT id, vereinnr, id_spalte, liga, mannschaft FROM config_gesamtspielplan_mannschaft WHERE vereinnr = ? ORDER BY id_spalte ASC, id ASC";
-		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql);
-				) {
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql);) {
 			pstmt.setString(1, vereinnr);
 			try (ResultSet rs = pstmt.executeQuery()) {
-			while (rs.next()) {
-				GesamtspielplanConfigMannschaft mannschaft = new GesamtspielplanConfigMannschaft();
-				mannschaft.setId(rs.getInt("id"));
-				mannschaft.setVereinnr(rs.getString("vereinnr"));
-				mannschaft.setIdSpalte(rs.getInt("id_spalte"));
-				mannschaft.setLiga(rs.getString("liga"));
-				mannschaft.setMannschaft(rs.getString("mannschaft"));
-				result.add(mannschaft);
-			}
+				while (rs.next()) {
+					GesamtspielplanConfigMannschaft mannschaft = new GesamtspielplanConfigMannschaft();
+					mannschaft.setId(rs.getInt("id"));
+					mannschaft.setVereinnr(rs.getString("vereinnr"));
+					mannschaft.setIdSpalte(rs.getInt("id_spalte"));
+					mannschaft.setLiga(rs.getString("liga"));
+					mannschaft.setMannschaft(rs.getString("mannschaft"));
+					result.add(mannschaft);
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -1722,20 +1739,20 @@ public class DatabaseService {
 			List<GesamtspielplanConfigRunde> runden) {
 		String deleteKinder = "DELETE FROM config_gesamtspielplan_mannschaft WHERE vereinnr = ?";
 		String deleteSpalten = "DELETE FROM config_gesamtspielplan WHERE vereinnr = ?";
-		String deleteRunden = "DELETE FROM config_gesamtspielplan_runde WHERE vereinnr = ?";		
+		String deleteRunden = "DELETE FROM config_gesamtspielplan_runde WHERE vereinnr = ?";
 		String insertSpalte = "INSERT INTO config_gesamtspielplan (vereinnr, spalte, liga_anzeige, mannschaft_anzeige, betreuer) VALUES (?, ?, ?, ?, ?)";
 		String insertMannschaft = "INSERT INTO config_gesamtspielplan_mannschaft (vereinnr, id_spalte, liga, mannschaft) VALUES (?, ?, ?, ?)";
 		String insertRunde = "INSERT INTO config_gesamtspielplan_runde (vereinnr, name, datum_von, datum_bis) VALUES (?, ?, ?, ?)";
-		
+
 		try (Connection conn = openConnection()) {
 			conn.setAutoCommit(false);
 			try (PreparedStatement deleteKinderStmt = conn.prepareStatement(deleteKinder);
-					PreparedStatement deleteRundenStmt = conn.prepareStatement(deleteRunden);					
+					PreparedStatement deleteRundenStmt = conn.prepareStatement(deleteRunden);
 					PreparedStatement deleteSpaltenStmt = conn.prepareStatement(deleteSpalten);
-					PreparedStatement insertSpalteStmt = conn.prepareStatement(insertSpalte, Statement.RETURN_GENERATED_KEYS);
+					PreparedStatement insertSpalteStmt = conn.prepareStatement(insertSpalte,
+							Statement.RETURN_GENERATED_KEYS);
 					PreparedStatement insertMannschaftStmt = conn.prepareStatement(insertMannschaft);
 					PreparedStatement insertRundeStmt = conn.prepareStatement(insertRunde)) {
-
 
 				deleteKinderStmt.setString(1, vereinnr);
 				deleteKinderStmt.executeUpdate();
@@ -1743,26 +1760,25 @@ public class DatabaseService {
 				deleteSpaltenStmt.executeUpdate();
 				deleteRundenStmt.setString(1, vereinnr);
 				deleteRundenStmt.executeUpdate();
-				
 
 				int index = 1;
 				for (GesamtspielplanConfigSpalte spalte : spalten) {
-						insertSpalteStmt.setString(1, vereinnr);
-						insertSpalteStmt.setInt(2, index++);
-						insertSpalteStmt.setString(3, spalte.getLigaAnzeige());
-						insertSpalteStmt.setString(4, spalte.getMannschaftAnzeige());
-						insertSpalteStmt.setBoolean(5, spalte.isBetreuer());
-						insertSpalteStmt.executeUpdate();
+					insertSpalteStmt.setString(1, vereinnr);
+					insertSpalteStmt.setInt(2, index++);
+					insertSpalteStmt.setString(3, spalte.getLigaAnzeige());
+					insertSpalteStmt.setString(4, spalte.getMannschaftAnzeige());
+					insertSpalteStmt.setBoolean(5, spalte.isBetreuer());
+					insertSpalteStmt.executeUpdate();
 					try (ResultSet keys = insertSpalteStmt.getGeneratedKeys()) {
 						if (!keys.next()) {
 							continue;
 						}
 						int idSpalte = keys.getInt(1);
 						for (GesamtspielplanConfigMannschaft mannschaft : spalte.getMannschaften()) {
-								insertMannschaftStmt.setString(1, vereinnr);
-								insertMannschaftStmt.setInt(2, idSpalte);
-								insertMannschaftStmt.setString(3, mannschaft.getLiga());
-								insertMannschaftStmt.setString(4, mannschaft.getMannschaft());
+							insertMannschaftStmt.setString(1, vereinnr);
+							insertMannschaftStmt.setInt(2, idSpalte);
+							insertMannschaftStmt.setString(3, mannschaft.getLiga());
+							insertMannschaftStmt.setString(4, mannschaft.getMannschaft());
 							insertMannschaftStmt.addBatch();
 						}
 					}
@@ -1790,7 +1806,7 @@ public class DatabaseService {
 					insertRundeStmt.addBatch();
 				}
 				insertRundeStmt.executeBatch();
-				
+
 				conn.commit();
 			} catch (SQLException ex) {
 				conn.rollback();
@@ -1850,7 +1866,6 @@ public class DatabaseService {
 		}
 		return result;
 	}
-
 
 	public List<Map<String, String>> ladeAufstellungLigaRangName(String vereinnr) {
 		String sql = "SELECT mannschaft, rang, name FROM aufstellung WHERE vereinnr = ?";
@@ -2504,12 +2519,10 @@ public class DatabaseService {
 			throw new IllegalStateException("Versendete Mail konnte nicht gelöscht werden.", e);
 		}
 	}
-	
 
 	public SpielcodeEintrag ladeSpielcodeEintrag(String uniqueKey, String vereinnr) {
 		String sql = "SELECT t.liga, t.datum, t.zeit, t.heim, t.gast, s.spiel_code, s.pin "
-				+ "FROM spielplan_tabelle t "
-				+ "LEFT JOIN spielcodes s ON s.unique_key = t.unique_key "
+				+ "FROM spielplan_tabelle t " + "LEFT JOIN spielcodes s ON s.unique_key = t.unique_key "
 				+ "WHERE t.unique_key = ?";
 		if (vereinnr != null && !vereinnr.isBlank()) {
 			sql += " AND t.vereinnr = ?";
@@ -2531,8 +2544,8 @@ public class DatabaseService {
 					String pin = rs.getString("pin");
 					eintrag.setSpielCode(spielCode);
 					eintrag.setPin(pin);
-					eintrag.setSpielcodeGefunden((spielCode != null && !spielCode.isBlank())
-							|| (pin != null && !pin.isBlank()));
+					eintrag.setSpielcodeGefunden(
+							(spielCode != null && !spielCode.isBlank()) || (pin != null && !pin.isBlank()));
 					return eintrag;
 				}
 			}
@@ -2541,6 +2554,5 @@ public class DatabaseService {
 		}
 		return null;
 	}
-
 
 }

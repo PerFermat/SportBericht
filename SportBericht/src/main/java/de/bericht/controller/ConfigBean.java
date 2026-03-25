@@ -11,18 +11,22 @@ import de.bericht.util.ConfigBedeutung;
 import de.bericht.util.ConfigEintrag;
 import de.bericht.util.ConfigKategorie;
 import de.bericht.util.ConfigManager;
+import de.bericht.util.OpenAIModelFetcher;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 
 @Named
 @ViewScoped
@@ -48,6 +52,11 @@ public class ConfigBean implements Serializable {
 	private String dialogInhaltformat;
 	private String dialogWertebereich;
 	private List<String> dialogKategorien = new ArrayList<>();
+	private final Map<String, List<String>> enumWerteCache = new HashMap<>();
+	private List<String> chatGptModelle = new ArrayList<>();
+	private ConfigEintrag passwortDialogEintrag;
+	private String passwortDialogAnzeige;
+	private String passwortDialogInput;
 
 	private final ConfigService service = new ConfigService();
 
@@ -72,7 +81,84 @@ public class ConfigBean implements Serializable {
 
 	public void speichern() {
 		service.speichereConfigEintraege(vereinnr, configEintraege);
-		ladeConfigEintraegeMitBedeutung();		
+		ladeConfigEintraegeMitBedeutung();
+	}
+
+	public boolean isFarbFeld(ConfigEintrag eintrag) {
+		return eintrag != null && (Boolean.TRUE.equals(eintrag.getFarbe()) || eintrag.isInhaltformatFarbe());
+	}
+
+
+	
+	public boolean farbFeld(ConfigEintrag eintrag) {
+		return eintrag != null && (Boolean.TRUE.equals(eintrag.getFarbe()) || eintrag.isInhaltformatFarbe());
+	}
+
+	public boolean textFeld(ConfigEintrag eintrag) {
+		return eintrag != null && (eintrag.isInhaltformatText()
+				|| (!isFarbFeld(eintrag) && !eintrag.isInhaltformatZahl() && !eintrag.isInhaltformatEnum()
+						&& !eintrag.isInhaltformatChatGpt() && !eintrag.isInhaltformatPasswort()));
+	}
+
+	public int minWert(ConfigEintrag eintrag) {
+		return leseGrenzen(eintrag)[0];
+	}
+
+	public int maxWert(ConfigEintrag eintrag) {
+		return leseGrenzen(eintrag)[1];
+	}
+
+	public List<String> enumWerte(ConfigEintrag eintrag) {
+		if (eintrag == null || eintrag.getEintrag() == null || eintrag.getEintrag().isBlank()) {
+			return Collections.emptyList();
+		}
+		return enumWerteCache.computeIfAbsent(eintrag.getEintrag(), service::ladeDistinctConfigWerteByEintrag);
+	}
+
+	public List<String> getChatGptModelle() {
+		if (!chatGptModelle.isEmpty()) {
+			return chatGptModelle;
+		}
+		String apiKey = ConfigManager.getChatGptPasswort(vereinnr);
+		if (!isNotBlank(apiKey)) {
+			return Collections.emptyList();
+		}
+		try {
+			OpenAIModelFetcher fetcher = new OpenAIModelFetcher(apiKey);
+			chatGptModelle = fetcher.getModelNames().stream().sorted().collect(Collectors.toList());
+		} catch (Exception e) {
+			return Collections.emptyList();
+		}
+		return chatGptModelle;
+	}
+
+	public void openPasswortDialog(ConfigEintrag eintrag) {
+		passwortDialogEintrag = eintrag;
+		passwortDialogInput = "";
+		passwortDialogAnzeige = "******";
+		if (eintrag == null || !isNotBlank(eintrag.getWert())) {
+			return;
+		}
+		try {
+			String entschluesselt = ConfigManager.decryptPassword(vereinnr, eintrag.getWert());
+			passwortDialogAnzeige = maskierePasswort(entschluesselt);
+		} catch (Exception e) {
+			passwortDialogAnzeige = "******";
+		}
+	}
+
+	public void speicherePasswortDialog() {
+		if (passwortDialogEintrag == null || !isNotBlank(passwortDialogInput)) {
+			return;
+		}
+		try {
+			String verschluesselt = ConfigManager.encryptPassword(vereinnr, passwortDialogInput);
+			passwortDialogEintrag.setWert(verschluesselt);
+			passwortDialogAnzeige = maskierePasswort(passwortDialogInput);
+			passwortDialogInput = "";
+		} catch (Exception e) {
+			// absichtlich leer, Anzeige bleibt unverändert
+		}
 	}
 
 	public void insertHomepage() {
@@ -102,7 +188,7 @@ public class ConfigBean implements Serializable {
 			}
 		}
 		configEintraege = service.ladeConfigEintraege(vereinnr);
-		ladeConfigEintraegeMitBedeutung();		
+		ladeConfigEintraegeMitBedeutung();
 	}
 
 	public void openNeuerKeyDialog() {
@@ -160,12 +246,12 @@ public class ConfigBean implements Serializable {
 			service.insertOrUpdateConfigEintrag(verein, dialogKey.trim(), defaultString(dialogInhalt));
 		}
 
-		service.upsertConfigBedeutung(dialogKey.trim(), defaultString(dialogBedeutung), defaultString(dialogInhaltformat),
-				defaultString(dialogWertebereich));
+		service.upsertConfigBedeutung(dialogKey.trim(), defaultString(dialogBedeutung),
+				defaultString(dialogInhaltformat), defaultString(dialogWertebereich));
 		service.replaceConfigKategorien(dialogKey.trim(), dialogKategorien);
 		ladeConfigEintraegeMitBedeutung();
 	}
-		
+
 	// Getter & Setter
 	public String getVereinnr() {
 		return vereinnr;
@@ -174,7 +260,7 @@ public class ConfigBean implements Serializable {
 	public List<ConfigEintrag> getConfigEintraege() {
 		return configEintraege;
 	}
-	
+
 	private void ladeConfigEintraegeMitBedeutung() {
 		configEintraege = service.ladeConfigEintraege(vereinnr);
 		configBedeutungen = service.ladeConfigBedeutungen();
@@ -188,7 +274,8 @@ public class ConfigBean implements Serializable {
 		verfuegbareKategorien = new ArrayList<>(kategorieSet);
 		verfuegbareInhaltformate = configBedeutungen.values().stream().map(ConfigBedeutung::getInhaltformat)
 				.filter(this::isNotBlank).distinct().sorted().collect(Collectors.toList());
-
+		enumWerteCache.clear();
+		chatGptModelle = new ArrayList<>();
 
 		for (ConfigEintrag eintrag : configEintraege) {
 			ConfigBedeutung bedeutung = findeConfigBedeutung(eintrag.getEintrag());
@@ -230,7 +317,8 @@ public class ConfigBean implements Serializable {
 	}
 
 	public List<ConfigEintrag> getGefilterteConfigEintraege() {
-		return configEintraege.stream().filter(this::passtZurKategorie).filter(this::passtZurSuche).collect(Collectors.toList());
+		return configEintraege.stream().filter(this::passtZurKategorie).filter(this::passtZurSuche)
+				.collect(Collectors.toList());
 	}
 
 	private boolean passtZurKategorie(ConfigEintrag eintrag) {
@@ -242,6 +330,37 @@ public class ConfigBean implements Serializable {
 
 	}
 
+	private int[] leseGrenzen(ConfigEintrag eintrag) {
+		int min = 0;
+		int max = 100;
+		if (eintrag == null || !isNotBlank(eintrag.getWertebereich())) {
+			return new int[] { min, max };
+		}
+		Matcher matcher = Pattern.compile("-?\\d+").matcher(eintrag.getWertebereich());
+		List<Integer> werte = new ArrayList<>();
+		while (matcher.find()) {
+			werte.add(Integer.parseInt(matcher.group()));
+		}
+		if (werte.size() >= 2) {
+			min = Math.min(werte.get(0), werte.get(1));
+			max = Math.max(werte.get(0), werte.get(1));
+		} else if (werte.size() == 1) {
+			max = werte.get(0);
+			if (max < min) {
+				min = max;
+				max = 0;
+			}
+		}
+		return new int[] { min, max };
+	}
+
+	private String maskierePasswort(String klartext) {
+		if (!isNotBlank(klartext)) {
+			return "******";
+		}
+		return "*".repeat(Math.max(6, klartext.length()));
+	}
+
 	private boolean passtZurSuche(ConfigEintrag eintrag) {
 		if (suchText == null || suchText.isBlank()) {
 			return true;
@@ -250,6 +369,7 @@ public class ConfigBean implements Serializable {
 		return containsIgnoreCase(eintrag.getEintrag(), needle) || containsIgnoreCase(eintrag.getWert(), needle)
 				|| containsIgnoreCase(eintrag.getBedeutung(), needle);
 	}
+
 	private String defaultString(String wert) {
 		return wert == null ? "" : wert;
 	}
@@ -262,7 +382,6 @@ public class ConfigBean implements Serializable {
 		return verfuegbareInhaltformate;
 	}
 
-	
 	private boolean containsIgnoreCase(String text, String needle) {
 		return text != null && text.toLowerCase().contains(needle);
 	}
@@ -339,7 +458,6 @@ public class ConfigBean implements Serializable {
 		this.dialogKategorien = dialogKategorien;
 	}
 
-
 	public void encrypt() {
 		try {
 			encryptedPassword = ConfigManager.encryptPassword(vereinnr, emailPassword);
@@ -379,6 +497,18 @@ public class ConfigBean implements Serializable {
 
 	public boolean isTischtennis() {
 		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public String getPasswortDialogAnzeige() {
+		return passwortDialogAnzeige;
+	}
+
+	public String getPasswortDialogInput() {
+		return passwortDialogInput;
+	}
+
+	public void setPasswortDialogInput(String passwortDialogInput) {
+		this.passwortDialogInput = passwortDialogInput;
 	}
 
 	public void zurueck() {

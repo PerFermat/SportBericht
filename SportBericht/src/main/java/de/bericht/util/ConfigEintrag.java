@@ -47,7 +47,32 @@ public class ConfigEintrag {
 			return false;
 		}
 	}
+
+	public boolean isInhaltformatFarbe() {
+		return hasInhaltformat("farbe");
+	}
+
+	public boolean isInhaltformatText() {
+		return hasInhaltformat("text");
+	}
+
+	public boolean isInhaltformatZahl() {
+		return hasInhaltformat("zahl");
+	}
+
+	public boolean isInhaltformatEnum() {
+		return hasInhaltformat("enum");
+	}
+
+	public boolean isInhaltformatChatGpt() {
+		return hasInhaltformat("chatgpt");
+	}
+
+	public boolean isInhaltformatPasswort() {
+		return hasInhaltformat("passwort");
+	}
 	
+
 	public String getBedeutung() {
 		return bedeutung;
 	}
@@ -105,5 +130,9 @@ public class ConfigEintrag {
 	public void setKategorien(String kategorien) {
 		this.kategorien = kategorien;
 	}
+	private boolean hasInhaltformat(String format) {
+		return inhaltformat != null && inhaltformat.trim().equalsIgnoreCase(format);
+	}
+
 
 }

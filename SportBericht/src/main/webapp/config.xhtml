@@ -107,7 +107,7 @@
 				</p:column>
 
 				<p:column headerText="Wert">
-					<ui:fragment rendered="#{eintrag.farbe}">
+					<ui:fragment rendered="#{configBean.farbFeld(eintrag)}">
 						<h:panelGrid columns="3" cellpadding="5"
 							style="border: 0; border-collapse: collapse;">
 							<h:inputText id="hueInput_#{configTable.rowIndex}"
@@ -125,7 +125,33 @@
 
 						</h:panelGrid>
 					</ui:fragment>
-					<ui:fragment rendered="#{not eintrag.farbe}">
+					<ui:fragment rendered="#{eintrag.inhaltformatZahl}">
+						<h:panelGrid columns="2" cellpadding="5"
+							style="border: 0; border-collapse: collapse; width:100%;">
+							<p:inputText id="zahlInput_#{configTable.rowIndex}"
+								value="#{eintrag.wert}" style="width:100%;" />
+							<p:slider for="zahlInput_#{configTable.rowIndex}"
+								minValue="#{configBean.minWert(eintrag)}"
+								maxValue="#{configBean.maxWert(eintrag)}" step="1" />
+						</h:panelGrid>
+					</ui:fragment>
+					<ui:fragment rendered="#{eintrag.inhaltformatEnum}">
+						<p:selectOneMenu value="#{eintrag.wert}" style="width:100%;">
+							<f:selectItems value="#{configBean.enumWerte(eintrag)}" />
+						</p:selectOneMenu>
+					</ui:fragment>
+					<ui:fragment rendered="#{eintrag.inhaltformatChatGpt}">
+						<p:selectOneMenu value="#{eintrag.wert}" style="width:100%;">
+							<f:selectItems value="#{configBean.chatGptModelle}" />
+						</p:selectOneMenu>
+					</ui:fragment>
+					<ui:fragment rendered="#{eintrag.inhaltformatPasswort}">
+						<p:commandButton value="Passwort eingeben"
+							actionListener="#{configBean.openPasswortDialog(eintrag)}"
+							update="passwortDialogForm"
+							oncomplete="PF('passwortDialog').show();" />
+					</ui:fragment>
+					<ui:fragment rendered="#{configBean.textFeld(eintrag)}">
 						<p:inputTextarea value="#{eintrag.wert}" rows="2"
 							autoResize="true" style="width: 100%;" />
 					</ui:fragment>
@@ -207,6 +233,26 @@
 					action="#{configBean.speichereDialog}"
 					update=":configTabelle:configTable configDialogForm"
 					oncomplete="PF('configDialog').hide();" />
+			</div>
+		</h:form>
+	</p:dialog>
+	<p:dialog widgetVar="passwortDialog" modal="true" resizable="false"
+		header="Passwort bearbeiten" width="500">
+		<h:form id="passwortDialogForm">
+			<h:panelGrid columns="2" style="width:100%; row-gap:8px;"
+				columnClasses="ui-g-4,ui-g-8">
+				<h:outputLabel value="Aktuell" />
+				<h:outputText value="#{configBean.passwortDialogAnzeige}" />
+				<h:outputLabel for="passwortInput" value="Neues Passwort" />
+				<p:inputText id="passwortInput"
+					value="#{configBean.passwortDialogInput}" feedback="false"
+					style="width:100%;" />
+			</h:panelGrid>
+			<div style="margin-top: 15px; text-align: right;">
+				<p:commandButton value="Speichern"
+					action="#{configBean.speicherePasswortDialog}"
+					update=":configTabelle:configTable passwortDialogForm"
+					oncomplete="PF('passwortDialog').hide();" />
 			</div>
 		</h:form>
 	</p:dialog>

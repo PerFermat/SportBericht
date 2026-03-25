@@ -25,6 +25,10 @@ public class ConfigService {
 		db.speichereConfigEintraege(vereinnr, eintraege);
 	}
 	
+	public List<String> ladeDistinctConfigWerteByEintrag(String eintrag) {
+		return db.ladeDistinctConfigWerteByEintrag(eintrag);
+	}
+
 
 	public Map<String, ConfigBedeutung> ladeConfigBedeutungen() {
 		return db.ladeConfigBedeutungen();
