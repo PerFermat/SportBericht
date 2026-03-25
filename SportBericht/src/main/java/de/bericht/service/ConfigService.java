@@ -33,5 +33,16 @@ public class ConfigService {
 	public List<ConfigKategorie> ladeConfigKategorien() {
 		return db.ladeConfigKategorien();
 	}
+	public void upsertConfigBedeutung(String configEintrag, String bedeutung, String inhaltformat, String wertebereich) {
+		db.upsertConfigBedeutung(configEintrag, bedeutung, inhaltformat, wertebereich);
+	}
+
+	public void replaceConfigKategorien(String configEintrag, List<String> kategorien) {
+		db.replaceConfigKategorien(configEintrag, kategorien);
+	}
+
+	public void insertOrUpdateConfigEintrag(String vereinnr, String eintrag, String wert) {
+		db.insertOrUpdateConfigEintrag(vereinnr, eintrag, wert);
+	}
 
 }

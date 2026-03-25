@@ -38,10 +38,18 @@ public class ConfigBean implements Serializable {
 	private String suchText;
 	private String ausgewaehlteKategorie;
 	private List<String> verfuegbareKategorien = new ArrayList<>();
-	
 
+	private List<String> verfuegbareInhaltformate = new ArrayList<>();
 
-	private final ConfigService service = new ConfigService(); // Deine DAO/Service
+	private boolean neuerDialog;
+	private String dialogKey;
+	private String dialogInhalt;
+	private String dialogBedeutung;
+	private String dialogInhaltformat;
+	private String dialogWertebereich;
+	private List<String> dialogKategorien = new ArrayList<>();
+
+	private final ConfigService service = new ConfigService();
 
 	@PostConstruct
 	public void init() {
@@ -55,7 +63,6 @@ public class ConfigBean implements Serializable {
 			try {
 				FacesContext.getCurrentInstance().getExternalContext().redirect("fehlenderVerein.xhtml");
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			return;
@@ -98,6 +105,67 @@ public class ConfigBean implements Serializable {
 		ladeConfigEintraegeMitBedeutung();		
 	}
 
+	public void openNeuerKeyDialog() {
+		neuerDialog = true;
+		dialogKey = "";
+		dialogInhalt = "";
+		dialogBedeutung = "";
+		dialogWertebereich = "";
+		dialogInhaltformat = verfuegbareInhaltformate.isEmpty() ? "" : verfuegbareInhaltformate.get(0);
+		dialogKategorien = new ArrayList<>();
+		dialogKategorien.add("");
+	}
+
+	public void openBearbeitenDialog(ConfigEintrag eintrag) {
+		neuerDialog = false;
+		dialogKey = eintrag.getEintrag();
+		dialogInhalt = eintrag.getWert();
+		dialogBedeutung = defaultString(eintrag.getBedeutung());
+		dialogInhaltformat = defaultString(eintrag.getInhaltformat());
+		dialogWertebereich = defaultString(eintrag.getWertebereich());
+		dialogKategorien = new ArrayList<>();
+		List<String> vorhandeneKategorien = findeKategorien(eintrag.getEintrag());
+		if (vorhandeneKategorien != null && !vorhandeneKategorien.isEmpty()) {
+			dialogKategorien.addAll(vorhandeneKategorien);
+		}
+		if (dialogKategorien.isEmpty()) {
+			dialogKategorien.add("");
+		}
+	}
+
+	public void addKategorieZeile() {
+		if (dialogKategorien == null) {
+			dialogKategorien = new ArrayList<>();
+		}
+		dialogKategorien.add("");
+	}
+
+	public void removeKategorieZeile(int index) {
+		if (dialogKategorien == null || index < 0 || index >= dialogKategorien.size()) {
+			return;
+		}
+		dialogKategorien.remove(index);
+		if (dialogKategorien.isEmpty()) {
+			dialogKategorien.add("");
+		}
+	}
+
+	public void speichereDialog() {
+		if (dialogKey == null || dialogKey.isBlank()) {
+			return;
+		}
+
+		List<String> vereine = service.ladeAlleVereine();
+		for (String verein : vereine) {
+			service.insertOrUpdateConfigEintrag(verein, dialogKey.trim(), defaultString(dialogInhalt));
+		}
+
+		service.upsertConfigBedeutung(dialogKey.trim(), defaultString(dialogBedeutung), defaultString(dialogInhaltformat),
+				defaultString(dialogWertebereich));
+		service.replaceConfigKategorien(dialogKey.trim(), dialogKategorien);
+		ladeConfigEintraegeMitBedeutung();
+	}
+		
 	// Getter & Setter
 	public String getVereinnr() {
 		return vereinnr;
@@ -118,6 +186,10 @@ public class ConfigBean implements Serializable {
 			kategorieSet.add(kategorie.getKategorie());
 		}
 		verfuegbareKategorien = new ArrayList<>(kategorieSet);
+		verfuegbareInhaltformate = configBedeutungen.values().stream().map(ConfigBedeutung::getInhaltformat)
+				.filter(this::isNotBlank).distinct().sorted().collect(Collectors.toList());
+
+
 		for (ConfigEintrag eintrag : configEintraege) {
 			ConfigBedeutung bedeutung = findeConfigBedeutung(eintrag.getEintrag());
 			if (bedeutung != null) {
@@ -165,7 +237,9 @@ public class ConfigBean implements Serializable {
 		if (ausgewaehlteKategorie == null || ausgewaehlteKategorie.isBlank()) {
 			return true;
 		}
-		return eintrag.getKategorien() != null && eintrag.getKategorien().toLowerCase().contains(ausgewaehlteKategorie.toLowerCase());
+		return eintrag.getKategorien() != null
+				&& eintrag.getKategorien().toLowerCase().contains(ausgewaehlteKategorie.toLowerCase());
+
 	}
 
 	private boolean passtZurSuche(ConfigEintrag eintrag) {
@@ -176,7 +250,19 @@ public class ConfigBean implements Serializable {
 		return containsIgnoreCase(eintrag.getEintrag(), needle) || containsIgnoreCase(eintrag.getWert(), needle)
 				|| containsIgnoreCase(eintrag.getBedeutung(), needle);
 	}
+	private String defaultString(String wert) {
+		return wert == null ? "" : wert;
+	}
 
+	private boolean isNotBlank(String wert) {
+		return wert != null && !wert.isBlank();
+	}
+
+	public List<String> getVerfuegbareInhaltformate() {
+		return verfuegbareInhaltformate;
+	}
+
+	
 	private boolean containsIgnoreCase(String text, String needle) {
 		return text != null && text.toLowerCase().contains(needle);
 	}
@@ -201,9 +287,60 @@ public class ConfigBean implements Serializable {
 		return verfuegbareKategorien;
 	}
 
+	public boolean isNeuerDialog() {
+		return neuerDialog;
+	}
+
+	public String getDialogKey() {
+		return dialogKey;
+	}
+
+	public void setDialogKey(String dialogKey) {
+		this.dialogKey = dialogKey;
+	}
+
+	public String getDialogInhalt() {
+		return dialogInhalt;
+	}
+
+	public void setDialogInhalt(String dialogInhalt) {
+		this.dialogInhalt = dialogInhalt;
+	}
+
+	public String getDialogBedeutung() {
+		return dialogBedeutung;
+	}
+
+	public void setDialogBedeutung(String dialogBedeutung) {
+		this.dialogBedeutung = dialogBedeutung;
+	}
+
+	public String getDialogInhaltformat() {
+		return dialogInhaltformat;
+	}
+
+	public void setDialogInhaltformat(String dialogInhaltformat) {
+		this.dialogInhaltformat = dialogInhaltformat;
+	}
+
+	public String getDialogWertebereich() {
+		return dialogWertebereich;
+	}
+
+	public void setDialogWertebereich(String dialogWertebereich) {
+		this.dialogWertebereich = dialogWertebereich;
+	}
+
+	public List<String> getDialogKategorien() {
+		return dialogKategorien;
+	}
+
+	public void setDialogKategorien(List<String> dialogKategorien) {
+		this.dialogKategorien = dialogKategorien;
+	}
+
 
 	public void encrypt() {
-
 		try {
 			encryptedPassword = ConfigManager.encryptPassword(vereinnr, emailPassword);
 		} catch (Exception e) {

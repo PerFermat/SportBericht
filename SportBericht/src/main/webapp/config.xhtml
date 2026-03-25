@@ -94,7 +94,16 @@
 				editable="true" styleClass="config-table" style="width: 100%">
 
 				<p:column headerText="Key" style="width: 30%;">
-					<h:outputText value="#{eintrag.eintrag}" />
+					<h:panelGroup layout="block">
+						<p:commandButton icon="pi pi-pencil" title="Bearbeiten"
+							styleClass="p-button-rounded p-button-text p-button-sm"
+							actionListener="#{configBean.openBearbeitenDialog(eintrag)}"
+							update="configDialogForm" oncomplete="PF('configDialog').show();" />
+						<h:outputText value="#{eintrag.eintrag}"
+							style="font-weight: bold;" />
+						<h:outputText value="#{eintrag.bedeutung}"
+							style="display:block; font-size: 0.8rem; color: #666; margin-top: 4px;" />
+					</h:panelGroup>
 				</p:column>
 
 				<p:column headerText="Wert">
@@ -128,6 +137,9 @@
 			<div class="button4-container">
 				<p:commandButton value="Speichern" action="#{configBean.speichern}"
 					update="configTable" />
+				<p:commandButton value="Neuer Key"
+					actionListener="#{configBean.openNeuerKeyDialog}"
+					update="configDialogForm" oncomplete="PF('configDialog').show();" />
 				<p:commandButton value="Aktuallisieren Homepage-Configs-Einträge"
 					action="#{configBean.insertHomepage}" update="configTable" />
 				<p:commandButton value="Zurück" action="index.xhtml">
@@ -137,6 +149,67 @@
 
 		</p:panel>
 	</h:form>
+	<p:dialog widgetVar="configDialog" modal="true" resizable="false"
+		header="#{configBean.neuerDialog ? 'Neuer Key' : 'Key bearbeiten'}"
+		width="700">
+		<h:form id="configDialogForm">
+			<h:panelGrid columns="2" columnClasses="ui-g-3,ui-g-9"
+				style="width:100%; row-gap:8px;">
+				<h:outputLabel for="dialogKey" value="Key" />
+				<p:inputText id="dialogKey" value="#{configBean.dialogKey}"
+					style="width:100%;" />
+
+				<h:outputLabel for="dialogInhalt" value="Inhalt" />
+				<p:inputTextarea id="dialogInhalt"
+					value="#{configBean.dialogInhalt}" rows="2" autoResize="true"
+					style="width:100%;" />
+
+				<h:outputLabel for="dialogBedeutung" value="Bedeutung" />
+				<p:inputTextarea id="dialogBedeutung"
+					value="#{configBean.dialogBedeutung}" rows="2" autoResize="true"
+					style="width:100%;" />
+
+				<h:outputLabel for="dialogInhaltformat" value="Inhaltformat" />
+				<p:selectOneMenu id="dialogInhaltformat"
+					value="#{configBean.dialogInhaltformat}" style="width:100%;">
+					<f:selectItem itemLabel="Bitte wählen" itemValue="" />
+					<f:selectItems value="#{configBean.verfuegbareInhaltformate}" />
+				</p:selectOneMenu>
+
+				<h:outputLabel for="dialogWertebereich" value="Wertebereich" />
+				<p:inputText id="dialogWertebereich"
+					value="#{configBean.dialogWertebereich}" style="width:100%;" />
+			</h:panelGrid>
+
+			<h3>Kategorien</h3>
+			<ui:repeat value="#{configBean.dialogKategorien}" var="kategorie"
+				varStatus="status">
+				<h:panelGrid columns="2" style="width:100%; margin-bottom:6px;"
+					columnClasses="ui-g-11,ui-g-1">
+					<p:selectOneMenu
+						value="#{configBean.dialogKategorien[status.index]}"
+						style="width:100%;" editable="true">
+						<f:selectItem itemLabel="Vorhandene wählen" itemValue="" />
+						<f:selectItems value="#{configBean.verfuegbareKategorien}" />
+					</p:selectOneMenu>
+					<p:commandButton icon="pi pi-times"
+						actionListener="#{configBean.removeKategorieZeile(status.index)}"
+						update="configDialogForm"
+						styleClass="p-button-rounded p-button-text p-button-danger" />
+				</h:panelGrid>
+			</ui:repeat>
+			<p:commandButton value="+ Kategorie"
+				actionListener="#{configBean.addKategorieZeile}"
+				update="configDialogForm" styleClass="p-button-text" />
+
+			<div style="margin-top: 15px; text-align: right;">
+				<p:commandButton value="Speichern"
+					action="#{configBean.speichereDialog}"
+					update=":configTabelle:configTable configDialogForm"
+					oncomplete="PF('configDialog').hide();" />
+			</div>
+		</h:form>
+	</p:dialog>
 </h:body>
 </html>
 

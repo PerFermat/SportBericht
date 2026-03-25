@@ -1168,6 +1168,54 @@ public class DatabaseService {
 		}
 	}
 
+	public void upsertConfigBedeutung(String configEintrag, String bedeutung, String inhaltformat, String wertebereich) {
+		String sql = "INSERT INTO config_Bedeutung (config_eintrag, bedeutung, inhaltformat, wertebereich) "
+				+ "VALUES (?, ?, ?, ?) "
+				+ "ON DUPLICATE KEY UPDATE bedeutung = VALUES(bedeutung), inhaltformat = VALUES(inhaltformat), wertebereich = VALUES(wertebereich)";
+
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, configEintrag);
+			pstmt.setString(2, bedeutung);
+			pstmt.setString(3, inhaltformat);
+			pstmt.setString(4, wertebereich);
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void replaceConfigKategorien(String configEintrag, List<String> kategorien) {
+		String deleteSql = "DELETE FROM config_Kategorie WHERE config_eintrag = ?";
+		String insertSql = "INSERT INTO config_Kategorie (config_eintrag, kategorie) VALUES (?, ?)";
+
+		try (Connection conn = openConnection()) {
+			try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+				deleteStmt.setString(1, configEintrag);
+				deleteStmt.executeUpdate();
+			}
+
+			if (kategorien == null) {
+				return;
+			}
+
+			try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+				for (String kategorie : kategorien) {
+					if (kategorie == null || kategorie.isBlank()) {
+						continue;
+					}
+					insertStmt.setString(1, configEintrag);
+					insertStmt.setString(2, kategorie.trim());
+					insertStmt.addBatch();
+				}
+				insertStmt.executeBatch();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	
 	public void saveOrUpdateSpielstatistik(String vereinnr, String ergebnisLink, String spielstatistik) {
 
 		String selectSql = "SELECT spielstatistik FROM berichte WHERE vereinnr = ? AND ergebnisLink = ?";
