@@ -48,5 +48,11 @@ public class ConfigService {
 	public void insertOrUpdateConfigEintrag(String vereinnr, String eintrag, String wert) {
 		db.insertOrUpdateConfigEintrag(vereinnr, eintrag, wert);
 	}
+	
+	public void insertConfigEintrag(String vereinnr, String eintrag, String wert) {
+		db.insertConfigEintrag(vereinnr, eintrag, wert);
+	}
+
+
 
 }

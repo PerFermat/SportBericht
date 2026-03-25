@@ -107,6 +107,11 @@ public class ConfigBean implements Serializable {
 	public int maxWert(ConfigEintrag eintrag) {
 		return leseGrenzen(eintrag)[1];
 	}
+	
+	public int schrittweite(ConfigEintrag eintrag) {
+		return leseGrenzen(eintrag)[2];
+	}
+
 
 	public List<String> enumWerte(ConfigEintrag eintrag) {
 		if (eintrag == null || eintrag.getEintrag() == null || eintrag.getEintrag().isBlank()) {
@@ -235,14 +240,18 @@ public class ConfigBean implements Serializable {
 			return;
 		}
 
-		List<String> vereine = service.ladeAlleVereine();
-		for (String verein : vereine) {
-			service.insertOrUpdateConfigEintrag(verein, dialogKey.trim(), "");
+		String bereinigterKey = dialogKey.trim();
+		if (neuerDialog) {
+			List<String> vereine = service.ladeAlleVereine();
+			for (String verein : vereine) {
+				service.insertConfigEintrag(verein, bereinigterKey, "");
+			}
+
 		}
 
-		service.upsertConfigBedeutung(dialogKey.trim(), defaultString(dialogBedeutung),
+		service.upsertConfigBedeutung(bereinigterKey, defaultString(dialogBedeutung),
 				defaultString(dialogInhaltformat), defaultString(dialogWertebereich));
-		service.replaceConfigKategorien(dialogKey.trim(), dialogKategorien);
+		service.replaceConfigKategorien(bereinigterKey, dialogKategorien);
 		ladeConfigEintraegeMitBedeutung();
 	}
 
@@ -351,25 +360,35 @@ public class ConfigBean implements Serializable {
 	private int[] leseGrenzen(ConfigEintrag eintrag) {
 		int min = 0;
 		int max = 100;
+		int schritt = 1;
 		if (eintrag == null || !isNotBlank(eintrag.getWertebereich())) {
-			return new int[] { min, max };
+			return new int[] { min, max, schritt };
 		}
-		Matcher matcher = Pattern.compile("-?\\d+").matcher(eintrag.getWertebereich());
-		List<Integer> werte = new ArrayList<>();
-		while (matcher.find()) {
-			werte.add(Integer.parseInt(matcher.group()));
-		}
-		if (werte.size() >= 2) {
-			min = Math.min(werte.get(0), werte.get(1));
-			max = Math.max(werte.get(0), werte.get(1));
-		} else if (werte.size() == 1) {
-			max = werte.get(0);
-			if (max < min) {
-				min = max;
-				max = 0;
+
+		String[] teile = eintrag.getWertebereich().split(";");
+		try {
+			if (teile.length >= 1 && isNotBlank(teile[0])) {
+				min = Integer.parseInt(teile[0].trim());
 			}
+			if (teile.length >= 2 && isNotBlank(teile[1])) {
+				max = Integer.parseInt(teile[1].trim());
+			}
+			if (teile.length >= 3 && isNotBlank(teile[2])) {
+				schritt = Integer.parseInt(teile[2].trim());
+			}
+		} catch (NumberFormatException e) {
+			return new int[] { 0, 100, 1 };
 		}
-		return new int[] { min, max };
+
+		if (max < min) {
+			int tmp = min;
+			min = max;
+			max = tmp;
+		}
+		if (schritt <= 0) {
+			schritt = 1;
+		}
+		return new int[] { min, max, schritt };
 	}
 
 

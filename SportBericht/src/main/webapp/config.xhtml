@@ -38,41 +38,10 @@
 			</p:commandButton>
 		</h:form>
 	</div>
-	<!-- Container, der Eingabefeld und Fehlerbereich sowie die jeweiligen Buttons enthält -->
-	<div class="text-container">
-		<h:form style="text-align: center;">
-			<h2>Passwort-Verschlüsselung</h2>
-			<p>
-				Bitte geben Sie Ihr echtes Passwort unten ein.<br /> Nach dem Klick
-				auf „Verschlüsseln“ erhalten Sie einen geheimen Schlüssel
-				(secretKey),<br /> den Sie in der Konfigurationsseite unter dem
-				Eintrag <strong>password</strong> einfügen müssen.
-			</p>
-
-			<h:outputLabel for="emailPass" value="Passwort:" />
-			<h:inputSecret id="emailPass" value="#{configBean.emailPassword}"
-				required="true" />
-			<br />
-			<br />
-
-			<p:commandButton value="Verschlüsseln" action="#{configBean.encrypt}"
-				update="berichtForm">
-			</p:commandButton>
-			<br />
-			<br />
-		</h:form>
-		<h:form id="berichtForm" enctype="multipart/form-data"
-			style="text-align: center;">
-			<h2>SecretKey für Config:</h2>
-			<h:outputText value="#{configBean.encryptedPassword}"
-				style="display:block; font-weight:bold; color:green; margin-top:5px" />
-
-		</h:form>
-	</div>
 	<h:form style="text-align: center;">
 		<h2>Config-Einstellungen</h2>
 	</h:form>
-	<h:form id="configTabelle">
+	<h:form id="configTabelle"  style="max-width: 1500px; margin: 0 auto;">
 		<p:panel header="Konfiguration">
 			<h:panelGrid columns="4" style="width:100%; margin-bottom:10px;">
 				<h:outputLabel for="suchfeld" value="Suche:" />
@@ -98,6 +67,7 @@
 						<p:commandButton icon="pi pi-pencil" title="Bearbeiten"
 							styleClass="p-button-rounded p-button-text p-button-sm"
 							actionListener="#{configBean.openBearbeitenDialog(eintrag)}"
+							process="@this" immediate="true"
 							update=":configDialogForm"
 							oncomplete="PF('configDialog').show();" />
 						<h:outputText value="#{eintrag.eintrag}"
@@ -126,14 +96,15 @@
 
 						</h:panelGrid>
 					</ui:fragment>
-					<ui:fragment rendered="#{eintrag.inhaltformatZahl}">
+						<ui:fragment rendered="#{eintrag.inhaltformatZahl and not configBean.farbFeld(eintrag)}">
 						<h:panelGrid columns="2" cellpadding="5"
 							style="border: 0; border-collapse: collapse; width:100%;">
 							<p:inputText id="zahlInput_#{configTable.rowIndex}"
 								value="#{eintrag.wert}" style="width:100%;" />
 							<p:slider for="zahlInput_#{configTable.rowIndex}"
 								minValue="#{configBean.minWert(eintrag)}"
-								maxValue="#{configBean.maxWert(eintrag)}" step="1" />
+								maxValue="#{configBean.maxWert(eintrag)}"
+								step="#{configBean.schrittweite(eintrag)}" />
 						</h:panelGrid>
 					</ui:fragment>
 					<ui:fragment rendered="#{eintrag.inhaltformatEnum}">
@@ -149,7 +120,8 @@
 					<ui:fragment rendered="#{eintrag.inhaltformatPasswort}">
 						<p:commandButton value="Passwort eingeben"
 							actionListener="#{configBean.openPasswortDialog(eintrag)}"
-							update="passwortDialogForm"
+							process="@this" immediate="true"
+							update=":passwortDialogForm"
 							oncomplete="PF('passwortDialog').show();" />
 					</ui:fragment>
 					<ui:fragment rendered="#{configBean.textFeld(eintrag)}">
@@ -166,6 +138,7 @@
 					update="configTable" />
 				<p:commandButton value="Neuer Key"
 					actionListener="#{configBean.openNeuerKeyDialog}"
+					process="@this" immediate="true"					
 					update=":configDialogForm" oncomplete="PF('configDialog').show();" />
 				<p:commandButton value="Aktuallisieren Homepage-Configs-Einträge"
 					action="#{configBean.insertHomepage}" update="configTable" />
