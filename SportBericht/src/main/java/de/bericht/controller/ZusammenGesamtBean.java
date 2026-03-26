@@ -51,7 +51,7 @@ public class ZusammenGesamtBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private List<Spiel> spieleFreigegeben;
 	private String username;
-	private String password;
+	private String passwort;
 	private String berichte;
 	private String ueberschrift;
 	private String berichtDatum;
@@ -500,12 +500,12 @@ public class ZusammenGesamtBean implements Serializable {
 		this.username = username;
 	}
 
-	public String getPassword() {
-		return password;
+	public String getPasswort() {
+		return passwort;
 	}
 
-	public void setPassword(String password) {
-		this.password = password;
+	public void setPasswort(String passwort) {
+		this.passwort = passwort;
 	}
 
 	public void login() {
@@ -522,7 +522,7 @@ public class ZusammenGesamtBean implements Serializable {
 	}
 
 	public List<String> getKategorie() throws IOException, InterruptedException, URISyntaxException {
-		WordPressAPIClient client = new WordPressAPIClient(vereinnr, username, password, name);
+		WordPressAPIClient client = new WordPressAPIClient(vereinnr, username, passwort, name);
 		return client.getCategoryNames(vereinnr);
 	}
 
@@ -543,7 +543,7 @@ public class ZusammenGesamtBean implements Serializable {
 
 		String subject = ueberschrift;
 
-		WordPressAPIClient client = new WordPressAPIClient(vereinnr, username, password, name);
+		WordPressAPIClient client = new WordPressAPIClient(vereinnr, username, passwort, name);
 		if (!bildArray.isEmpty()) {
 			for (Bilddaten bild : bildArray) {
 				WordpressMedia media = client.uploadMediaAndInsertIntoPost(bild.getBildDaten(), bild.getBildName(),

@@ -55,7 +55,7 @@ public final class DatabaseSchemaInitializer {
 
 		ConfigManager config = ConfigManager.getInstance();
 		return DriverManager.getConnection(buildJdbcUrl(config), config.getDatabaseUser(),
-				config.getDatabasePassword());
+				config.getDatabasePasswort());
 	}
 
 	private static DataSource getDataSourceOrNull() {

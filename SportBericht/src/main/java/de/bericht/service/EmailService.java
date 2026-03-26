@@ -91,7 +91,7 @@ public class EmailService {
 			@Override
 			protected PasswordAuthentication getPasswordAuthentication() {
 				return new PasswordAuthentication(ConfigManager.getConfigValue(vereinnr, "mail.username"),
-						ConfigManager.getMailPassword(vereinnr));
+						ConfigManager.getMailPasswort(vereinnr));
 			}
 		});
 

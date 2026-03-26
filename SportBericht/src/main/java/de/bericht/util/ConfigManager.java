@@ -25,7 +25,7 @@ import de.bericht.util.enums.SportartVerein;
 public class ConfigManager {
 	private static ConfigManager instance;
 	private Properties properties;
-	private static String password = "HängtT@geEbenNetzAmerik@n!sch3Bund3sk@nz1er!n@ng3l4Merk3l";
+	private static String passwort = "HängtT@geEbenNetzAmerik@n!sch3Bund3sk@nz1er!n@ng3l4Merk3l";
 	private static final Cache<String, ConcurrentHashMap<String, String>> cache = Caffeine.newBuilder()
 			.maximumSize(10_000).expireAfterWrite(Duration.ofMinutes(500_000)).build();
 
@@ -120,14 +120,14 @@ public class ConfigManager {
 		return resolveProperty("database.user", "DATABASE_USER");
 	}
 
-	public String getDatabasePassword() {
-		String encrypted = resolveProperty("database.password", "DATABASE_PASSWORD");
+	public String getDatabasePasswort() {
+		String encrypted = resolveProperty("database.passwort", "DATABASE_Passwort");
 		if (encrypted == null || encrypted.isBlank()) {
 			return encrypted;
 		}
 
 		try {
-			String decrypted = decryptPassword("", encrypted);
+			String decrypted = decryptPasswort("", encrypted);
 			return decrypted;
 		} catch (Exception e) {
 			return encrypted;
@@ -151,7 +151,7 @@ public class ConfigManager {
 	public String getTelegrammToken(String vereinnr) {
 		String encrypted = getConfigValue(vereinnr, "telegramm.token");
 		try {
-			String decrypted = decryptPassword(vereinnr, encrypted);
+			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -179,10 +179,10 @@ public class ConfigManager {
 		return getConfigValue(vereinnr, "mail.username");
 	}
 
-	public static String getMailPassword(String vereinnr) {
-		String encrypted = getConfigValue(vereinnr, "mail.password");
+	public static String getMailPasswort(String vereinnr) {
+		String encrypted = getConfigValue(vereinnr, "mail.passwort");
 		try {
-			String decrypted = decryptPassword(vereinnr, encrypted);
+			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -190,10 +190,21 @@ public class ConfigManager {
 		}
 	}
 
-	public static String getAdresslistePassword(String vereinnr) {
-		String encrypted = getConfigValue(vereinnr, "adressliste.password");
+	public static String getUserPasswort(String vereinnr) {
+		String encrypted = getConfigValue(vereinnr, "user.passwort");
 		try {
-			String decrypted = decryptPassword(vereinnr, encrypted);
+			String decrypted = decryptPasswort(vereinnr, encrypted);
+			return decrypted;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static String getAdminPasswort(String vereinnr) {
+		String encrypted = getConfigValue(vereinnr, "admin.passwort");
+		try {
+			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -202,9 +213,9 @@ public class ConfigManager {
 	}
 
 	public static String getChatGptPasswort(String vereinnr) {
-		String encrypted = getConfigValue(vereinnr, "bericht.ki.password");
+		String encrypted = getConfigValue(vereinnr, "bericht.ki.passwort");
 		try {
-			String decrypted = decryptPassword(vereinnr, encrypted);
+			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -237,12 +248,12 @@ public class ConfigManager {
 		return -1; // Suche nicht gefunden
 	}
 
-	public static String encryptPassword(String vereinnr, String emailPassword) throws Exception {
+	public static String encryptPasswort(String vereinnr, String emailPasswort) throws Exception {
 		byte[] salt = new byte[16];
 		new SecureRandom().nextBytes(salt);
 
-		String masterPassword = password + vereinnr;
-		SecretKeySpec secretKey = deriveKey(masterPassword, salt);
+		String masterPasswort = passwort + vereinnr;
+		SecretKeySpec secretKey = deriveKey(masterPasswort, salt);
 
 		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 		byte[] iv = new byte[16];
@@ -250,7 +261,7 @@ public class ConfigManager {
 		IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
 		cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
-		byte[] encrypted = cipher.doFinal(emailPassword.getBytes("UTF-8"));
+		byte[] encrypted = cipher.doFinal(emailPasswort.getBytes("UTF-8"));
 
 		byte[] combined = new byte[salt.length + iv.length + encrypted.length];
 		System.arraycopy(salt, 0, combined, 0, salt.length);
@@ -260,29 +271,29 @@ public class ConfigManager {
 		return Base64.getEncoder().encodeToString(combined);
 	}
 
-	private static SecretKeySpec deriveKey(String password, byte[] salt) throws Exception {
-		PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
+	private static SecretKeySpec deriveKey(String passwort, byte[] salt) throws Exception {
+		PBEKeySpec spec = new PBEKeySpec(passwort.toCharArray(), salt, 65536, 256);
 		SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
 		byte[] key = factory.generateSecret(spec).getEncoded();
 		return new SecretKeySpec(key, "AES");
 	}
 
-	public static String decryptPassword(String vereinnr, String encrypted) throws Exception {
+	public static String decryptPasswort(String vereinnr, String encrypted) throws Exception {
 		byte[] combined = Base64.getDecoder().decode(encrypted);
 
 		byte[] salt = new byte[16];
 		byte[] iv = new byte[16];
-		byte[] encryptedPassword = new byte[combined.length - 32];
+		byte[] encryptedPasswort = new byte[combined.length - 32];
 
 		System.arraycopy(combined, 0, salt, 0, 16);
 		System.arraycopy(combined, 16, iv, 0, 16);
-		System.arraycopy(combined, 32, encryptedPassword, 0, encryptedPassword.length);
-		String masterPassword = password + vereinnr;
-		SecretKeySpec secretKey = deriveKey(masterPassword, salt);
+		System.arraycopy(combined, 32, encryptedPasswort, 0, encryptedPasswort.length);
+		String masterPasswort = passwort + vereinnr;
+		SecretKeySpec secretKey = deriveKey(masterPasswort, salt);
 
 		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 		cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
-		byte[] decrypted = cipher.doFinal(encryptedPassword);
+		byte[] decrypted = cipher.doFinal(encryptedPasswort);
 
 		return new String(decrypted, "UTF-8");
 	}

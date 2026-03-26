@@ -4,7 +4,7 @@ import mysql.connector
 DB_CONFIG = {
     'host': '87.106.133.140',
     'user': 'michaelremote',
-    'password': 'Neue$K0ll3genKur$B1sl@ng',
+    'passwort': 'Neue$K0ll3genKur$B1sl@ng',
     'database': 'TischtennisBericht',
     'port': 3306  # Optional, Standardport für MariaDB
 }

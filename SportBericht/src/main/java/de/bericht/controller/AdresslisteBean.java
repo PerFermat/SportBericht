@@ -115,7 +115,9 @@ public class AdresslisteBean implements Serializable {
 			return;
 		}
 		schreibzugriff = pruefeSchreibzugriff(request.getParameter("p"));
-		if (schreibzugriff || "tsgv000".equals(request.getParameter("p"))) {
+		String userPasswort = ConfigManager.getUserPasswort(vereinnr);
+		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);		
+		if (userPasswort.equals(request.getParameter("p")) | adminPasswort.equals(request.getParameter("p"))) {
 			ladeEintraege();
 		} else {
 			eintraege = new ArrayList<>();
@@ -737,7 +739,7 @@ public class AdresslisteBean implements Serializable {
 			return false;
 		}
 
-		String konfigPasswort = ConfigManager.getAdresslistePassword(vereinnr);
+		String konfigPasswort = ConfigManager.getAdminPasswort(vereinnr);
 		if (konfigPasswort == null || konfigPasswort.isBlank()) {
 			return false;
 		}
@@ -747,7 +749,7 @@ public class AdresslisteBean implements Serializable {
 		}
 
 		try {
-			String entschluesselt = ConfigManager.decryptPassword(vereinnr, konfigPasswort);
+			String entschluesselt = ConfigManager.decryptPasswort(vereinnr, konfigPasswort);
 			return passwortAusUrl.equals(entschluesselt);
 		} catch (Exception e) {
 			return false;

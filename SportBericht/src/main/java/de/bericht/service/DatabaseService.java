@@ -2409,7 +2409,7 @@ public class DatabaseService {
 			return ds.getConnection();
 		}
 
-		return DriverManager.getConnection(buildJdbcUrl(), config.getDatabaseUser(), config.getDatabasePassword());
+		return DriverManager.getConnection(buildJdbcUrl(), config.getDatabaseUser(), config.getDatabasePasswort());
 	}
 
 	private DataSource getDataSourceOrNull() {

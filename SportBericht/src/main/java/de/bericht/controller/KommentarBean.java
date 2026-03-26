@@ -23,7 +23,7 @@ public class KommentarBean implements Serializable {
 	private String name = "tt-hattenhofen";
 	private String username;
 	private String vereinnr;
-	private String password;
+	private String passwort;
 	private String selectedPostUrl;
 
 	private List<WpComment> comments;
@@ -45,12 +45,12 @@ public class KommentarBean implements Serializable {
 		this.name = request.getParameter("name");
 		this.username = request.getParameter("username");
 		try {
-			String hashPassword = request.getParameter("password");
-			this.password = ConfigManager.decryptPassword(vereinnr, hashPassword);
+			String hashPasswort = request.getParameter("passwort");
+			this.passwort = ConfigManager.decryptPasswort(vereinnr, hashPasswort);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		if (this.name != null && this.username != null && this.password != null) {
+		if (this.name != null && this.username != null && this.passwort != null) {
 			loadComments();
 			selectedPostUrl = ConfigManager.getWordpressValue(vereinnr, name, "domain");
 		}
@@ -58,7 +58,7 @@ public class KommentarBean implements Serializable {
 
 	public void loadComments() {
 		try {
-			WordPressAPIClient api = new WordPressAPIClient(vereinnr, username, password, name);
+			WordPressAPIClient api = new WordPressAPIClient(vereinnr, username, passwort, name);
 			if (api.getFehler() == 0) {
 				comments = api.fetchAllComments();
 			}
@@ -69,7 +69,7 @@ public class KommentarBean implements Serializable {
 
 	public void trashComment(WpComment comment) {
 		try {
-			WordPressAPIClient api = new WordPressAPIClient(vereinnr, username, password, name);
+			WordPressAPIClient api = new WordPressAPIClient(vereinnr, username, passwort, name);
 			if (api.getFehler() == 0) {
 				api.trashComment(comment);
 				loadComments(); // neu laden
@@ -81,7 +81,7 @@ public class KommentarBean implements Serializable {
 
 	public void approveComment(WpComment comment) {
 		try {
-			WordPressAPIClient api = new WordPressAPIClient(vereinnr, username, password, name);
+			WordPressAPIClient api = new WordPressAPIClient(vereinnr, username, passwort, name);
 			if (api.getFehler() == 0) {
 				api.approveComment(comment);
 				loadComments(); // neu laden
@@ -93,7 +93,7 @@ public class KommentarBean implements Serializable {
 
 	public void markAsSpam(WpComment comment) {
 		try {
-			WordPressAPIClient api = new WordPressAPIClient(vereinnr, username, password, name);
+			WordPressAPIClient api = new WordPressAPIClient(vereinnr, username, passwort, name);
 			if (api.getFehler() == 0) {
 				api.markCommentAsSpam(comment);
 				loadComments(); // neu laden
@@ -112,8 +112,8 @@ public class KommentarBean implements Serializable {
 		return username;
 	}
 
-	public String getPassword() {
-		return password;
+	public String getPasswort() {
+		return passwort;
 	}
 
 	public List<WpComment> getComments() {
@@ -133,8 +133,8 @@ public class KommentarBean implements Serializable {
 		this.username = username;
 	}
 
-	public void setPassword(String password) {
-		this.password = password;
+	public void setPasswort(String passwort) {
+		this.passwort = passwort;
 	}
 
 	public List<String> getHomepages() throws IOException, InterruptedException, URISyntaxException {

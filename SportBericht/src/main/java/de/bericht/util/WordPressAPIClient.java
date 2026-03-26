@@ -41,22 +41,22 @@ public class WordPressAPIClient {
 	 *
 	 * @param domain   Die Domain deines WordPress (z.B. "http://deinedomain.com")
 	 * @param username Dein WordPress-Benutzername
-	 * @param password Dein Anwendungspasswort
+	 * @param passwort Dein Anwendungspasswort
 	 */
-	public WordPressAPIClient(String vereinnr, String username, String password, String name) {
+	public WordPressAPIClient(String vereinnr, String username, String passwort, String name) {
 		if (name == null) {
 			evaluateResponseStatus(-1, "WordPressAPIClient");
 			return;
 		}
 		this.name = name;
 		if (ConfigManager.getWordpressValue(vereinnr, name, "domain") != null) {
-			ParameterWordPressAPIClient(ConfigManager.getWordpressValue(vereinnr, name, "domain"), username, password);
+			ParameterWordPressAPIClient(ConfigManager.getWordpressValue(vereinnr, name, "domain"), username, passwort);
 		}
 	}
 
-	public void ParameterWordPressAPIClient(String domain, String username, String password) {
+	public void ParameterWordPressAPIClient(String domain, String username, String passwort) {
 		this.domain = domain;
-		this.encodedAuth = Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
+		this.encodedAuth = Base64.getEncoder().encodeToString((username + ":" + passwort).getBytes());
 		this.client = HttpClient.newHttpClient();
 	}
 

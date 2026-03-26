@@ -42,7 +42,9 @@ public class SpielcodesBean implements Serializable {
 		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = "13014";
 		}
-		if ("tsgv000".equals(request.getParameter("p"))) {
+		String userPasswort = ConfigManager.getUserPasswort(vereinnr);
+		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);		
+		if (userPasswort.equals(request.getParameter("p")) | adminPasswort.equals(request.getParameter("p"))) {
 			ladeSpiele();
 		} else {
 			return;

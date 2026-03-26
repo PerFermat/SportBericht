@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import de.bericht.util.ConfigManager;
 
-class DecryptPasswordTest {
+class DecryptPasswortTest {
 
 	String vereinnr = "13014"; // <-- passe an, falls nötig
 	String passwort;
@@ -20,10 +20,10 @@ class DecryptPasswordTest {
 	void setUp() {
 		try {
 			ConfigManager c = new ConfigManager();
-//			passwort = c.getMailPassword(vereinnr);
+//			passwort = c.getMailPasswort(vereinnr);
 //			System.out.println(passwort);
 //			
-			String decrypted = c.decryptPassword(vereinnr, hash);
+			String decrypted = c.decryptPasswort(vereinnr, hash);
 			System.out.println(decrypted);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

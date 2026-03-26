@@ -34,8 +34,8 @@ public class ConfigBean implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private String vereinnr;
-	private String emailPassword;
-	private String encryptedPassword;
+	private String emailPasswort;
+	private String encryptedPasswort;
 	private List<ConfigEintrag> configEintraege;
 	private Map<String, ConfigBedeutung> configBedeutungen;
 	private Map<String, List<String>> configKategorieMap;
@@ -145,7 +145,7 @@ public class ConfigBean implements Serializable {
 			return;
 		}
 		try {
-			String entschluesselt = ConfigManager.decryptPassword(vereinnr, eintrag.getWert());
+			String entschluesselt = ConfigManager.decryptPasswort(vereinnr, eintrag.getWert());
 			passwortDialogInput = defaultString(entschluesselt);
 		} catch (Exception e) {
 			passwortDialogInput = defaultString(eintrag.getWert());
@@ -157,7 +157,7 @@ public class ConfigBean implements Serializable {
 			return;
 		}
 		try {
-			String verschluesselt = ConfigManager.encryptPassword(vereinnr, passwortDialogInput);
+			String verschluesselt = ConfigManager.encryptPasswort(vereinnr, passwortDialogInput);
 			passwortDialogEintrag.setWert(verschluesselt);
 			passwortDialogAnzeige = passwortDialogInput;
 		} catch (Exception e) {
@@ -484,23 +484,23 @@ public class ConfigBean implements Serializable {
 
 	public void encrypt() {
 		try {
-			encryptedPassword = ConfigManager.encryptPassword(vereinnr, emailPassword);
+			encryptedPasswort = ConfigManager.encryptPasswort(vereinnr, emailPasswort);
 		} catch (Exception e) {
-			encryptedPassword = "Fehler: " + e.getMessage();
+			encryptedPasswort = "Fehler: " + e.getMessage();
 		}
 	}
 
 	// Getter & Setter
-	public String getEmailPassword() {
-		return emailPassword;
+	public String getEmailPasswort() {
+		return emailPasswort;
 	}
 
-	public void setEmailPassword(String emailPassword) {
-		this.emailPassword = emailPassword;
+	public void setEmailPasswort(String emailPasswort) {
+		this.emailPasswort = emailPasswort;
 	}
 
-	public String getEncryptedPassword() {
-		return encryptedPassword;
+	public String getEncryptedPasswort() {
+		return encryptedPasswort;
 	}
 
 	public String getBestimmenIcon() {

@@ -40,8 +40,8 @@ public class ConfigEintrag {
 		}
 	}
 
-	public Boolean getPassword() {
-		if (this.eintrag.contains("password") || this.eintrag.contains("token")) {
+	public Boolean getPasswort() {
+		if (this.eintrag.contains("passwort") || this.eintrag.contains("token")) {
 			return true;
 		} else {
 			return false;

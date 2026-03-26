@@ -50,7 +50,7 @@ public class ZusammenBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private List<Spiel> spieleFreigegeben;
 	private String username;
-	private String password;
+	private String passwort;
 
 	private boolean bereitsFreigegeben = false;
 	private String berichte;
@@ -348,8 +348,8 @@ public class ZusammenBean implements Serializable {
 		return username;
 	}
 
-	public String getPassword() {
-		return password;
+	public String getPasswort() {
+		return passwort;
 	}
 
 	// Gibt den Bild-Link zu=-1rück, damit h:graphicImage das Bild anzeigen kann.
@@ -395,8 +395,8 @@ public class ZusammenBean implements Serializable {
 		this.username = username;
 	}
 
-	public void setPassword(String password) {
-		this.password = password;
+	public void setPasswort(String passwort) {
+		this.passwort = passwort;
 	}
 
 	public String getVereinnr() {
@@ -484,7 +484,7 @@ public class ZusammenBean implements Serializable {
 			spielErgebnis = "";
 		}
 
-		WordPressAPIClient client = new WordPressAPIClient(vereinnr, username, password, name);
+		WordPressAPIClient client = new WordPressAPIClient(vereinnr, username, passwort, name);
 		byte[] attachment = null;
 		WordpressMedia image = new WordpressMedia();
 
@@ -619,7 +619,7 @@ public class ZusammenBean implements Serializable {
 	}
 
 	public List<String> getKategorie() throws IOException, InterruptedException, URISyntaxException {
-		WordPressAPIClient client = new WordPressAPIClient(vereinnr, username, password, name);
+		WordPressAPIClient client = new WordPressAPIClient(vereinnr, username, passwort, name);
 		return client.getCategoryNames(vereinnr);
 	}
 

@@ -254,7 +254,9 @@ public class SpielplanBean implements Serializable {
 	}
 
 	public boolean isPasswortOK() {
-		if ("tsgv000".equals(passwort)) {
+		String userPasswort = ConfigManager.getUserPasswort(vereinnr);
+		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);		
+		if (userPasswort.equals(passwort) | adminPasswort.equals(passwort)) {
 			return true;
 		}
 
