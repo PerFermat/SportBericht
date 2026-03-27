@@ -440,7 +440,9 @@ public class ConfigBean implements Serializable {
 	public boolean isNeuerDialog() {
 		return neuerDialog;
 	}
-
+	public boolean neuerDialog() {
+		return neuerDialog;
+	}
 	public String getDialogKey() {
 		return dialogKey;
 	}

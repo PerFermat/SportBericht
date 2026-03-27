@@ -41,7 +41,7 @@
 	<h:form style="text-align: center;">
 		<h2>Config-Einstellungen</h2>
 	</h:form>
-	<h:form id="configTabelle"  style="max-width: 1500px; margin: 0 auto;">
+	<h:form id="configTabelle" style="max-width: 1500px; margin: 0 auto;">
 		<p:panel header="Konfiguration">
 			<h:panelGrid columns="4" style="width:100%; margin-bottom:10px;">
 				<h:outputLabel for="suchfeld" value="Suche:" />
@@ -67,8 +67,7 @@
 						<p:commandButton icon="pi pi-pencil" title="Bearbeiten"
 							styleClass="p-button-rounded p-button-text p-button-sm"
 							actionListener="#{configBean.openBearbeitenDialog(eintrag)}"
-							process="@this" immediate="true"
-							update=":configDialogForm"
+							process="@this" immediate="true" update=":configDialogForm"
 							oncomplete="PF('configDialog').show();" />
 						<h:outputText value="#{eintrag.eintrag}"
 							style="font-weight: bold;" />
@@ -96,7 +95,8 @@
 
 						</h:panelGrid>
 					</ui:fragment>
-						<ui:fragment rendered="#{eintrag.inhaltformatZahl and not configBean.farbFeld(eintrag)}">
+					<ui:fragment
+						rendered="#{eintrag.inhaltformatZahl and not configBean.farbFeld(eintrag)}">
 						<h:panelGrid columns="2" cellpadding="5"
 							style="border: 0; border-collapse: collapse; width:100%;">
 							<p:inputText id="zahlInput_#{configTable.rowIndex}"
@@ -120,8 +120,7 @@
 					<ui:fragment rendered="#{eintrag.inhaltformatPasswort}">
 						<p:commandButton value="Passwort eingeben"
 							actionListener="#{configBean.openPasswortDialog(eintrag)}"
-							process="@this" immediate="true"
-							update=":passwortDialogForm"
+							process="@this" immediate="true" update=":passwortDialogForm"
 							oncomplete="PF('passwortDialog').show();" />
 					</ui:fragment>
 					<ui:fragment rendered="#{configBean.textFeld(eintrag)}">
@@ -137,14 +136,11 @@
 				<p:commandButton value="Speichern" action="#{configBean.speichern}"
 					update="configTable" />
 				<p:commandButton value="Neuer Key"
-					actionListener="#{configBean.openNeuerKeyDialog}"
-					process="@this" immediate="true"					
-					update=":configDialogForm" oncomplete="PF('configDialog').show();" />
+					actionListener="#{configBean.openNeuerKeyDialog}" process="@this"
+					immediate="true" update=":configDialogForm"
+					oncomplete="PF('configDialog').show();" />
 				<p:commandButton value="Aktuallisieren Homepage-Configs-Einträge"
 					action="#{configBean.insertHomepage}" update="configTable" />
-				<p:commandButton value="Zurück" action="index.xhtml">
-					<f:param name="vereinnr" value="#{configBean.vereinnr}" />
-				</p:commandButton>
 			</div>
 
 		</p:panel>
@@ -156,8 +152,8 @@
 			<h:panelGrid columns="2" columnClasses="ui-g-3,ui-g-9"
 				style="width:100%; row-gap:8px;">
 				<h:outputLabel for="dialogKey" value="Key" />
-				<h:outputText  value="#{configBean.dialogKey}"
-					style="width:100%;" />
+				<p:inputText id="dialogKey" value="#{configBean.dialogKey}"
+					style="width:100%;" readonly="#{not configBean.neuerDialog}" />
 
 				<h:outputLabel for="dialogBedeutung" value="Bedeutung" />
 				<p:inputTextarea id="dialogBedeutung"

@@ -154,8 +154,7 @@ public class ConfigManager {
 			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;
 		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+			return encrypted;
 		}
 	}
 
@@ -185,8 +184,7 @@ public class ConfigManager {
 			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;
 		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+			return encrypted;
 		}
 	}
 
@@ -196,8 +194,7 @@ public class ConfigManager {
 			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;
 		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+			return encrypted;
 		}
 	}
 
@@ -207,8 +204,7 @@ public class ConfigManager {
 			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;
 		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+			return encrypted;
 		}
 	}
 
@@ -218,8 +214,7 @@ public class ConfigManager {
 			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;
 		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+			return encrypted;
 		}
 	}
 

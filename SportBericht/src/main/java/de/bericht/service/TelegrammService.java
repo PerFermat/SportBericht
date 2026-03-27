@@ -27,8 +27,8 @@ public class TelegrammService {
 			throws Exception {
 		ConfigManager config = ConfigManager.getInstance();
 		String botToken = config.getTelegrammToken(vereinnr);
-		if (botToken == null) {
-			return 0;
+		if (botToken == null || botToken.isEmpty()) {
+			return -1;
 		}
 
 		String chatId = getLatestChatId(vereinnr, botToken);
