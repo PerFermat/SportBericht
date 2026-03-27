@@ -75,6 +75,15 @@
 							style="display:block; font-size: 0.8rem; color: #666; margin-top: 4px;" />
 					</h:panelGroup>
 				</p:column>
+				<p:column headerText="" style="width: 55px; text-align:center;">
+					<p:commandButton id="saveBtn_#{configTable.rowIndex}"
+						icon="pi pi-save" title="Diesen Eintrag speichern"
+						rendered="#{configBean.eintragGeaendert(eintrag)}"
+						actionListener="#{configBean.speichereEintrag(eintrag)}"
+						process="@this" immediate="true"
+						update=":configTabelle:configTable"
+						styleClass="p-button-rounded p-button-text p-button-sm" />
+				</p:column>
 
 				<p:column headerText="Wert">
 					<ui:fragment rendered="#{configBean.farbFeld(eintrag)}">
@@ -82,7 +91,9 @@
 							style="border: 0; border-collapse: collapse;">
 							<h:inputText id="hueInput_#{configTable.rowIndex}"
 								value="#{eintrag.wert}" size="4"
-								style="border: 0; outline: none;" />
+								style="border: 0; outline: none;">
+								<p:ajax event="change" update="configTable" process="@this" />
+							</h:inputText>
 
 							<p:slider for="hueInput_#{configTable.rowIndex}" minValue="0"
 								maxValue="360" step="1" style="border: 0;"
@@ -100,7 +111,9 @@
 						<h:panelGrid columns="2" cellpadding="5"
 							style="border: 0; border-collapse: collapse; width:100%;">
 							<p:inputText id="zahlInput_#{configTable.rowIndex}"
-								value="#{eintrag.wert}" style="width:100%;" />
+								value="#{eintrag.wert}" style="width:100%;">
+								<p:ajax event="change" update="configTable" process="@this" />
+							</p:inputText>
 							<p:slider for="zahlInput_#{configTable.rowIndex}"
 								minValue="#{configBean.minWert(eintrag)}"
 								maxValue="#{configBean.maxWert(eintrag)}"
@@ -110,11 +123,13 @@
 					<ui:fragment rendered="#{eintrag.inhaltformatEnum}">
 						<p:selectOneMenu value="#{eintrag.wert}" style="width:100%;">
 							<f:selectItems value="#{configBean.enumWerte(eintrag)}" />
+							<p:ajax event="change" update="configTable" process="@this" />
 						</p:selectOneMenu>
 					</ui:fragment>
 					<ui:fragment rendered="#{eintrag.inhaltformatChatGpt}">
 						<p:selectOneMenu value="#{eintrag.wert}" style="width:100%;">
 							<f:selectItems value="#{configBean.chatGptModelle}" />
+							<p:ajax event="change" update="configTable" process="@this" />
 						</p:selectOneMenu>
 					</ui:fragment>
 					<ui:fragment rendered="#{eintrag.inhaltformatPasswort}">
@@ -125,7 +140,9 @@
 					</ui:fragment>
 					<ui:fragment rendered="#{configBean.textFeld(eintrag)}">
 						<p:inputTextarea value="#{eintrag.wert}" rows="2"
-							autoResize="true" style="width: 100%;" />
+							autoResize="true" style="width: 100%;">
+							<p:ajax event="change" update="configTable" process="@this" />
+						</p:inputTextarea>
 					</ui:fragment>
 				</p:column>
 
@@ -133,8 +150,6 @@
 			</p:dataTable>
 
 			<div class="button4-container">
-				<p:commandButton value="Speichern" action="#{configBean.speichern}"
-					update="configTable" />
 				<p:commandButton value="Neuer Key"
 					actionListener="#{configBean.openNeuerKeyDialog}" process="@this"
 					immediate="true" update=":configDialogForm"
@@ -152,8 +167,14 @@
 			<h:panelGrid columns="2" columnClasses="ui-g-3,ui-g-9"
 				style="width:100%; row-gap:8px;">
 				<h:outputLabel for="dialogKey" value="Key" />
-				<p:inputText id="dialogKey" value="#{configBean.dialogKey}"
-					style="width:100%;" readonly="#{not configBean.neuerDialog}" />
+				<ui:fragment rendered="#{configBean.neuerDialog}">
+					<p:inputText id="dialogKeyNeu" value="#{configBean.dialogKey}"
+						style="width:100%;" />
+				</ui:fragment>
+				<ui:fragment rendered="#{not configBean.neuerDialog}">
+					<p:inputText id="dialogKey" value="#{configBean.dialogKey}"
+						style="width:100%;" readonly="true" />
+				</ui:fragment>
 
 				<h:outputLabel for="dialogBedeutung" value="Bedeutung" />
 				<p:inputTextarea id="dialogBedeutung"

@@ -13,6 +13,7 @@ import de.bericht.util.ConfigKategorie;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.OpenAIModelFetcher;
 import jakarta.annotation.PostConstruct;
+import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,11 +50,13 @@ public class ConfigBean implements Serializable {
 	private boolean neuerDialog;
 	private String dialogKey;
 	private String dialogInhalt;
+	private String dialogOriginalKey;	
 	private String dialogBedeutung;
 	private String dialogInhaltformat;
 	private String dialogWertebereich;
 	private List<String> dialogKategorien = new ArrayList<>();
 	private final Map<String, List<String>> enumWerteCache = new HashMap<>();
+	private final Map<String, String> originalWerteByKey = new HashMap<>();	
 	private List<String> chatGptModelle = new ArrayList<>();
 	private ConfigEintrag passwortDialogEintrag;
 	private String passwortDialogAnzeige;
@@ -88,6 +92,26 @@ public class ConfigBean implements Serializable {
 		return eintrag != null && (Boolean.TRUE.equals(eintrag.getFarbe()) || eintrag.isInhaltformatFarbe());
 	}
 
+	public void speichereEintrag(ConfigEintrag eintrag) {
+		System.out.println(eintrag.getWert() + " wird gespeichert ");
+		if (eintrag == null || !isNotBlank(eintrag.getEintrag())) {
+			return;
+		}
+		service.insertOrUpdateConfigEintrag(vereinnr, eintrag.getEintrag(), defaultString(eintrag.getWert()));
+		ladeConfigEintraegeMitBedeutung();
+		FacesContext.getCurrentInstance().addMessage(null,
+				new FacesMessage(FacesMessage.SEVERITY_INFO, "Gespeichert",
+						"Eintrag " + eintrag.getEintrag() + " wurde gespeichert."));
+	}
+
+	public boolean eintragGeaendert(ConfigEintrag eintrag) {
+		if (eintrag == null || !isNotBlank(eintrag.getEintrag())) {
+			return false;
+		}
+		String originalWert = defaultString(originalWerteByKey.get(eintrag.getEintrag()));
+		String aktuellerWert = defaultString(eintrag.getWert());
+		return !Objects.equals(originalWert, aktuellerWert);
+	}
 
 	
 	public boolean farbFeld(ConfigEintrag eintrag) {
@@ -199,6 +223,7 @@ public class ConfigBean implements Serializable {
 		neuerDialog = true;
 		dialogKey = "";
 		dialogBedeutung = "";
+		dialogOriginalKey = "";		
 		dialogWertebereich = "";
 		dialogInhaltformat = verfuegbareInhaltformate.isEmpty() ? "" : verfuegbareInhaltformate.get(0);
 		dialogKategorien = new ArrayList<>();
@@ -208,6 +233,7 @@ public class ConfigBean implements Serializable {
 	public void openBearbeitenDialog(ConfigEintrag eintrag) {
 		neuerDialog = false;
 		dialogKey = eintrag.getEintrag();
+		dialogOriginalKey = eintrag.getEintrag();
 		dialogBedeutung = defaultString(eintrag.getBedeutung());
 		dialogInhaltformat = defaultString(eintrag.getInhaltformat());
 		dialogWertebereich = defaultString(eintrag.getWertebereich());
@@ -241,6 +267,10 @@ public class ConfigBean implements Serializable {
 		}
 
 		String bereinigterKey = dialogKey.trim();
+		if (!neuerDialog && isNotBlank(dialogOriginalKey)) {
+			bereinigterKey = dialogOriginalKey;
+		}
+
 		if (neuerDialog) {
 			List<String> vereine = service.ladeAlleVereine();
 			for (String verein : vereine) {
@@ -291,6 +321,7 @@ public class ConfigBean implements Serializable {
 	private void ladeConfigEintraegeMitBedeutung() {
 		configEintraege = service.ladeConfigEintraege(vereinnr);
 		configBedeutungen = service.ladeConfigBedeutungen();
+		originalWerteByKey.clear();
 		List<ConfigKategorie> kategorien = service.ladeConfigKategorien();
 		configKategorieMap = kategorien.stream().collect(Collectors.groupingBy(ConfigKategorie::getConfigEintrag,
 				Collectors.mapping(ConfigKategorie::getKategorie, Collectors.toList())));
@@ -315,6 +346,7 @@ public class ConfigBean implements Serializable {
 			if (trefferKategorien != null && !trefferKategorien.isEmpty()) {
 				eintrag.setKategorien(String.join(", ", trefferKategorien));
 			}
+			originalWerteByKey.put(eintrag.getEintrag(), defaultString(eintrag.getWert()));
 		}
 	}
 
