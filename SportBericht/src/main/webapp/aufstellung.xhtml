@@ -57,10 +57,13 @@
 					style="vertical-align: middle;" width="50" />
 			</h:outputLink>
 			<h2>Planung der Aufstellung</h2>
-			<p:commandButton value="Zurück" action="#{aufstellungBean.ruecksprung}" immediate="true"
-				rendered="#{not empty aufstellungBean.ruecksprung}">
+			<p:commandButton value="Zurück" action="index.xhtml" immediate="true"
+				rendered="#{aufstellungBean.tennis}">
 				<f:param name="vereinnr" value="#{aufstellungBean.vereinnr}" />
-				<f:param name="gruppeUrl" value="#{aufstellungBean.gruppeUrl}" />
+			</p:commandButton>
+			<p:commandButton value="Zurück" action="spielplan.xhtml"
+				immediate="true" rendered="#{aufstellungBean.tischtennis}">
+				<f:param name="vereinnr" value="#{aufstellungBean.vereinnr}" />
 			</p:commandButton>
 		</div>
 	</h:form>
