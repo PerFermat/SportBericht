@@ -8,25 +8,24 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import de.bericht.util.NamensSpeicher;
+import de.bericht.provider.BilanzProvider;
 import de.bericht.util.WebCache;
 
-public class BilanzService {
+public class TischtennisBilanzService implements BilanzProvider {
 
-	public BilanzService() {
+	private String url;
+	private String vereinnr;
+	private List<Bilanz> bilanz = new ArrayList<>();
+
+	public TischtennisBilanzService(String vereinnr, String url) {
+		this.vereinnr = vereinnr;
+		this.url = url;
+		generiereBilanz();
 	}
 
-	public List<Bilanz> getBilanz(String vereinnr, String spielplan, NamensSpeicher namensSpeicher) {
-		return getBilanz(vereinnr, spielplan, namensSpeicher, true);
-	}
-
-	public List<Bilanz> getBilanz(String vereinnr, String spielplan, NamensSpeicher namensSpeicher,
-			Boolean verschluesseln) {
-
-		List<Bilanz> Bilanz = new ArrayList<>();
-
+	public void generiereBilanz() {
 		try {
-			Document doc = WebCache.getPage(spielplan);
+			Document doc = WebCache.getPage(url);
 			Elements tables = doc.select("table"); // Alle Bilanzn auswählen
 			if (tables.size() >= 2) { // Prüfen, ob mindestens zwei Bilanzn vorhanden sind
 				Element secondTable = tables.get(1); // Zweite Bilanz auswählen (Index 1)
@@ -78,12 +77,7 @@ public class BilanzService {
 						if (cols.size() >= 8) {
 
 							String rang = cols.get(rangIndex).text();
-							String name = "";
-							if (verschluesseln) {
-								name = namensSpeicher.formatName(vereinnr, cols.get(nameIndex).text(), namensSpeicher);
-							} else {
-								name = cols.get(nameIndex).text();
-							}
+							String name = cols.get(nameIndex).text();
 							String einsaetze = cols.get(einsaetzeIndex).text();
 							String p1 = cols.get(position1Index).text();
 							String p2 = cols.get(position2Index).text();
@@ -93,18 +87,14 @@ public class BilanzService {
 							String p6 = cols.get(position6Index).text();
 							String gesamt = cols.get(gesamtIndex).text();
 
-							Bilanz.add(new Bilanz(rang, name, einsaetze, p1, p2, p3, p4, p5, p6, gesamt));
+							bilanz.add(new TischtennisBilanz(rang, name, einsaetze, p1, p2, p3, p4, p5, p6, gesamt));
 						} else if (cols.size() >= 5) {
-							String name = "";
-							if (verschluesseln) {
-								name = namensSpeicher.formatName(vereinnr, cols.get(nameIndex).text(), namensSpeicher);
-							} else {
-								name = cols.get(nameIndex).text();
-							}
+							String name = cols.get(nameIndex).text();
 							String einsaetze = cols.get(einsaetzeIndex).text();
 							String gesamt = cols.get(4).text();
 
-							Bilanz.add(new Bilanz("Doppel", name, einsaetze, "", "", "", "", "", "", gesamt));
+							bilanz.add(
+									new TischtennisBilanz("Doppel", name, einsaetze, "", "", "", "", "", "", gesamt));
 						}
 					}
 				}
@@ -114,10 +104,9 @@ public class BilanzService {
 		IOException e) {
 			e.printStackTrace();
 		}
-
-		return Bilanz;
 	}
 
+	@Override
 	public String ausgabe(List<Bilanz> Bilanz) {
 		// String-Variable, um alle Spiele zu speichern
 		StringBuilder BilanzListe = new StringBuilder();
@@ -126,11 +115,19 @@ public class BilanzService {
 		for (Bilanz spiel : Bilanz) {
 			BilanzListe.append(spiel.getRang()).append(" - ");
 			BilanzListe.append(spiel.getName()).append(" - ");
-			BilanzListe.append(spiel.getEinsaetze()).append(" - ");
 			BilanzListe.append(spiel.getGesamt()).append("\n");
 
 		}
 
 		return BilanzListe.toString();
+	}
+
+	@Override
+	public List<Bilanz> getBilanz() {
+		return bilanz;
+	}
+
+	public void setBilanz(List<Bilanz> bilanz) {
+		this.bilanz = bilanz;
 	}
 }

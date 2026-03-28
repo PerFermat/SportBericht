@@ -9,35 +9,54 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import de.bericht.provider.BilanzFactory;
+import de.bericht.provider.BilanzProvider;
 import de.bericht.service.Bilanz;
-import de.bericht.service.BilanzService;
 import de.bericht.util.NamensSpeicher;
 
 class BilanzServiceTest {
 
-	BilanzService service = new BilanzService();
-	List<Bilanz> bilanz;
+	List<Bilanz> bil;
 	NamensSpeicher namen = new NamensSpeicher();
 	String vereinnr = "13014"; // <-- passe an, falls nötig
-	String url = "https://www.mytischtennis.de/click-tt/TTBW/25--26/ligen/Erwachsene_Landesklasse_Gr._4/gruppe/494856/mannschaft/2961581/Erwachsene/spielerbilanzen/gesamt";
+	String url = "https://www.wtb-tennis.de/spielbetrieb/vereine/verein/mannschaften/mannschaft/v/20233/m/3496326.html";
 
 	@Disabled("temporär deaktiviert")
 	@BeforeEach
 	void setUp() {
 		// Hier stehen die von dir gewünschten Zeilen am Anfang
-		bilanz = service.getBilanz(vereinnr, url, namen, false);
-		System.out.println(service.ausgabe(bilanz));
+		BilanzProvider service;
+		try {
+			service = BilanzFactory.create(vereinnr, url);
+			bil = service.getBilanz();
+			System.out.println(service.ausgabe(bil));
+
+			ObjectMapper objectMapper = new ObjectMapper();
+			try {
+				System.out.println(objectMapper.writeValueAsString(bil).toString());
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 	@Disabled("temporär deaktiviert")
 	@Test
 	void spielplan_darf_nicht_null_und_soll_nicht_leer_sein() {
-		assertNotNull(bilanz, "bilanz darf nicht null sein");
-		assertFalse(bilanz.isEmpty(), "bilanz sollte mindestens ein Spiel enthalten");
+		assertNotNull(bil, "bilanz darf nicht null sein");
+		assertFalse(bil.isEmpty(), "bilanz sollte mindestens ein Spiel enthalten");
 
-		Bilanz s = bilanz.get(0);
+		Bilanz s = bil.get(0);
 		assertNotNull(s.getName(), "Mannschaft darf nicht null sein");
-		assertNotNull(s.getPosition(), "Position darf nicht null sein");
 	}
 
 }

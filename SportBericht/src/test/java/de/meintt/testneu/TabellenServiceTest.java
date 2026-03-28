@@ -3,6 +3,7 @@ package de.meintt.testneu;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -12,23 +13,26 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.bericht.provider.TabellenFactory;
+import de.bericht.provider.TabellenProvider;
 import de.bericht.service.Tabelle;
-import de.bericht.service.TabelleService;
-import de.bericht.util.IgnorierteWoerte;
 
 class TabellenServiceTest {
-
-	TabelleService service = new TabelleService();
-	List<Tabelle> tabelle;
-	String vereinnr = "13031"; // <-- passe an, falls nötig
+	TabellenProvider service;
 	String url = "https://www.mytischtennis.de/click-tt/TTBW/25--26/ligen/Erwachsene_Bezirksliga/gruppe/494841/mannschaft/2959879/Erwachsene/spielplan/gesamt";
-	IgnorierteWoerte ignorieren = new IgnorierteWoerte();
+	List<Tabelle> tabelle = new ArrayList<>();
 
 	@Disabled("temporär deaktiviert")
 	@BeforeEach
 	void setUp() {
+		try {
+			service = TabellenFactory.create(url);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		// Hier stehen die von dir gewünschten Zeilen am Anfang
-		tabelle = service.getTabelle(url);
+		tabelle = service.getTabelle();
 		System.out.println(service.ausgabe(tabelle));
 		ObjectMapper objectMapper = new ObjectMapper();
 		try {

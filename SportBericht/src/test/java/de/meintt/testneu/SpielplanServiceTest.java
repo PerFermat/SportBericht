@@ -19,8 +19,8 @@ class SpielplanServiceTest {
 	ConfigManager config;
 	SpielplanProvider provider;
 	List<Spiel> spiele;
-	String vereinnr = "20233"; // <-- passe an, falls nötig
-	String url = "https://www.wtb-tennis.de/spielbetrieb/vereine/verein/mannschaften/mannschaft/v/20233/m/3496261.html";
+	String vereinnr = "13014"; // <-- passe an, falls nötig
+	String url = "https://www.mytischtennis.de/click-tt/TTBW/25--26/ligen/Erwachsene_Bezirksliga/gruppe/494841/mannschaft/2959879/Erwachsene/spielplan/gesamt";
 	// String vereinnr = "13014"; // <-- passe an, falls nötig
 	// String url =
 	// "https://www.mytischtennis.de/click-tt/TTBW/25--26/verein/13014/TSGV_Hattenhofen_III/spielplan";

@@ -21,17 +21,20 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.bericht.provider.BilanzFactory;
+import de.bericht.provider.BilanzProvider;
 import de.bericht.provider.SpielergebnisFactory;
 import de.bericht.provider.SpielergebnisProvider;
+import de.bericht.provider.SpielplanFactory;
+import de.bericht.provider.SpielplanProvider;
+import de.bericht.provider.TabellenFactory;
+import de.bericht.provider.TabellenProvider;
 import de.bericht.service.Bilanz;
-import de.bericht.service.BilanzService;
 import de.bericht.service.DatabaseService;
 import de.bericht.service.KiZusammenfassenText;
 import de.bericht.service.Mannschaft;
 import de.bericht.service.Spiel;
-import de.bericht.service.SpielplanService;
 import de.bericht.service.Tabelle;
-import de.bericht.service.TabelleService;
 import de.bericht.util.ApiKIChatGPT;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
@@ -66,7 +69,7 @@ public class BerichtkiBean implements Serializable {
 	private double presencePenalty = 0.5;
 	private boolean spielplan = false;
 	private String liga;
-	private String ligaSpiel;	
+	private String ligaSpiel;
 	private String uuid;
 	private String ersetzungen;
 	private List<String> wirkungen = new ArrayList<>();
@@ -107,10 +110,11 @@ public class BerichtkiBean implements Serializable {
 		this.heim = params.get("heim");
 		this.gast = params.get("gast");
 		this.datum = params.get("datum");
-		this.ligaSpiel = params.get("ligaSpiel");		
+		this.ligaSpiel = params.get("ligaSpiel");
 		this.ergebnis = params.get("ergebnis");
 		this.ergebnisLink = params.get("ergebnisLink");
 		this.gruppeUrl = params.get("gruppeUrl");
+		this.tabelleUrl = gruppeUrl;
 		this.besondereVorkommnisse = params.get("besondereVorkommnisse");
 		if (params.get("berichtText") != null && !params.get("berichtText").isEmpty()) {
 			Spielbericht sb = new Spielbericht();
@@ -238,7 +242,7 @@ public class BerichtkiBean implements Serializable {
 		if (zusaetzlicheJSON && tabelleUrl != null && tabelleUrl.startsWith("http")) {
 			try {
 
-				SpielplanService service = new SpielplanService(vereinnr, tabelleUrl);
+				SpielplanProvider service = SpielplanFactory.create(vereinnr, tabelleUrl);
 				List<Spiel> spiele = service.getSpielplan();
 
 				List<SpielMapped> mappedList = spiele.stream().map(SpielMapped::new).collect(Collectors.toList());
@@ -264,8 +268,12 @@ public class BerichtkiBean implements Serializable {
 		String prettyJsonBilanz = "";
 		if (zusaetzlicheJSON && bilanzUrl != null && bilanzUrl.startsWith("http")) {
 			try {
-				BilanzService service = new BilanzService();
-				List<Bilanz> bil = service.getBilanz(vereinnr, bilanzUrl, this.namensSpeicher);
+				// TischtennisBilanzService service = new TischtennisBilanzService();
+				// List<Bilanz> bil = service.getBilanz(vereinnr, bilanzUrl,
+				// this.namensSpeicher);
+				BilanzProvider service = BilanzFactory.create(vereinnr, bilanzUrl);
+				List<Bilanz> bil = service.getBilanz();
+
 				ObjectMapper objectMapper = new ObjectMapper();
 				jsonBilanz = objectMapper.writeValueAsString(bil);
 				ObjectMapper mapper = new ObjectMapper();
@@ -286,8 +294,8 @@ public class BerichtkiBean implements Serializable {
 		String prettyJsonTabelle = "";
 		if (zusaetzlicheJSON && tabelleUrl != null && tabelleUrl.startsWith("http")) {
 			try {
-				TabelleService service = new TabelleService();
-				List<Tabelle> tab = service.getTabelle(tabelleUrl);
+				TabellenProvider service = TabellenFactory.create(tabelleUrl);
+				List<Tabelle> tab = service.getTabelle();
 				ObjectMapper objectMapper = new ObjectMapper();
 				jsonTabelle = objectMapper.writeValueAsString(tab);
 				ObjectMapper mapper = new ObjectMapper();

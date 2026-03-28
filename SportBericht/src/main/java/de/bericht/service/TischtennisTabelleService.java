@@ -8,19 +8,23 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import de.bericht.provider.TabellenProvider;
 import de.bericht.util.WebCache;
 
-public class TabelleService {
+public class TischtennisTabelleService implements TabellenProvider {
 
-	public TabelleService() {
+	private String url;
+	List<Tabelle> tabelle = new ArrayList<>();
+
+	public TischtennisTabelleService(String url) {
+		this.url = url;
+		generiereTabelle();
 	}
 
-	public List<Tabelle> getTabelle(String spielplan) {
-
-		List<Tabelle> tabelle = new ArrayList<>();
+	public void generiereTabelle() {
 
 		try {
-			Document doc = WebCache.getPage(spielplan);
+			Document doc = WebCache.getPage(url);
 			Elements tables = doc.select("table"); // Alle Tabellen auswählen
 			if (tables.size() >= 2) { // Prüfen, ob mindestens zwei Tabellen vorhanden sind
 				Element secondTable = tables.get(1); // Zweite Tabelle auswählen (Index 1)
@@ -91,8 +95,8 @@ public class TabelleService {
 							String plus = cols.get(plusIndex).text();
 							String punkte = cols.get(punkteIndex).text();
 
-							tabelle.add(new Tabelle(rang, aufAb, mannschaft, beg, sieg, unentschieden, niederlagen,
-									spiele, plus, punkte));
+							tabelle.add(new TischtennisTabelle(aufAb, rang, mannschaft, beg, sieg, unentschieden,
+									niederlagen, spiele, plus, punkte));
 						}
 					}
 				}
@@ -103,9 +107,9 @@ public class TabelleService {
 			e.printStackTrace();
 		}
 
-		return tabelle;
 	}
 
+	@Override
 	public String ausgabe(List<Tabelle> tabelle) {
 		// String-Variable, um alle Spiele zu speichern
 		StringBuilder tabelleListe = new StringBuilder();
@@ -115,14 +119,23 @@ public class TabelleService {
 			tabelleListe.append(spiel.getRang()).append(" - ");
 			tabelleListe.append(spiel.getMannschaft()).append(" - ");
 			tabelleListe.append(spiel.getBeg()).append(" - ");
-			tabelleListe.append(spiel.getSieg()).append(" - ");
-			tabelleListe.append(spiel.getUnentschieden()).append(" - ");
-			tabelleListe.append(spiel.getNiederlagen()).append(" - ");
-			tabelleListe.append(spiel.getSpiele()).append(" - ");
-			tabelleListe.append(spiel.getPlus()).append(" - ");
 			tabelleListe.append(spiel.getPunkte()).append("\n");
 		}
 
 		return tabelleListe.toString();
 	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+
+	@Override
+	public List<Tabelle> getTabelle() {
+		return tabelle;
+	}
+
 }
