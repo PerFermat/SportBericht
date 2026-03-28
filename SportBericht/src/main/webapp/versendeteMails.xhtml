@@ -108,7 +108,8 @@
 	<div class="tabheader-area">
 		<h2>Versendete Mails</h2>
 		<h:form>
-			<p:commandButton value="Zurück" action="#{versendeteMailsBean.ruecksprung}" immediate="true"
+			<p:commandButton value="Zurück"
+				action="#{versendeteMailsBean.ruecksprung}" immediate="true"
 				rendered="#{not empty versendeteMailsBean.ruecksprung}">
 				<f:param name="vereinnr" value="#{versendeteMailsBean.vereinnr}" />
 			</p:commandButton>
@@ -119,22 +120,34 @@
 		<div
 			class="mail-layout #{versendeteMailsBean.mobileDetailAnsicht ? 'mobile-detail' : 'mobile-list'}">
 			<div class="mail-liste">
-			<div style="margin-bottom:.75rem;">
-				<p:inputText id="suche" value="#{versendeteMailsBean.suchbegriff}"
-					placeholder="Suche in Betreff, Text, Empfänger, CC, BCC"
-					style="width:100%;">
-					<p:ajax event="keyup" delay="250" listener="#{versendeteMailsBean.onSucheAendern}" update="mailForm" />
-				</p:inputText>
-			</div>
+				<div style="margin-bottom: .75rem;">
+					<p:inputText id="suche" value="#{versendeteMailsBean.suchbegriff}"
+						placeholder="Suche in Betreff, Text, Empfänger, CC, BCC"
+						style="width:100%;">
+						<p:ajax event="keyup" delay="250"
+							listener="#{versendeteMailsBean.onSucheAendern}"
+							update="mailForm" />
+					</p:inputText>
+				</div>
 				<ui:repeat value="#{versendeteMailsBean.gruppen}" var="gruppe">
-					<p:panel header="#{gruppe.titel}" toggleable="true" collapsed="#{not gruppe.aufgeklappt}" style="margin-bottom:.5rem;">
+					<p:panel header="#{gruppe.titel}" toggleable="true"
+						collapsed="#{not gruppe.aufgeklappt}" style="margin-bottom:.5rem;">
 						<ui:repeat value="#{gruppe.mails}" var="mail">
-							<p:commandLink actionListener="#{versendeteMailsBean.mailAuswaehlen(mail)}"
-								update="mailForm msgForm"
-								styleClass="mail-eintrag-link #{versendeteMailsBean.ausgewaehlteMail ne null and versendeteMailsBean.ausgewaehlteMail.id eq mail.id ? 'aktiv' : ''}">
-								<div>#{mail.betreff}</div>
-								<div class="mail-meta">#{versendeteMailsBean.formatZeitstempel(mail)}</div>
-							</p:commandLink>
+							<div class="mail-row">
+								<p:commandButton icon="pi pi-trash" title="Mail löschen"
+									actionListener="#{versendeteMailsBean.loescheAusgewaehlteMail(mail)}"
+									update="mailForm msgForm"
+									styleClass="mail-delete ui-button-danger ui-button-flat" />
+
+								<p:commandLink
+									actionListener="#{versendeteMailsBean.mailAuswaehlen(mail)}"
+									update="mailForm msgForm"
+									styleClass="mail-eintrag-link #{versendeteMailsBean.ausgewaehlteMail ne null and versendeteMailsBean.ausgewaehlteMail.id eq mail.id ? 'aktiv' : ''}">
+									<div>#{mail.betreff}</div>
+									<div class="mail-meta">#{versendeteMailsBean.formatZeitstempel(mail)}</div>
+								</p:commandLink>
+							</div>
+
 						</ui:repeat>
 					</p:panel>
 				</ui:repeat>
@@ -149,20 +162,38 @@
 						actionListener="#{versendeteMailsBean.zurListe}" update="mailForm"
 						styleClass="ui-button-secondary ui-button-flat" />
 				</div>
+				<p:commandButton icon="pi pi-trash" title="Mail löschen"
+					actionListener="#{versendeteMailsBean.loescheAusgewaehlteMail}"
+					update="mailForm msgForm"
+					styleClass="mail-delete ui-button-danger ui-button-flat" />
 
-				<ui:fragment rendered="#{versendeteMailsBean.ausgewaehlteMail ne null}">
+				<ui:fragment
+					rendered="#{versendeteMailsBean.ausgewaehlteMail ne null}">
 					<div class="mail-detail-wrapper">
 						<div class="mail-detail-content">
-							<div><strong>An:</strong> #{versendeteMailsBean.ausgewaehlteMail.empfaenger}</div>
-							<div><strong>CC:</strong>
-								#{empty versendeteMailsBean.ausgewaehlteMail.empfaengerCc ? '-' : versendeteMailsBean.ausgewaehlteMail.empfaengerCc}</div>
-							<div><strong>BCC:</strong>
-								#{empty versendeteMailsBean.ausgewaehlteMail.empfaengerBcc ? '-' : versendeteMailsBean.ausgewaehlteMail.empfaengerBcc}</div>
-							<div><strong>Anhang:</strong>
-								#{empty versendeteMailsBean.ausgewaehlteMail.attachmentName ? '-' : versendeteMailsBean.ausgewaehlteMail.attachmentName}</div>
+							<div>
+								<strong>An:</strong>
+								#{versendeteMailsBean.ausgewaehlteMail.empfaenger}
+							</div>
+							<div>
+								<strong>CC:</strong> #{empty
+								versendeteMailsBean.ausgewaehlteMail.empfaengerCc ? '-' :
+								versendeteMailsBean.ausgewaehlteMail.empfaengerCc}
+							</div>
+							<div>
+								<strong>BCC:</strong> #{empty
+								versendeteMailsBean.ausgewaehlteMail.empfaengerBcc ? '-' :
+								versendeteMailsBean.ausgewaehlteMail.empfaengerBcc}
+							</div>
+							<div>
+								<strong>Anhang:</strong> #{empty
+								versendeteMailsBean.ausgewaehlteMail.attachmentName ? '-' :
+								versendeteMailsBean.ausgewaehlteMail.attachmentName}
+							</div>
 							<div class="mail-betreff">#{versendeteMailsBean.ausgewaehlteMail.betreff}</div>
 							<div class="mail-html">
-								<h:outputText value="#{versendeteMailsBean.ausgewaehlteMail.text}"
+								<h:outputText
+									value="#{versendeteMailsBean.ausgewaehlteMail.text}"
 									escape="false" />
 							</div>
 						</div>
@@ -173,7 +204,8 @@
 					</div>
 				</ui:fragment>
 
-				<ui:fragment rendered="#{versendeteMailsBean.ausgewaehlteMail eq null}">
+				<ui:fragment
+					rendered="#{versendeteMailsBean.ausgewaehlteMail eq null}">
 					<p>Keine versendeten Mails oder keine Treffer vorhanden.</p>
 				</ui:fragment>
 			</div>

@@ -1421,6 +1421,23 @@ overflow: visible;
 	justify-content: flex-end;
 }
 
+.mail-row {
+    display: flex;
+    align-items: flex-start; /* oben bündig */
+    gap: 0.5rem;
+
+}
+.mail-eintrag-link {
+    display: flex;
+    flex-direction: column;
+}
+.mail-delete {
+    padding: 0.2rem 0.3rem !important; /* kleineres Padding */
+    font-size: 0.75rem !important;     /* Icon kleiner */
+    height: auto !important;           /* verhindert unnötige Höhe */
+    line-height: 1 !important;
+}
+
 @media
 (
 max-width

@@ -116,7 +116,7 @@ public class AdresslisteBean implements Serializable {
 		}
 		schreibzugriff = pruefeSchreibzugriff(request.getParameter("p"));
 		String userPasswort = ConfigManager.getUserPasswort(vereinnr);
-		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);		
+		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);
 		if (userPasswort.equals(request.getParameter("p")) | adminPasswort.equals(request.getParameter("p"))) {
 			ladeEintraege();
 		} else {
@@ -288,7 +288,7 @@ public class AdresslisteBean implements Serializable {
 		String nachricht = "Ihr Einmalpasswort lautet: <b>" + passwort + "</b><br/>"
 				+ "Bitte geben Sie dieses Passwort im Dialog ein, um fortzufahren.";
 		try {
-			emailService.sendEmail(vereinnr, betreff, nachricht, null, null);
+			emailService.sendEmail(vereinnr, betreff, nachricht, null, null, false);
 			addInfo("Einmalpasswort wurde an " + empfaenger + " versendet.");
 		} catch (Exception e) {
 			addError("Einmalpasswort konnte nicht versendet werden: " + e.getMessage());
@@ -625,7 +625,7 @@ public class AdresslisteBean implements Serializable {
 
 		EmailService emailService = new EmailService(vereinnr, "TO:" + "michael.spahr@web.de");
 		try {
-			emailService.sendEmail(vereinnr, betreff, nachricht.replace("\n", "<br/>"), null, null);
+			emailService.sendEmail(vereinnr, betreff, nachricht.replace("\n", "<br/>"), null, null, true);
 		} catch (Exception e) {
 			addError("Info-E-Mail konnte nicht gesendet werden: " + e.getMessage());
 		}

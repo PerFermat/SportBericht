@@ -1,71 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Einstieg</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 2rem;
-            background: #f7f7f7;
-        }
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Einstieg</title>
+<style>
+body {
+	font-family: Arial, sans-serif;
+	margin: 2rem;
+	background: #f7f7f7;
+}
 
-        h1 {
-            margin-bottom: 1rem;
-        }
+h1 {
+	margin-bottom: 1rem;
+}
 
-        .container {
-            max-width: 900px;
-            background: #fff;
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        }
+.container {
+	max-width: 900px;
+	background: #fff;
+	border-radius: 8px;
+	padding: 1.5rem;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
 
-        .feld-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
+.feld-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 0.75rem;
+	margin-bottom: 1.5rem;
+}
 
-        label {
-            display: flex;
-            flex-direction: column;
-            font-size: 0.9rem;
-            gap: 0.25rem;
-        }
+label {
+	display: flex;
+	flex-direction: column;
+	font-size: 0.9rem;
+	gap: 0.25rem;
+}
 
-        input {
-            padding: 0.5rem;
-            border: 1px solid #bbb;
-            border-radius: 4px;
-            font-size: 0.95rem;
-        }
+input {
+	padding: 0.5rem;
+	border: 1px solid #bbb;
+	border-radius: 4px;
+	font-size: 0.95rem;
+}
 
-        .button-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: 0.75rem;
-        }
+.button-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+	gap: 0.75rem;
+}
 
-        button {
-            padding: 0.65rem 1rem;
-            border: none;
-            border-radius: 4px;
-            background: #1976d2;
-            color: #fff;
-            cursor: pointer;
-            font-size: 0.95rem;
-        }
+button {
+	padding: 0.65rem 1rem;
+	border: none;
+	border-radius: 4px;
+	background: #1976d2;
+	color: #fff;
+	cursor: pointer;
+	font-size: 0.95rem;
+}
 
-        button:hover {
-            background: #135ca4;
-        }
-    </style>
-    <script>
+button:hover {
+	background: #135ca4;
+}
+</style>
+<script>
         function navigateTo(targetPage) {
             const inputIds = [
                 'vereinnr',
@@ -96,52 +99,43 @@
             window.location.href = query ? targetPage + '?' + query : targetPage;
         }
     </script>
-</head>
+</h:head>
 <body>
-    <div class="container">
-        <h1>Einstieg</h1>
+	<h:form>
+		<div class="container">
+			<h1>Einstieg</h1>
 
-        <div class="feld-grid">
-            <label for="vereinnr">vereinnr
-                <input id="vereinnr" type="text" />
-            </label>
-            <label for="v">v
-                <input id="v" type="text" />
-            </label>
-            <label for="p">p
-                <input id="p" type="text" />
-            </label>
-            <label for="uuid">uuid
-                <input id="uuid" type="text" />
-            </label>
-            <label for="uniqueKey">uniqueKey
-                <input id="uniqueKey" type="text" />
-            </label>
-            <label for="ruecksprung">ruecksprung
-                <input id="ruecksprung" type="text" value="einstieg.xhtml" />
-            </label>
-            <label for="sp">sp
-                <input id="sp" type="text" />
-            </label>
-            <label for="runde">runde
-                <input id="runde" type="text" />
-            </label>
-            <label for="name">name
-                <input id="name" type="text" />
-            </label>
-        </div>
+			<div class="feld-grid">
+				<label for="vereinnr">vereinnr <input id="vereinnr"
+					type="text" />
+				</label> <label for="v">v <input id="v" type="text" />
+				</label> <label for="p">p <input id="p" type="text" />
+				</label> <label for="uuid">uuid <input id="uuid" type="text" />
+				</label> <label for="uniqueKey">uniqueKey <input id="uniqueKey"
+					type="text" />
+				</label> <label for="ruecksprung">ruecksprung <input
+					id="ruecksprung" type="text" value="einstieg.xhtml" />
+				</label> <label for="sp">sp <input id="sp" type="text" />
+				</label> <label for="runde">runde <input id="runde" type="text" />
+				</label> <label for="name">name <input id="name" type="text" />
+				</label>
+			</div>
 
-        <div class="button-grid">
-            <button type="button" onclick="navigateTo('adressliste.xhtml')">adressliste</button>
-            <button type="button" onclick="navigateTo('aufstellung.xhtml')">aufstellung</button>
-            <button type="button" onclick="navigateTo('bestaetigung.xhtml')">bestaetigung</button>
-            <button type="button" onclick="navigateTo('bilder.xhtml')">bilder</button>
-            <button type="button" onclick="navigateTo('config.xhtml')">config</button>
-            <button type="button" onclick="navigateTo('gesamtspielplan.xhtml')">gesamtspielplan</button>
-            <button type="button" onclick="navigateTo('spielcodes.xhtml')">spielcodes</button>
-            <button type="button" onclick="navigateTo('verfuegbar.xhtml')">verfuegbar</button>
-             <button type="button" onclick="navigateTo('versendeteMails.xhtml')">Versendete Mails</button>
-        </div>
-    </div>
+			<div class="button-grid">
+				<button type="button" onclick="navigateTo('adressliste.xhtml')">adressliste</button>
+				<button type="button" onclick="navigateTo('aufstellung.xhtml')">aufstellung</button>
+				<button type="button" onclick="navigateTo('bestaetigung.xhtml')">bestaetigung</button>
+				<button type="button" onclick="navigateTo('bilder.xhtml')">bilder</button>
+				<button type="button" onclick="navigateTo('config.xhtml')">config</button>
+				<button type="button" onclick="navigateTo('gesamtspielplan.xhtml')">gesamtspielplan</button>
+				<button type="button" onclick="navigateTo('spielcodes.xhtml')">spielcodes</button>
+				<button type="button" onclick="navigateTo('verfuegbar.xhtml')">verfuegbar</button>
+				<button type="button" onclick="navigateTo('versendeteMails.xhtml')">Versendete
+					Mails</button>
+				<button type="button" onclick="navigateTo('zwischenablage.xhtml')">Spielcodes
+					kopieren</button>
+			</div>
+		</div>
+	</h:form>
 </body>
 </html>

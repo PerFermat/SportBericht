@@ -294,7 +294,7 @@ public class BestaetigungBean implements Serializable {
 
 		String inhalt = sb.toString();
 		try {
-			emailService.sendEmail(vereinnr, betreff, inhalt, null, null);
+			emailService.sendEmail(vereinnr, betreff, inhalt, null, null, true);
 			mailGesendetHinweis = true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -365,7 +365,7 @@ public class BestaetigungBean implements Serializable {
 
 		String inhalt = sb.toString();
 		try {
-			emailService.sendEmail(vereinnr, betreff, inhalt, null, null);
+			emailService.sendEmail(vereinnr, betreff, inhalt, null, null, true);
 			mailGesendetHinweis = true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -484,7 +484,7 @@ public class BestaetigungBean implements Serializable {
 		String inhalt = sb.toString();
 
 		try {
-			emailService.sendEmail(vereinnr, betreff, inhalt, null, null);
+			emailService.sendEmail(vereinnr, betreff, inhalt, null, null, true);
 			mailGesendetHinweis = true;
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -129,6 +129,14 @@ public class VersendeteMailsBean implements Serializable {
 		ladeMails();
 	}
 
+	public void loescheAusgewaehlteMail(VersendeteMail mail) {
+
+		dbService.loescheVersendeteMail(mail.getId());
+		FacesContext.getCurrentInstance().addMessage(null,
+				new FacesMessage(FacesMessage.SEVERITY_INFO, "Mail gelöscht", "Die Mail wurde entfernt."));
+		ladeMails();
+	}
+
 	public String formatZeitstempel(VersendeteMail mail) {
 		return mail.getTimestamp() == null ? "" : mail.getTimestamp().format(ZEIT_FORMAT);
 	}

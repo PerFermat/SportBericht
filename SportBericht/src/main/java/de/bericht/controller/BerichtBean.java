@@ -283,7 +283,7 @@ public class BerichtBean implements Serializable {
 		}
 		EmailService emailService = new EmailService(vereinnr, name);
 		try {
-			emailService.sendEmail(vereinnr, subject, body, attachment, bildname);
+			emailService.sendEmail(vereinnr, subject, body, attachment, bildname, true);
 			if (emailService.getCcEmpfaenger() == null) {
 				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
 						"Erfolg", "E-Mail wurde erfolgreich versendet! \nTo:" + emailService.getRecipients()));

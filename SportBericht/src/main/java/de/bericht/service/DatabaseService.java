@@ -72,23 +72,34 @@ public class DatabaseService {
 
 	public BerichtData loadBerichtData(String vereinnr, String ergebnisLink) {
 		String sql = "SELECT berichtText, bild , bildUnterschrift, ueberschrift, mitSpielberichte FROM berichte WHERE ergebnisLink = ? and vereinnr = ?";
-		BerichtData data = new BerichtData();
-		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-			pstmt.setString(1, ergebnisLink);
-			pstmt.setString(2, vereinnr);
-			ResultSet rs = pstmt.executeQuery();
-			if (rs.next()) {
-				data.setBerichtText(rs.getString("berichtText"));
-				data.setBild(rs.getBytes("bild"));
-				data.setBildUnterschrift(rs.getString("bildUnterschrift"));
-				data.setUeberschrift(rs.getString("ueberschrift"));
-				data.setMitSpielberichte(rs.getBoolean("mitSpielberichte"));
+		for (int versuch = 0; versuch < 2; versuch++) {
+			BerichtData data = new BerichtData();
+			try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+				pstmt.setString(1, ergebnisLink);
+				pstmt.setString(2, vereinnr);
+				try (ResultSet rs = pstmt.executeQuery()) {
+					if (rs.next()) {
+						data.setBerichtText(rs.getString("berichtText"));
+						data.setBild(rs.getBytes("bild"));
+						data.setBildUnterschrift(rs.getString("bildUnterschrift"));
+						data.setUeberschrift(rs.getString("ueberschrift"));
+						data.setMitSpielberichte(rs.getBoolean("mitSpielberichte"));
+					}
+				}
+				return data;
+			} catch (SQLException e) {
+				boolean connectionClosed = e instanceof java.sql.SQLNonTransientConnectionException
+						|| (e.getMessage() != null && e.getMessage().toLowerCase().contains("connection is closed"));
+				if (connectionClosed && versuch == 0) {
+					System.err.println("Geschlossene DB-Verbindung erkannt, erneuter Versuch für loadBerichtData.");
+					continue;
+				}
+				e.printStackTrace();
+				return data;
 			}
-			rs.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
 		}
-		return data;
+		return new BerichtData();
+
 	}
 
 	public String loadUeberschrift(String vereinnr, String ueberschrift) {
@@ -338,19 +349,7 @@ public class DatabaseService {
 	// Datenbank
 	public int anzahlWordpress(String vereinnr, String ergebnisLink, String name) {
 		String sql = "SELECT count(*) as Anzahl FROM log_tabelle WHERE vereinnr = ? and ergebnisLink = ? AND aktion LIKE CONCAT('Veröffentlichen ', ?, ' OK%')";
-		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-			pstmt.setString(1, vereinnr);
-			pstmt.setString(2, ergebnisLink);
-			pstmt.setString(3, name);
-			ResultSet rs = pstmt.executeQuery();
-			if (rs.next()) {
-				return rs.getInt("Anzahl");
-			}
-			rs.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return 0;
+		return countLogEintraege(sql, vereinnr, ergebnisLink, name);
 	}
 
 	// Liest den gespeicherten Berichtstext und das Bild (als BLOB) aus der
@@ -391,34 +390,13 @@ public class DatabaseService {
 
 	public int anzahlFreigabe(String vereinnr, String ergebnisLink) {
 		String sql = "SELECT count(*) as Anzahl FROM log_tabelle WHERE vereinnr = ? and ergebnisLink = ? AND aktion = 'Freigegeben'";
-		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-			pstmt.setString(1, vereinnr);
-			pstmt.setString(2, ergebnisLink);
-			ResultSet rs = pstmt.executeQuery();
-			if (rs.next()) {
-				return rs.getInt("Anzahl");
-			}
-			rs.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return 0;
+		return countLogEintraege(sql, vereinnr, ergebnisLink);
+
 	}
 
 	public int anzahlBlaettle(String vereinnr, String ergebnisLink) {
 		String sql = "SELECT count(*) as Anzahl FROM log_tabelle WHERE vereinnr = ? and  ergebnisLink = ? AND aktion = 'Veröffentlichung Blättle'";
-		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-			pstmt.setString(1, vereinnr);
-			pstmt.setString(2, ergebnisLink);
-			ResultSet rs = pstmt.executeQuery();
-			if (rs.next()) {
-				return rs.getInt("Anzahl");
-			}
-			rs.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return 0;
+		return countLogEintraege(sql, vereinnr, ergebnisLink);
 	}
 
 	// Liest den gespeicherten Berichtstext und das Bild (als BLOB) aus der
@@ -526,7 +504,7 @@ public class DatabaseService {
 		String insertHistorieSql = "INSERT INTO berichte_historie (vereinnr, ergebnisLink, berichtText, bild, bildUnterschrift, ueberschrift, liga, heim, gast, datum, ergebnis, timestamp) VALUES (? , ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
 		String upsertSql = "INSERT INTO berichte (vereinnr, ergebnisLink, berichtText, bild, bildUnterschrift , ueberschrift) VALUES (? , ?, ?, ?, ? , ?) "
 				+ "ON DUPLICATE KEY UPDATE berichtText = VALUES(berichtText), bild = VALUES(bild), bildUnterschrift = VALUES(bildUnterschrift) , ueberschrift = VALUES(ueberschrift)";
-
+		boolean gespeichert = false;
 		try (Connection conn = openConnection()) {
 
 			if (speichernHistorie) {
@@ -625,7 +603,9 @@ public class DatabaseService {
 							upsertStmt.setNull(6, java.sql.Types.VARCHAR);
 						}
 						upsertStmt.executeUpdate();
+						gespeichert = true;
 					}
+
 				}
 			} else {
 				// Update / Insert mit finalen Werten (kann auch null sein)
@@ -637,11 +617,16 @@ public class DatabaseService {
 				upsertStmt.setString(5, neueUnterschrift);
 				upsertStmt.setString(6, neueUeberschrift);
 				upsertStmt.executeUpdate();
+				gespeichert = true;
 			}
-			BerichtHelper.refreshCachedBerichtData(vereinnr, ergebnisLink);
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		if (gespeichert) {
+			BerichtHelper.refreshCachedBerichtData(vereinnr, ergebnisLink);
+		}
+
 	}
 
 	public void saveSpielMetadaten(String vereinnr, String ergebnisLink, String liga, String heim, String gast,
@@ -664,7 +649,7 @@ public class DatabaseService {
 
 	public void saveLogData(String vereinnr, String ergebnisLink, String name, String aktion, String mailErfolgreich) {
 		String sql = "INSERT INTO log_tabelle (vereinnr, ergebnisLink, timestamp, name, aktion, mailErfolgreich) VALUES (?, ?, ?, ?, ?, ?)";
-
+		boolean gespeichert = false;
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
 			// Aktuelle Zeit in deutscher Zeitzone (inkl. Sommer-/Winterzeit)
@@ -678,21 +663,25 @@ public class DatabaseService {
 			pstmt.setString(5, aktion);
 			pstmt.setString(6, mailErfolgreich);
 			pstmt.executeUpdate();
+			gespeichert = true;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		if (gespeichert) {
 
 			ErgebnisCache.setze(vereinnr, "Freigabe", this, ergebnisLink, name);
 			ErgebnisCache.setze(vereinnr, "Blaettle", this, ergebnisLink, name);
 			ErgebnisCache.setze(vereinnr, "Wordpress", this, ergebnisLink, name);
 			BerichtHelper.refreshCachedBerichtData(vereinnr, ergebnisLink);
 
-		} catch (SQLException e) {
-			e.printStackTrace();
 		}
 	}
 
 	public void saveLogData(String vereinnr, String ergebnisLink, String name, String aktion, String mailErfolgreich,
 			String info) {
 		String sql = "INSERT INTO log_tabelle (vereinnr, ergebnisLink, timestamp, name, aktion, mailErfolgreich, info) VALUES (?, ?, ?, ?, ?, ? ,?)";
-
+		boolean gespeichert = false;
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
 			// Aktuelle Zeit in deutscher Zeitzone (inkl. Sommer-/Winterzeit)
@@ -707,14 +696,17 @@ public class DatabaseService {
 			pstmt.setString(6, mailErfolgreich);
 			pstmt.setString(7, info);
 			pstmt.executeUpdate();
+			gespeichert = true;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		if (gespeichert) {
 
 			ErgebnisCache.setze(vereinnr, "Freigabe", this, ergebnisLink, name);
 			ErgebnisCache.setze(vereinnr, "Blaettle", this, ergebnisLink, name);
 			ErgebnisCache.setze(vereinnr, "Wordpress", this, ergebnisLink, name);
 			BerichtHelper.refreshCachedBerichtData(vereinnr, ergebnisLink);
-
-		} catch (SQLException e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -1240,7 +1232,7 @@ public class DatabaseService {
 		String insertSql = "INSERT INTO berichte (vereinnr, ergebnisLink, spielstatistik, berichtText, bild, bildUnterschrift, ueberschrift) "
 				+ "VALUES (?, ?, ?, NULL, NULL, NULL, NULL)";
 		String updateSql = "UPDATE berichte SET spielstatistik = ? WHERE vereinnr = ? AND ergebnisLink = ?";
-
+		boolean gespeichert = false;
 		try (Connection conn = openConnection();
 
 		) {
@@ -1265,21 +1257,28 @@ public class DatabaseService {
 					updateStmt.setString(2, vereinnr);
 					updateStmt.setString(3, ergebnisLink);
 					updateStmt.executeUpdate();
+					gespeichert = true;
 				}
 			} else {
+
 				// INSERT Satz anlegen → andere Felder NULL
 				try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
 					insertStmt.setString(1, vereinnr);
 					insertStmt.setString(2, ergebnisLink);
 					insertStmt.setString(3, spielstatistik);
 					insertStmt.executeUpdate();
+					gespeichert = true;
 				}
-			}
 
-			BerichtHelper.refreshCachedBerichtData(vereinnr, ergebnisLink);
+			}
 
 		} catch (SQLException e) {
 			e.printStackTrace();
+		}
+		if (gespeichert) {
+
+			BerichtHelper.refreshCachedBerichtData(vereinnr, ergebnisLink);
+
 		}
 	}
 
@@ -2553,6 +2552,34 @@ public class DatabaseService {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	private int countLogEintraege(String sql, String vereinnr, String ergebnisLink, String... weitereParameter) {
+		for (int versuch = 0; versuch < 2; versuch++) {
+			try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+				pstmt.setString(1, vereinnr);
+				pstmt.setString(2, ergebnisLink);
+				for (int i = 0; i < weitereParameter.length; i++) {
+					pstmt.setString(i + 3, weitereParameter[i]);
+				}
+				try (ResultSet rs = pstmt.executeQuery()) {
+					if (rs.next()) {
+						return rs.getInt("Anzahl");
+					}
+				}
+				return 0;
+			} catch (SQLException e) {
+				boolean connectionClosed = e instanceof java.sql.SQLNonTransientConnectionException
+						|| (e.getMessage() != null && e.getMessage().toLowerCase().contains("connection is closed"));
+				if (connectionClosed && versuch == 0) {
+					System.err.println("Geschlossene DB-Verbindung erkannt, erneuter Versuch für Count-Abfrage.");
+					continue;
+				}
+				e.printStackTrace();
+				return 0;
+			}
+		}
+		return 0;
 	}
 
 }

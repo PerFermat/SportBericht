@@ -112,7 +112,7 @@
 							<f:param name="ergebnis" value="#{spiel.ergebnis}" />
 							<f:param name="ergebnisLink" value="#{spiel.ergebnisLink}" />
 							<f:param name="liga" value="#{spiel.liga}" />
-							<f:param name="guppeUrl" value="#{freieBerichteBean.gruppeUrl}" />							
+							<f:param name="gruppeUrl" value="#{freieBerichteBean.gruppeUrl}" />							
 						</p:commandButton>
 						<p:commandButton value="Veröffentlichen" action="zusammen.xhtml"
 							rendered="#{freieBerichteBean.hasFreigabe(spiel.ergebnisLink)}"

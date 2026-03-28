@@ -75,7 +75,7 @@ public class EmailService {
 	 * Textversion mitgeschickt.
 	 */
 	public void sendEmail(String vereinnr, String mailSubject, String mailText, byte[] attachment,
-			String attachmentName) throws MessagingException {
+			String attachmentName, Boolean speichern) throws MessagingException {
 
 		String htmlMailText = toHtml(mailText);
 
@@ -136,7 +136,9 @@ public class EmailService {
 		message.setContent(finalMultipart);
 
 		Transport.send(message);
-		ds.speichernMail(recipients, ccEmpfaenger, mailSubject, htmlMailText, attachmentName);
+		if (speichern) {
+			ds.speichernMail(recipients, ccEmpfaenger, mailSubject, htmlMailText, attachmentName);
+		}
 
 	}
 
