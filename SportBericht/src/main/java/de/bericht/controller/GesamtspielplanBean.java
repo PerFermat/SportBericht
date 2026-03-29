@@ -3,10 +3,10 @@ package de.bericht.controller;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
@@ -19,8 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -51,6 +50,7 @@ import com.lowagie.text.pdf.draw.VerticalPositionMark;
 
 import de.bericht.service.AnzeigeSpalte;
 import de.bericht.service.DatabaseService;
+import de.bericht.service.EmailService;
 import de.bericht.service.GesamtspielplanConfigMannschaft;
 import de.bericht.service.GesamtspielplanConfigRunde;
 import de.bericht.service.GesamtspielplanConfigSpalte;
@@ -59,11 +59,12 @@ import de.bericht.service.SpielerRueckmeldung;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import jakarta.annotation.PostConstruct;
+import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.TreeSet;
 
 @Named("gesamtspielplanBean")
 @ViewScoped
@@ -79,7 +80,6 @@ public class GesamtspielplanBean implements Serializable {
 	private final List<String> verfuegbareMannschaften = new ArrayList<>();
 	private final Map<String, List<String>> mannschaftenByLiga = new LinkedHashMap<>();
 	private final Map<String, List<String>> ligenByMannschaft = new LinkedHashMap<>();
-
 
 	private final ConfigManager configManager = ConfigManager.getInstance();
 	private final DatabaseService databaseService = new DatabaseService();
@@ -104,6 +104,10 @@ public class GesamtspielplanBean implements Serializable {
 	private final List<SpielerRueckmeldung> zusatzZugesagtSpieler = new ArrayList<>();
 	private final Map<String, VerfuegbarkeitsSnapshot> verfuegbarkeitBySpielKey = new HashMap<>();
 	private boolean konfigurationErforderlich;
+	private final SecureRandom secureRandom = new SecureRandom();
+	private String speicherEinmalpasswort;
+	private String speicherEinmalpasswortEingabe;
+	private boolean speicherFreigeschaltet;
 
 	@PostConstruct
 	public void init() {
@@ -196,7 +200,7 @@ public class GesamtspielplanBean implements Serializable {
 		for (String datum : sortierteDaten) {
 
 			Map<String, List<GesamtspielplanEintrag>> rowMap = new LinkedHashMap<>();
-			boolean hatMindestensEinSpiel = false;			
+			boolean hatMindestensEinSpiel = false;
 			for (AnzeigeSpalte spalte : spalten) {
 				List<GesamtspielplanEintrag> gesammelt = new ArrayList<>();
 				Map<String, List<GesamtspielplanEintrag>> datumMap = basisEintraege.getOrDefault(datum, Map.of());
@@ -214,8 +218,7 @@ public class GesamtspielplanBean implements Serializable {
 			if (hatMindestensEinSpiel) {
 				datumsListe.add(datum);
 				spieleByDatumUndSpalte.put(datum, rowMap);
-				
-				
+
 			}
 		}
 
@@ -981,7 +984,7 @@ public class GesamtspielplanBean implements Serializable {
 			model.setDatumBis(row.getDatumBis());
 			configRunden.add(model);
 		}
-		
+
 		Map<Integer, ConfigSpalteModel> byId = new LinkedHashMap<>();
 		for (GesamtspielplanConfigSpalte row : databaseService.ladeGesamtspielplanConfigSpalten(vereinnr)) {
 			ConfigSpalteModel model = new ConfigSpalteModel();
@@ -1014,9 +1017,9 @@ public class GesamtspielplanBean implements Serializable {
 		verfuegbareLigen.addAll(databaseService.ladeGesamtspielplanLigen(vereinnr, verein_prefix));
 		verfuegbareMannschaften.clear();
 		verfuegbareMannschaften.addAll(databaseService.ladeGesamtspielplanMannschaften(vereinnr, verein_prefix));
-		aktualisiereLigaMannschaftZuordnung();		
+		aktualisiereLigaMannschaftZuordnung();
 	}
-	
+
 	private void aktualisiereLigaMannschaftZuordnung() {
 		mannschaftenByLiga.clear();
 		ligenByMannschaft.clear();
@@ -1048,7 +1051,6 @@ public class GesamtspielplanBean implements Serializable {
 		}
 	}
 
-
 	private void uebernehmeDefinitionenAusConfigSpalten() {
 		aktiveSpaltenDefinitionen.clear();
 		for (ConfigSpalteModel model : configSpalten) {
@@ -1064,7 +1066,7 @@ public class GesamtspielplanBean implements Serializable {
 							nullSafe(model.getLigaAnzeige()), model.isBetreuer(), quellen));
 		}
 	}
-	
+
 	public void addConfigRunde() {
 		ConfigRundeModel model = new ConfigRundeModel();
 		model.setExpanded(true);
@@ -1084,7 +1086,6 @@ public class GesamtspielplanBean implements Serializable {
 		}
 		runde.setExpanded(!runde.isExpanded());
 	}
-
 
 	public void addConfigSpalte() {
 		ConfigSpalteModel model = new ConfigSpalteModel();
@@ -1115,6 +1116,7 @@ public class GesamtspielplanBean implements Serializable {
 		spalte.getMannschaften().add(new ConfigMannschaftModel());
 		spalte.setExpanded(true);
 	}
+
 	public void onLigaChange(ConfigMannschaftModel mannschaft) {
 		if (mannschaft == null) {
 			return;
@@ -1155,7 +1157,6 @@ public class GesamtspielplanBean implements Serializable {
 		synchronisiereAnzeigeMitErsterAuswahl();
 	}
 
-
 	public void removeConfigMannschaft(ConfigSpalteModel spalte, ConfigMannschaftModel mannschaft) {
 		if (spalte == null || mannschaft == null) {
 			return;
@@ -1172,6 +1173,12 @@ public class GesamtspielplanBean implements Serializable {
 	}
 
 	public void saveConfig() {
+		if (!speicherFreigeschaltet) {
+			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
+					"Freigabe fehlt", "Bitte zuerst das Einmalpasswort prüfen."));
+			return;
+		}
+
 		reindexConfigSpalten();
 		setzeAnzeigeDefaultsWennLeer();
 		List<GesamtspielplanConfigRunde> dbRunden = new ArrayList<>();
@@ -1187,7 +1194,7 @@ public class GesamtspielplanBean implements Serializable {
 			row.setDatumBis(model.getDatumBis());
 			dbRunden.add(row);
 		}
-		
+
 		List<GesamtspielplanConfigSpalte> dbSpalten = new ArrayList<>();
 		for (ConfigSpalteModel model : configSpalten) {
 			GesamtspielplanConfigSpalte row = new GesamtspielplanConfigSpalte();
@@ -1209,11 +1216,50 @@ public class GesamtspielplanBean implements Serializable {
 		ladePersistierteGesamtspielplanKonfiguration();
 		ladeGesamtspielplan();
 		aktualisiereKonfigurationErforderlich();
+		resetSpeicherFreigabe();
+	}
+
+	public void anfordernSpeicherEinmalpasswort() {
+		speicherFreigeschaltet = false;
+		speicherEinmalpasswortEingabe = "";
+		String empfaenger = trimToNull(ConfigManager.getConfigValue(vereinnr, "config.berechtigung"));
+		if (empfaenger == null) {
+			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+					"Keine Empfänger", "Bitte config.mail mit E-Mail-Adressen pflegen."));
+			return;
+		}
+		speicherEinmalpasswort = String.format("%06d", secureRandom.nextInt(1_000_000));
+		try {
+			new EmailService(vereinnr, empfaenger, null).sendEmail(vereinnr, "Einmalpasswort Gesamtspielplan",
+					"Das Einmalpasswort lautet: " + speicherEinmalpasswort, null, null, false);
+			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Einmalpasswort versendet", "Bitte E-Mail prüfen und den Code eingeben."));
+		} catch (MessagingException e) {
+			speicherEinmalpasswort = null;
+			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+					"Versand fehlgeschlagen", "Einmalpasswort konnte nicht versendet werden."));
+		}
+	}
+
+	public void pruefeSpeicherEinmalpasswort() {
+		if (speicherEinmalpasswort == null || speicherEinmalpasswortEingabe == null
+				|| speicherEinmalpasswortEingabe.isBlank()) {
+			speicherFreigeschaltet = false;
+			return;
+		}
+		speicherFreigeschaltet = speicherEinmalpasswort.equals(speicherEinmalpasswortEingabe.trim());
+	}
+
+	private void resetSpeicherFreigabe() {
+		speicherEinmalpasswort = null;
+		speicherEinmalpasswortEingabe = "";
+		speicherFreigeschaltet = false;
+
 	}
 
 	private void aktualisiereKonfigurationErforderlich() {
 		konfigurationErforderlich = configSpalten.isEmpty() || datumsListe.isEmpty();
-		
+
 	}
 
 	private void reindexConfigSpalten() {
@@ -1225,6 +1271,7 @@ public class GesamtspielplanBean implements Serializable {
 	private String nullSafe(String value) {
 		return value == null ? "" : value.trim();
 	}
+
 	private String trimToNull(String value) {
 		if (value == null) {
 			return null;
@@ -1276,7 +1323,6 @@ public class GesamtspielplanBean implements Serializable {
 		}
 	}
 
-	
 	private boolean passtZurRunde(String datum) {
 		if (istLeer(halbserie)) {
 			return true;
@@ -1341,7 +1387,6 @@ public class GesamtspielplanBean implements Serializable {
 		}
 		return "";
 	}
-
 
 	public void saveBetreuer(GesamtspielplanEintrag eintrag) {
 		if (eintrag == null || eintrag.getUniqueKey() == null || eintrag.getUniqueKey().isBlank()) {
@@ -1505,6 +1550,7 @@ public class GesamtspielplanBean implements Serializable {
 	public String getHalbserie() {
 		return halbserie;
 	}
+
 	public List<String> getRundenNamen() {
 		List<String> result = new ArrayList<>();
 		for (ConfigRundeModel runde : configRunden) {
@@ -1520,7 +1566,6 @@ public class GesamtspielplanBean implements Serializable {
 		return configRunden;
 	}
 
-
 	public void setHalbserie(String halbserie) {
 		this.halbserie = halbserie;
 	}
@@ -1533,7 +1578,6 @@ public class GesamtspielplanBean implements Serializable {
 		return konfigurationErforderlich;
 	}
 
-	
 	public List<ConfigSpalteModel> getConfigSpalten() {
 		return configSpalten;
 	}
@@ -1636,8 +1680,6 @@ public class GesamtspielplanBean implements Serializable {
 			List<SpielerRueckmeldung> zusatzZugesagt, List<SpielerRueckmeldung> offen) {
 	}
 
-
-
 	public static class ConfigRundeModel implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private Integer id;
@@ -1687,7 +1729,6 @@ public class GesamtspielplanBean implements Serializable {
 		}
 	}
 
-	
 	public static class ConfigSpalteModel implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private Integer id;
@@ -1825,4 +1866,21 @@ public class GesamtspielplanBean implements Serializable {
 	public void zurueck() {
 
 	}
+
+	public String getSpeicherEinmalpasswortEingabe() {
+		return speicherEinmalpasswortEingabe;
+	}
+
+	public void setSpeicherEinmalpasswortEingabe(String speicherEinmalpasswortEingabe) {
+		this.speicherEinmalpasswortEingabe = speicherEinmalpasswortEingabe;
+	}
+
+	public boolean isSpeicherFreigeschaltet() {
+		return speicherFreigeschaltet;
+	}
+
+	public boolean isSpeicherEinmalpasswortAngefordert() {
+		return speicherEinmalpasswort != null;
+	}
+
 }

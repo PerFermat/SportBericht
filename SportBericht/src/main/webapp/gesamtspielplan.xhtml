@@ -286,10 +286,12 @@
 											<p:inputText value="#{configRunde.name}" placeholder="Name"
 												styleClass="gesamt-config-runde-name" />
 											<p:datePicker value="#{configRunde.datumVon}"
-												pattern="dd.MM.yyyy" showIcon="false" placeholder="Datum_von"
+												pattern="dd.MM.yyyy" showIcon="false"
+												placeholder="Datum_von"
 												styleClass="gesamt-config-runde-datum" />
 											<p:datePicker value="#{configRunde.datumBis}"
-												pattern="dd.MM.yyyy" showIcon="false" placeholder="Datum_bis"
+												pattern="dd.MM.yyyy" showIcon="false"
+												placeholder="Datum_bis"
 												styleClass="gesamt-config-runde-datum" />
 										</h:panelGroup>
 										<p:commandButton icon="pi pi-trash"
@@ -384,12 +386,32 @@
 								update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
 						</div>
 						<div class="dialog-footer-buttons" style="margin-top: 16px;">
+							<p:messages id="gesamtConfigMessages" showDetail="true"
+								closable="true" />
+							<br />	
+							<br />	
 							<p:commandButton value="Temporär"
 								actionListener="#{gesamtspielplanBean.applyTempConfig}"
 								process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
 								update=":gesamtspielplanForm :controlsForm"
-								oncomplete="PF('gesamtspielplanConfigDialog').hide();" />
+								oncomplete="PF('gesamtspielplanConfigDialog').hide();"
+								styleClass="ui-button-secondary" />
+							<p:commandButton value="Einmalpasswort anfordern"
+								actionListener="#{gesamtspielplanBean.anfordernSpeicherEinmalpasswort}"
+								rendered="#{not gesamtspielplanBean.speicherFreigeschaltet}"
+								process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
+								update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent :controlsForm" />
+							<p:inputText
+								value="#{gesamtspielplanBean.speicherEinmalpasswortEingabe}"
+								placeholder="Einmalpasswort"
+								rendered="#{gesamtspielplanBean.speicherEinmalpasswortAngefordert and not gesamtspielplanBean.speicherFreigeschaltet}" />
+							<p:commandButton value="Einmalpasswort prüfen"
+								actionListener="#{gesamtspielplanBean.pruefeSpeicherEinmalpasswort}"
+								rendered="#{gesamtspielplanBean.speicherEinmalpasswortAngefordert and not gesamtspielplanBean.speicherFreigeschaltet}"
+								process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
+								update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent :controlsForm" />
 							<p:commandButton value="Speichern"
+								rendered="#{gesamtspielplanBean.speicherFreigeschaltet}"
 								actionListener="#{gesamtspielplanBean.saveConfig}"
 								process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
 								update=":gesamtspielplanForm :controlsForm"

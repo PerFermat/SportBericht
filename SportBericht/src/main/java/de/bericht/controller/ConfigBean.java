@@ -2,10 +2,20 @@ package de.bericht.controller;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import de.bericht.service.ConfigService;
 import de.bericht.service.DatabaseService;
+import de.bericht.service.EmailService;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigBedeutung;
 import de.bericht.util.ConfigEintrag;
@@ -17,18 +27,8 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Named
 @ViewScoped
@@ -50,17 +50,21 @@ public class ConfigBean implements Serializable {
 	private boolean neuerDialog;
 	private String dialogKey;
 	private String dialogInhalt;
-	private String dialogOriginalKey;	
+	private String dialogOriginalKey;
 	private String dialogBedeutung;
 	private String dialogInhaltformat;
 	private String dialogWertebereich;
 	private List<String> dialogKategorien = new ArrayList<>();
 	private final Map<String, List<String>> enumWerteCache = new HashMap<>();
-	private final Map<String, String> originalWerteByKey = new HashMap<>();	
+	private final Map<String, String> originalWerteByKey = new HashMap<>();
 	private List<String> chatGptModelle = new ArrayList<>();
 	private ConfigEintrag passwortDialogEintrag;
 	private String passwortDialogAnzeige;
 	private String passwortDialogInput;
+	private final SecureRandom secureRandom = new SecureRandom();
+	private String einmalpasswort;
+	private String einmalpasswortEingabe;
+	private boolean einmalpasswortGeprueft;
 
 	private final ConfigService service = new ConfigService();
 
@@ -80,10 +84,17 @@ public class ConfigBean implements Serializable {
 			}
 			return;
 		}
+
+		erstelleUndSendeEinmalpasswort(false);
+
 		ladeConfigEintraegeMitBedeutung();
 	}
 
 	public void speichern() {
+		if (!einmalpasswortGeprueft) {
+			return;
+		}
+
 		service.speichereConfigEintraege(vereinnr, configEintraege);
 		ladeConfigEintraegeMitBedeutung();
 	}
@@ -93,15 +104,18 @@ public class ConfigBean implements Serializable {
 	}
 
 	public void speichereEintrag(ConfigEintrag eintrag) {
+		if (!einmalpasswortGeprueft) {
+			return;
+		}
+
 		System.out.println(eintrag.getWert() + " wird gespeichert ");
 		if (eintrag == null || !isNotBlank(eintrag.getEintrag())) {
 			return;
 		}
 		service.insertOrUpdateConfigEintrag(vereinnr, eintrag.getEintrag(), defaultString(eintrag.getWert()));
 		ladeConfigEintraegeMitBedeutung();
-		FacesContext.getCurrentInstance().addMessage(null,
-				new FacesMessage(FacesMessage.SEVERITY_INFO, "Gespeichert",
-						"Eintrag " + eintrag.getEintrag() + " wurde gespeichert."));
+		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Gespeichert",
+				"Eintrag " + eintrag.getEintrag() + " wurde gespeichert."));
 	}
 
 	public boolean eintragGeaendert(ConfigEintrag eintrag) {
@@ -113,7 +127,6 @@ public class ConfigBean implements Serializable {
 		return !Objects.equals(originalWert, aktuellerWert);
 	}
 
-	
 	public boolean farbFeld(ConfigEintrag eintrag) {
 		return eintrag != null && (Boolean.TRUE.equals(eintrag.getFarbe()) || eintrag.isInhaltformatFarbe());
 	}
@@ -131,17 +144,17 @@ public class ConfigBean implements Serializable {
 	public int maxWert(ConfigEintrag eintrag) {
 		return leseGrenzen(eintrag)[1];
 	}
-	
+
 	public int schrittweite(ConfigEintrag eintrag) {
 		return leseGrenzen(eintrag)[2];
 	}
-
 
 	public List<String> enumWerte(ConfigEintrag eintrag) {
 		if (eintrag == null || eintrag.getEintrag() == null || eintrag.getEintrag().isBlank()) {
 			return Collections.emptyList();
 		}
-		return enumWerteCache.computeIfAbsent(eintrag.getEintrag(), key -> enumWerteAusWertebereichUndDaten(key, eintrag));
+		return enumWerteCache.computeIfAbsent(eintrag.getEintrag(),
+				key -> enumWerteAusWertebereichUndDaten(key, eintrag));
 	}
 
 	public List<String> getChatGptModelle() {
@@ -177,6 +190,10 @@ public class ConfigBean implements Serializable {
 	}
 
 	public void speicherePasswortDialog() {
+		if (!einmalpasswortGeprueft) {
+			return;
+		}
+
 		if (passwortDialogEintrag == null || !isNotBlank(passwortDialogInput)) {
 			return;
 		}
@@ -190,6 +207,10 @@ public class ConfigBean implements Serializable {
 	}
 
 	public void insertHomepage() {
+		if (!einmalpasswortGeprueft) {
+			return;
+		}
+
 		speichern();
 
 		String domains = ConfigManager.getConfigValue(vereinnr, "wordpress.domains");
@@ -223,7 +244,7 @@ public class ConfigBean implements Serializable {
 		neuerDialog = true;
 		dialogKey = "";
 		dialogBedeutung = "";
-		dialogOriginalKey = "";		
+		dialogOriginalKey = "";
 		dialogWertebereich = "";
 		dialogInhaltformat = verfuegbareInhaltformate.isEmpty() ? "" : verfuegbareInhaltformate.get(0);
 		dialogKategorien = new ArrayList<>();
@@ -262,6 +283,10 @@ public class ConfigBean implements Serializable {
 	}
 
 	public void speichereDialog() {
+		if (!einmalpasswortGeprueft) {
+			return;
+		}
+
 		if (dialogKey == null || dialogKey.isBlank()) {
 			return;
 		}
@@ -279,10 +304,59 @@ public class ConfigBean implements Serializable {
 
 		}
 
-		service.upsertConfigBedeutung(bereinigterKey, defaultString(dialogBedeutung),
-				defaultString(dialogInhaltformat), defaultString(dialogWertebereich));
+		service.upsertConfigBedeutung(bereinigterKey, defaultString(dialogBedeutung), defaultString(dialogInhaltformat),
+				defaultString(dialogWertebereich));
 		service.replaceConfigKategorien(bereinigterKey, dialogKategorien);
 		ladeConfigEintraegeMitBedeutung();
+	}
+
+	public void anfordernEinmalpasswort() {
+		erstelleUndSendeEinmalpasswort(true);
+	}
+
+	public void pruefeEinmalpasswort() {
+		if (!isNotBlank(einmalpasswort) || !isNotBlank(einmalpasswortEingabe)) {
+			einmalpasswortGeprueft = false;
+			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+					"Einmalpasswort fehlt", "Bitte Einmalpasswort eingeben."));
+			return;
+		}
+		if (einmalpasswort.equals(einmalpasswortEingabe.trim())) {
+			einmalpasswortGeprueft = true;
+			FacesContext.getCurrentInstance().addMessage(null,
+					new FacesMessage(FacesMessage.SEVERITY_INFO, "Freigeschaltet", "Einmalpasswort korrekt."));
+			return;
+		}
+		einmalpasswortGeprueft = false;
+		FacesContext.getCurrentInstance().addMessage(null,
+				new FacesMessage(FacesMessage.SEVERITY_ERROR, "Falsch", "Einmalpasswort ist nicht korrekt."));
+	}
+
+	private void erstelleUndSendeEinmalpasswort(boolean zeigeMeldung) {
+		einmalpasswortGeprueft = false;
+		einmalpasswortEingabe = "";
+		String empfaenger = defaultString(ConfigManager.getConfigValue(vereinnr, "config.berechtigung")).trim();
+		if (!isNotBlank(empfaenger)) {
+			if (zeigeMeldung) {
+				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+						"Keine Empfänger", "Bitte config.mail mit mindestens einer E-Mail-Adresse pflegen."));
+			}
+			return;
+		}
+		einmalpasswort = String.format("%06d", secureRandom.nextInt(1_000_000));
+		EmailService emailService = new EmailService(vereinnr, empfaenger, null);
+		try {
+			emailService.sendEmail(vereinnr, "Einmalpasswort Konfiguration",
+					"Das Einmalpasswort für die Konfigurationsfreigabe lautet: " + einmalpasswort, null, null, false);
+			if (zeigeMeldung) {
+				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
+						"Einmalpasswort versendet", "Das Einmalpasswort wurde per E-Mail verschickt."));
+			}
+		} catch (MessagingException e) {
+			einmalpasswort = null;
+			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+					"Versand fehlgeschlagen", "Einmalpasswort konnte nicht versendet werden."));
+		}
 	}
 
 	private List<String> enumWerteAusWertebereichUndDaten(String key, ConfigEintrag eintrag) {
@@ -308,7 +382,6 @@ public class ConfigBean implements Serializable {
 		return new ArrayList<>(zusammengefuehrteWerte);
 	}
 
-	
 	// Getter & Setter
 	public String getVereinnr() {
 		return vereinnr;
@@ -423,7 +496,6 @@ public class ConfigBean implements Serializable {
 		return new int[] { min, max, schritt };
 	}
 
-
 	private boolean passtZurSuche(ConfigEintrag eintrag) {
 		if (suchText == null || suchText.isBlank()) {
 			return true;
@@ -472,9 +544,11 @@ public class ConfigBean implements Serializable {
 	public boolean isNeuerDialog() {
 		return neuerDialog;
 	}
+
 	public boolean neuerDialog() {
 		return neuerDialog;
 	}
+
 	public String getDialogKey() {
 		return dialogKey;
 	}
@@ -482,7 +556,6 @@ public class ConfigBean implements Serializable {
 	public void setDialogKey(String dialogKey) {
 		this.dialogKey = dialogKey;
 	}
-
 
 	public String getDialogBedeutung() {
 		return dialogBedeutung;
@@ -567,6 +640,18 @@ public class ConfigBean implements Serializable {
 
 	public void setPasswortDialogInput(String passwortDialogInput) {
 		this.passwortDialogInput = passwortDialogInput;
+	}
+
+	public String getEinmalpasswortEingabe() {
+		return einmalpasswortEingabe;
+	}
+
+	public void setEinmalpasswortEingabe(String einmalpasswortEingabe) {
+		this.einmalpasswortEingabe = einmalpasswortEingabe;
+	}
+
+	public boolean isEinmalpasswortGeprueft() {
+		return einmalpasswortGeprueft;
 	}
 
 	public void zurueck() {
