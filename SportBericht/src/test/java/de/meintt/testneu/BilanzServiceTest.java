@@ -23,14 +23,15 @@ class BilanzServiceTest {
 	NamensSpeicher namen = new NamensSpeicher();
 	String vereinnr = "13014"; // <-- passe an, falls nötig
 	String url = "https://www.wtb-tennis.de/spielbetrieb/vereine/verein/mannschaften/mannschaft/v/20233/m/3496326.html";
+	NamensSpeicher namensSpeicher = new NamensSpeicher();
 
-	@Disabled("temporär deaktiviert")
+	// @Disabled("temporär deaktiviert")
 	@BeforeEach
 	void setUp() {
 		// Hier stehen die von dir gewünschten Zeilen am Anfang
 		BilanzProvider service;
 		try {
-			service = BilanzFactory.create(vereinnr, url);
+			service = BilanzFactory.create(vereinnr, url, namensSpeicher, false);
 			bil = service.getBilanz();
 			System.out.println(service.ausgabe(bil));
 
@@ -41,6 +42,7 @@ class BilanzServiceTest {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			System.out.println(namensSpeicher.ausgabe());
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

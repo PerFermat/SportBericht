@@ -61,7 +61,6 @@ public class ErgebnisCache {
 
 		int value;
 		if (was.equals("Freigabe")) {
-			System.out.println(ergebnisLink);
 			value = dbService.anzahlFreigabe(vereinnr, ergebnisLink); // dein DB-Zugriff
 		} else if (was.equals("Blaettle")) {
 			value = dbService.anzahlBlaettle(vereinnr, ergebnisLink); // dein DB-Zugriff

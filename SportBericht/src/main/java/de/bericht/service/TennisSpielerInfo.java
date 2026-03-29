@@ -8,6 +8,8 @@ import org.jsoup.nodes.Element;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import de.bericht.util.NamensSpeicher;
+
 public class TennisSpielerInfo {
 
 	private static final Pattern LK_PATTERN = Pattern.compile("\\bLK\\s*(\\d{1,3})\\b", Pattern.CASE_INSENSITIVE);
@@ -30,64 +32,72 @@ public class TennisSpielerInfo {
 	@JsonProperty("strafwertung")
 	private final boolean strafwertung;
 
-	public TennisSpielerInfo(String position, String name, String meldeliste, String leistungsklasse) {
-		this(position, name, meldeliste, leistungsklasse, false);
+	public TennisSpielerInfo(String vereinnr, String position, String name, String meldeliste, String leistungsklasse,
+			NamensSpeicher ns, Boolean verschluesseln) {
+		this(vereinnr, position, name, meldeliste, leistungsklasse, false, ns, verschluesseln);
 	}
 
-	public TennisSpielerInfo(String position, String name, String meldeliste, String leistungsklasse,
-			boolean strafwertung) {
+	public TennisSpielerInfo(String vereinnr, String position, String name, String meldeliste, String leistungsklasse,
+			boolean strafwertung, NamensSpeicher ns, Boolean verschluesseln) {
 
 		this.position = position;
-		this.name = name;
+		if (verschluesseln) {
+			this.name = ns.formatName(vereinnr, name, ns);
+		} else {
+			this.name = name;
+		}
 		this.meldeliste = meldeliste;
 		this.leistungsklasse = leistungsklasse;
-		this.strafwertung = strafwertung;		
+		this.strafwertung = strafwertung;
 	}
 
-
-	public static TennisSpielerInfo parse(String text) {
+	public static TennisSpielerInfo parse(String vereinnr, String text, NamensSpeicher ns, Boolean verschluesseln) {
 		if (text == null || text.isBlank()) {
-			return new TennisSpielerInfo("", "", "", "");
+			return new TennisSpielerInfo("", "", "", "", "", null, false);
 		}
 		boolean istStrafwertung = istStrafwertung(text);
 		if (text.contains("<") && text.contains(">")) {
-			return markiereStrafwertung(parseHtml(text), istStrafwertung);
+			return markiereStrafwertung(vereinnr, parseHtml(vereinnr, text, ns, verschluesseln), istStrafwertung, ns,
+					verschluesseln);
 		}
-		return markiereStrafwertung(parseLegacyText(text), istStrafwertung);
+		return markiereStrafwertung(vereinnr, parseLegacyText(vereinnr, text, ns, verschluesseln), istStrafwertung, ns,
+				verschluesseln);
 	}
 
-
-	public static TennisSpielerInfo parseHtml(String html) {
+	public static TennisSpielerInfo parseHtml(String vereinnr, String html, NamensSpeicher ns, Boolean verschluesseln) {
 		if (html == null || html.isBlank()) {
-			return new TennisSpielerInfo("", "", "", "");
+			return new TennisSpielerInfo("", "", "", "", "", null, false);
 		}
 		Element body = Jsoup.parseBodyFragment(html).body();
 		if (body == null) {
-			return parseLegacyText(html);
+			return parseLegacyText(vereinnr, html, ns, verschluesseln);
 		}
-		return parseElement(body);
+		return parseElement(vereinnr, body, ns, verschluesseln);
 	}
 
-	public static TennisSpielerInfo parseCellHtml(String html) {
-		return parseCellHtml(html, 0);
+	public static TennisSpielerInfo parseCellHtml(String vereinnr, String html, NamensSpeicher ns,
+			Boolean verschluesseln) {
+		return parseCellHtml(vereinnr, html, 0, ns, verschluesseln);
 	}
 
-	public static TennisSpielerInfo parseCellHtml(String html, int playerIndex) {
+	public static TennisSpielerInfo parseCellHtml(String vereinnr, String html, int playerIndex, NamensSpeicher ns,
+			Boolean verschluesseln) {
 		if (html == null || html.isBlank()) {
-			return new TennisSpielerInfo("", "", "", "");
+			return new TennisSpielerInfo("", "", "", "", "", null, false);
 		}
 		Element body = Jsoup.parseBodyFragment(html).body();
 		if (body == null) {
-			return parseHtml(html);
+			return parseHtml(vereinnr, html, ns, verschluesseln);
 		}
 		boolean istStrafwertung = istStrafwertung(body.text());
 		Element segment = extrahiereSpielerSegment(body, playerIndex);
 		if (segment == null) {
-			return markiereStrafwertung(parseHtml(html), istStrafwertung);
+			return markiereStrafwertung(vereinnr, parseHtml(vereinnr, html, ns, verschluesseln), istStrafwertung, ns,
+					verschluesseln);
 		}
-		return markiereStrafwertung(parseElement(segment), istStrafwertung);
+		return markiereStrafwertung(vereinnr, parseElement(vereinnr, segment, ns, verschluesseln), istStrafwertung, ns,
+				verschluesseln);
 	}
-
 
 	private static Element extrahiereSpielerSegment(Element cellRoot, int playerIndex) {
 		if (cellRoot == null) {
@@ -113,14 +123,17 @@ public class TennisSpielerInfo {
 		}
 		return null;
 	}
-	private static TennisSpielerInfo markiereStrafwertung(TennisSpielerInfo info, boolean strafwertung) {
+
+	private static TennisSpielerInfo markiereStrafwertung(String vereinnr, TennisSpielerInfo info, boolean strafwertung,
+			NamensSpeicher ns, Boolean verschluesseln) {
 		if (info == null) {
-			return new TennisSpielerInfo("", "", "", "", strafwertung);
+			return new TennisSpielerInfo("", "", "", "", "", strafwertung, null, false);
 		}
 		if (!strafwertung) {
 			return info;
 		}
-		return new TennisSpielerInfo(info.position, info.name, info.meldeliste, info.leistungsklasse, true);
+		return new TennisSpielerInfo(vereinnr, info.position, info.name, info.meldeliste, info.leistungsklasse, true,
+				ns, verschluesseln);
 	}
 
 	private static boolean istStrafwertung(String text) {
@@ -130,9 +143,10 @@ public class TennisSpielerInfo {
 		return STRAFWERTUNG_PATTERN.matcher(text).find();
 	}
 
-	private static TennisSpielerInfo parseElement(Element root) {
+	private static TennisSpielerInfo parseElement(String vereinnr, Element root, NamensSpeicher ns,
+			Boolean verschluesseln) {
 		if (root == null) {
-			return new TennisSpielerInfo("", "", "", "");
+			return new TennisSpielerInfo("", "", "", "", "", null, false);
 		}
 		String normalizedText = root.text().replace('\u00A0', ' ').replaceAll("\\s+", " ").trim();
 
@@ -176,10 +190,11 @@ public class TennisSpielerInfo {
 			working = working.replaceAll("\\s+", " ").trim();
 			name = normalisiereName(working);
 		}
-		return new TennisSpielerInfo(position, name, meldeliste, lk);
+		return new TennisSpielerInfo(vereinnr, position, name, meldeliste, lk, ns, verschluesseln);
 	}
 
-	private static TennisSpielerInfo parseLegacyText(String text) {
+	private static TennisSpielerInfo parseLegacyText(String vereinnr, String text, NamensSpeicher ns,
+			Boolean verschluesseln) {
 
 		String normalized = text.replace('\u00A0', ' ').replaceAll("\\s+", " ").trim();
 		String working = normalized;
@@ -213,7 +228,7 @@ public class TennisSpielerInfo {
 		if (name.isBlank()) {
 			name = normalisiereName(normalized);
 		}
-		return new TennisSpielerInfo(position, name, meldeliste, lk);
+		return new TennisSpielerInfo(vereinnr, position, name, meldeliste, lk, ns, verschluesseln);
 
 	}
 
@@ -259,7 +274,7 @@ public class TennisSpielerInfo {
 	public String getLeistungsklasse() {
 		return leistungsklasse;
 	}
-	
+
 	public boolean isStrafwertung() {
 		return strafwertung;
 	}

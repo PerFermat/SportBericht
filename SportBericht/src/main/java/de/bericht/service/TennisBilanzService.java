@@ -9,6 +9,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import de.bericht.provider.BilanzProvider;
+import de.bericht.util.NamensSpeicher;
 import de.bericht.util.WebCache;
 
 public class TennisBilanzService implements BilanzProvider {
@@ -16,10 +17,14 @@ public class TennisBilanzService implements BilanzProvider {
 	private String url;
 	private String vereinnr;
 	private List<Bilanz> bilanz = new ArrayList<>();
+	private NamensSpeicher namensSpeicher;
+	private Boolean verschluesseln;
 
-	public TennisBilanzService(String vereinnr, String url) {
+	public TennisBilanzService(String vereinnr, String url, NamensSpeicher namensSpeicher, Boolean verschluesseln) {
 		this.vereinnr = vereinnr;
 		this.url = url;
+		this.namensSpeicher = namensSpeicher;
+		this.verschluesseln = verschluesseln;
 		generiereBilanz();
 	}
 
@@ -68,7 +73,12 @@ public class TennisBilanzService implements BilanzProvider {
 						if (cols.size() >= 6) {
 
 							String rang = cols.get(rangIndex).text();
-							String name = cols.get(nameIndex).text();
+							String name = "";
+							if (verschluesseln) {
+								name = namensSpeicher.formatName(vereinnr, cols.get(nameIndex).text(), namensSpeicher);
+							} else {
+								name = cols.get(nameIndex).text();
+							}
 							String lk = cols.get(lkIndex).text();
 							String nation = cols.get(nationIndex).text();
 							String einzel = cols.get(einzelIndex).text();

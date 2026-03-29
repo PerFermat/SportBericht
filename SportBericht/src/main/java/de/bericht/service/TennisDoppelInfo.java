@@ -2,19 +2,25 @@ package de.bericht.service;
 
 import org.jsoup.nodes.Element;
 
+import de.bericht.util.NamensSpeicher;
+
 public class TennisDoppelInfo {
 
 	private final TennisSpielerInfo spieler1;
 	private final TennisSpielerInfo spieler2;
 
-	public TennisDoppelInfo(TennisSpielerInfo spieler1, TennisSpielerInfo spieler2) {
-		this.spieler1 = spieler1 == null ? new TennisSpielerInfo("", "", "", "") : spieler1;
-		this.spieler2 = spieler2 == null ? new TennisSpielerInfo("", "", "", "") : spieler2;
+	public TennisDoppelInfo(String vereinnr, TennisSpielerInfo spieler1, TennisSpielerInfo spieler2, NamensSpeicher ns,
+			Boolean verschluesseln) {
+		this.spieler1 = spieler1 == null ? new TennisSpielerInfo(vereinnr, "", "", "", "", ns, verschluesseln)
+				: spieler1;
+		this.spieler2 = spieler2 == null ? new TennisSpielerInfo(vereinnr, "", "", "", "", ns, verschluesseln)
+				: spieler2;
 	}
 
-	public static TennisDoppelInfo fromCell(Element cell) {
+	public static TennisDoppelInfo fromCell(String vereinnr, Element cell, NamensSpeicher ns, Boolean verschluesseln) {
 		String html = cell == null ? "" : cell.html();
-		return new TennisDoppelInfo(TennisSpielerInfo.parseCellHtml(html, 0), TennisSpielerInfo.parseCellHtml(html, 1));
+		return new TennisDoppelInfo(vereinnr, TennisSpielerInfo.parseCellHtml(vereinnr, html, 0, ns, verschluesseln),
+				TennisSpielerInfo.parseCellHtml(vereinnr, html, 1, ns, verschluesseln), ns, verschluesseln);
 	}
 
 	public TennisSpielerInfo getSpieler1() {

@@ -21,11 +21,13 @@ public class NamensSpeicher {
 
 	public String speichereNamen(String klarname, boolean isVorname, String vereinsnr, boolean verschluesseln) {
 
-		verschluesseln = false;
 		if (db == null) {
 			db = new DatabaseService(vereinsnr);
 		}
 		String anonym;
+		if (namensListe.containsValue(klarname)) {
+			return klarname;
+		}
 		if (namensListe.containsKey(klarname)) {
 			return namensListe.get(klarname);
 		} else {
@@ -49,6 +51,15 @@ public class NamensSpeicher {
 		StringBuilder text = new StringBuilder();
 		for (Map.Entry<String, String> eintrag : namensListe.entrySet()) {
 			text.append("Klarname: " + eintrag.getKey() + " - Anonym: " + eintrag.getValue() + "<br />");
+		}
+		return text.toString();
+	}
+
+	// Optional: Methode zum Anzeigen aller gespeicherten Namen
+	public String ausgabe() {
+		StringBuilder text = new StringBuilder();
+		for (Map.Entry<String, String> eintrag : namensListe.entrySet()) {
+			text.append("Klarname: " + eintrag.getKey() + " - Anonym: " + eintrag.getValue() + "\n");
 		}
 		return text.toString();
 	}
@@ -83,21 +94,20 @@ public class NamensSpeicher {
 	}
 
 	public String anonymisiereText(String text) {
-		return text;
-//		String ausgabe = text;
-//
-//		if (!namensListe.isEmpty()) {
-//			for (Map.Entry<String, String> eintrag : namensListe.entrySet()) {
-//				String klarname = eintrag.getKey();
-//				String anonym = eintrag.getValue();
-//
-//				// Ersetze nur ganze Wörter: \b für Wortgrenzen, Pattern.quote schützt vor
-//				// Sonderzeichen
-//				ausgabe = ausgabe.replaceAll("\\b" + Pattern.quote(klarname) + "\\b", anonym);
-//			}
-//		}
-//
-//		return ausgabe;
+		String ausgabe = text;
+
+		if (!namensListe.isEmpty()) {
+			for (Map.Entry<String, String> eintrag : namensListe.entrySet()) {
+				String klarname = eintrag.getKey();
+				String anonym = eintrag.getValue();
+
+				// Ersetze nur ganze Wörter: \b für Wortgrenzen, Pattern.quote schützt vor
+				// Sonderzeichen
+				ausgabe = ausgabe.replaceAll("\\b" + Pattern.quote(klarname) + "\\b", anonym);
+			}
+		}
+
+		return ausgabe;
 	}
 
 	public String formatName(String vereinsnr, String input, NamensSpeicher namensSpeicher) {
@@ -199,14 +209,6 @@ public class NamensSpeicher {
 
 		SpielergebnisProvider provider = SpielergebnisFactory.create(vereinnr, url, namensSpeicher, verschluessen);
 		List<? extends SpielDetail> spiele = provider.getSummary().getSpiele();
-
-//		for (MatchErgebnis spiel : spiele) {
-//			String spielheim = null;
-//			String spielgast = null;
-//
-//			spielheim = formatName(vereinnr, spiel.getHeim(), namensSpeicher, verschluessen);
-//			spielgast = formatName(vereinnr, spiel.getGast(), namensSpeicher, verschluessen);
-//		}
 
 	}
 

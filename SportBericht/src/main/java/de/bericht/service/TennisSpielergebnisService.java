@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -31,8 +30,7 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 
 			List<TennisEinzelErgebnis> einzel = new ArrayList<>();
 			List<TennisDoppelErgebnis> doppel = new ArrayList<>();
-			parseMatches(doc, einzel, doppel);
-
+			parseMatches(doc, einzel, doppel, ns, verschluesseln);
 
 			List<SpielDetail> alleSpiele = new ArrayList<>();
 			alleSpiele.addAll(einzel);
@@ -184,6 +182,7 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 		return text.toLowerCase().contains(part.toLowerCase());
 
 	}
+
 	static Element findeGesamtZeile(Element foot) {
 		if (foot == null) {
 			return null;
@@ -208,8 +207,8 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 		return fallback;
 	}
 
-
-	private void parseMatches(Document doc, List<TennisEinzelErgebnis> einzel, List<TennisDoppelErgebnis> doppel) {
+	private void parseMatches(Document doc, List<TennisEinzelErgebnis> einzel, List<TennisDoppelErgebnis> doppel,
+			NamensSpeicher ns, Boolean verschluesseln) {
 		Element tabelle = doc.selectFirst("table.table-condensed");
 		if (tabelle == null) {
 			return;
@@ -243,15 +242,15 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 			String games = tds.get(7).text();
 
 			if ("EINZEL".equals(aktuellerModus)) {
-				einzel.add(new TennisEinzelErgebnis(tds.get(0), tds.get(1), satz1, satz2, satz3, matches, saetze, games));
+				einzel.add(new TennisEinzelErgebnis(vereinnr, tds.get(0), tds.get(1), satz1, satz2, satz3, matches,
+						saetze, games, ns, verschluesseln));
 			} else {
-				doppel.add(new TennisDoppelErgebnis(tds.get(0), tds.get(1), satz1, satz2, satz3, matches, saetze, games));
+				doppel.add(new TennisDoppelErgebnis(vereinnr, tds.get(0), tds.get(1), satz1, satz2, satz3, matches,
+						saetze, games, ns, verschluesseln));
 			}
-			
 
 		}
 	}
-
 
 	private String dreheErgebnis(String ergebnis) {
 		if (ergebnis == null || !ergebnis.contains(":")) {

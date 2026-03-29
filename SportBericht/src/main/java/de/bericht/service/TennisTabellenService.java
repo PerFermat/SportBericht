@@ -88,7 +88,6 @@ public class TennisTabellenService implements TabellenProvider {
 
 	@Override
 	public List<Tabelle> getTabelle() {
-		System.out.println(tabelle.size());
 		return tabelle;
 	}
 

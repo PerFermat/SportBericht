@@ -9,6 +9,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import de.bericht.provider.BilanzProvider;
+import de.bericht.util.NamensSpeicher;
 import de.bericht.util.WebCache;
 
 public class TischtennisBilanzService implements BilanzProvider {
@@ -16,10 +17,15 @@ public class TischtennisBilanzService implements BilanzProvider {
 	private String url;
 	private String vereinnr;
 	private List<Bilanz> bilanz = new ArrayList<>();
+	private NamensSpeicher namensSpeicher;
+	private Boolean verschluesseln;
 
-	public TischtennisBilanzService(String vereinnr, String url) {
+	public TischtennisBilanzService(String vereinnr, String url, NamensSpeicher namensSpeicher,
+			Boolean verschluesseln) {
 		this.vereinnr = vereinnr;
 		this.url = url;
+		this.namensSpeicher = namensSpeicher;
+		this.verschluesseln = verschluesseln;
 		generiereBilanz();
 	}
 
@@ -77,7 +83,12 @@ public class TischtennisBilanzService implements BilanzProvider {
 						if (cols.size() >= 8) {
 
 							String rang = cols.get(rangIndex).text();
-							String name = cols.get(nameIndex).text();
+							String name = "";
+							if (verschluesseln) {
+								name = namensSpeicher.formatName(vereinnr, cols.get(nameIndex).text(), namensSpeicher);
+							} else {
+								name = cols.get(nameIndex).text();
+							}
 							String einsaetze = cols.get(einsaetzeIndex).text();
 							String p1 = cols.get(position1Index).text();
 							String p2 = cols.get(position2Index).text();

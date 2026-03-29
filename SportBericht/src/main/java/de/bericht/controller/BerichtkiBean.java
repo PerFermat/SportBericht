@@ -271,7 +271,7 @@ public class BerichtkiBean implements Serializable {
 				// TischtennisBilanzService service = new TischtennisBilanzService();
 				// List<Bilanz> bil = service.getBilanz(vereinnr, bilanzUrl,
 				// this.namensSpeicher);
-				BilanzProvider service = BilanzFactory.create(vereinnr, bilanzUrl);
+				BilanzProvider service = BilanzFactory.create(vereinnr, bilanzUrl, this.namensSpeicher, true);
 				List<Bilanz> bil = service.getBilanz();
 
 				ObjectMapper objectMapper = new ObjectMapper();
