@@ -996,6 +996,30 @@ body.dark-mode .dark-mode-download-button:hover .ui-button-icon-left {
 	display: block;
 	z-index: 1;
 }
+.match-tooltip.ui-tooltip {
+	max-width: 320px;
+}
+
+.match-tooltip .ui-tooltip-text {
+	padding: 8px 10px;
+}
+
+.match-tooltip-content {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	line-height: 1.25;
+}
+
+.match-tooltip-content .tooltip-line {
+	display: block;
+}
+
+.match-tooltip-content .tooltip-betreuer {
+	font-size: 1.05rem;
+	font-weight: 700;
+}
+
 
 .column-group-title-nav {
 	position: relative;

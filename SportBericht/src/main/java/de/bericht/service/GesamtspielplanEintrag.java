@@ -142,6 +142,28 @@ public class GesamtspielplanEintrag implements Serializable {
 		return hatheim;
 	}
 
+	public String matchTooltipHtml(boolean jugendSpiel) {
+		String ligaText = liga == null || liga.isBlank() ? "Liga: -" : "Liga: " + liga;
+		StringBuilder html = new StringBuilder("<div class='match-tooltip-content'>");
+		html.append("<span class='tooltip-line tooltip-liga'>").append(escapeHtml(ligaText)).append("</span>");
+		if (jugendSpiel) {
+			String betreuerText = betreuer == null || betreuer.isBlank() ? "Betreuer: Kein Betreuer hinterlegt"
+					: "Betreuer: " + betreuer;
+			html.append("<span class='tooltip-line tooltip-betreuer'>").append(escapeHtml(betreuerText))
+					.append("</span>");
+		}
+		html.append("</div>");
+		return html.toString();
+	}
+
+	private String escapeHtml(String input) {
+		if (input == null) {
+			return "";
+		}
+		return input.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
+				.replace("'", "&#39;");
+	}
+
 	public void setHatheim(boolean hatheim) {
 		this.hatheim = hatheim;
 	}

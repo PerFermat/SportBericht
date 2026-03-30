@@ -101,9 +101,8 @@
 									<td class="spiel-col"><ui:repeat
 											value="#{gesamtspielplanBean.getEintraege(datum, spalte)}"
 											var="eintrag">
-											<div
-												class="match-block #{eintrag.ergebnisFarbeClass} #{spalte.jugend ? 'youth-match' : ''}"
-												title="#{spalte.jugend ? (empty eintrag.betreuer ? 'Kein Betreuer hinterlegt' : 'Betreuer: '.concat(eintrag.betreuer)) : ''}">
+											<h:panelGroup id="matchBlock" layout="block"
+												styleClass="match-block #{eintrag.ergebnisFarbeClass} #{spalte.jugend ? 'youth-match' : ''}">
 												<div class="match-head-row">
 													<span class="head-left">#{eintrag.zeit}</span> <span
 														class="head-right">#{eintrag.heimOderAuswaerts}</span>
@@ -129,7 +128,6 @@
 												</div>
 												<ui:fragment rendered="#{spalte.jugend}">
 													<p:commandLink styleClass="youth-match-overlay"
-														title="#{empty eintrag.betreuer ? 'Kein Betreuer hinterlegt' : 'Betreuer: '.concat(eintrag.betreuer)}"
 														actionListener="#{gesamtspielplanBean.openBetreuerDialog(eintrag)}"
 														process="@this"
 														update=":gesamtspielplanForm:betreuerDialogContent"
@@ -143,7 +141,10 @@
 														update=":gesamtspielplanForm:verfuegbarkeitDialogContent"
 														oncomplete="PF('verfuegbarkeitDialog').show();" />
 												</ui:fragment>
-											</div>
+											</h:panelGroup>
+											<p:tooltip for="matchBlock"
+												value="#{eintrag.matchTooltipHtml(spalte.jugend)}"
+												escape="false" position="top" styleClass="match-tooltip" />
 										</ui:repeat></td>
 								</ui:repeat>
 							</tr>
@@ -388,8 +389,7 @@
 						<div class="dialog-footer-buttons" style="margin-top: 16px;">
 							<p:messages id="gesamtConfigMessages" showDetail="true"
 								closable="true" />
-							<br />	
-							<br />	
+							<br /> <br />
 							<p:commandButton value="Temporär"
 								actionListener="#{gesamtspielplanBean.applyTempConfig}"
 								process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
