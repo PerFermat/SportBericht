@@ -120,6 +120,7 @@ public class GesamtspielplanBean implements Serializable {
 		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = "13014";
 		}
+
 		verein_prefix = ConfigManager.getSpielplanVerein(vereinnr);
 		ladePersistierteGesamtspielplanKonfiguration();
 		ladeAuswahlwerte();

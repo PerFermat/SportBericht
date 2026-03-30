@@ -75,6 +75,7 @@ public class ZusammenBean implements Serializable {
 	private String datum;
 	private String ergebnis;
 	private String liga;
+	private String ligaAuswahl;
 	private String ergebnisLink;
 	private String ergebnisLinkAnfang;
 	private List<LogEntry> logEntries;
@@ -92,10 +93,10 @@ public class ZusammenBean implements Serializable {
 
 	public ZusammenBean() throws UnsupportedEncodingException {
 		Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
-		gruppeUrl = params.get("gruppeUrl");
+		// gruppeUrl = params.get("gruppeUrl");
 		vereinnr = params.get("vereinnr");
 		datum = params.get("datum");
-		liga = params.get("liga");
+		// liga = params.get("liga");
 		try {
 			if (params.get("heim") != null) {
 				this.heim = URLDecoder.decode(params.get("heim"), "UTF-8");
@@ -116,14 +117,22 @@ public class ZusammenBean implements Serializable {
 
 		String mail = params.get("mail");
 		name = BerichtHelper.getHomepageStandardEinzel(vereinnr);
-		if (datum != null) {
+		freieBerichte = params.get("frei");
+
+		spiele = dbService.listeBerichteMitSpielMetadaten(vereinnr);
+		this.selectedItem = null;
+		for (Spiel spiel : spiele) {
+			if (ergebnisLink.equals(spiel.getErgebnisLink())) {
+				this.selectedItem = spiel;
+				ladeIframe(selectedItem);
+			}
+		}
+
+		if (this.selectedItem == null && datum != null) {
 			this.selectedItem = new TischtennisSpiel(vereinnr, "", "", datum, "", liga, heim, gast, ergebnis,
 					ergebnisLink);
 			ladeIframe(selectedItem);
 		}
-		freieBerichte = params.get("frei");
-
-		spiele = dbService.listeBerichteMitSpielMetadaten(vereinnr);
 
 		erstellenBerichtListe(freigegebeneBerichte);
 
@@ -211,7 +220,6 @@ public class ZusammenBean implements Serializable {
 		String spielLiga = spiel.getLiga();
 		return spielLiga != null && liga.trim().equalsIgnoreCase(spielLiga.trim());
 	}
-	
 
 	private boolean matchesFreiFilter(Spiel spiel) {
 		boolean istSpielbericht = spiel.getErgebnisLink().startsWith("http");
@@ -220,8 +228,6 @@ public class ZusammenBean implements Serializable {
 		}
 		return istSpielbericht || spiel.isMitSpielberichte();
 	}
-
-
 
 	public void setBerichtDatum(String berichtDatum) {
 		this.berichtDatum = berichtDatum;
@@ -295,7 +301,7 @@ public class ZusammenBean implements Serializable {
 	public void ladeIframe(Spiel spiel) throws UnsupportedEncodingException {
 
 		datum = spiel.getDatum();
-		liga = spiel.getLiga();
+		ligaAuswahl = spiel.getLiga();
 		heim = spiel.getHeim();
 		gast = spiel.getGast();
 		ergebnis = spiel.getErgebnis();
@@ -497,7 +503,6 @@ public class ZusammenBean implements Serializable {
 		String body = getBerichtWerbungHomepage();
 		WordpressBeitragsbildOption bildVariante = WordpressBeitragsbildOption
 				.fromConfig(ConfigManager.getWordpressValue(vereinnr, name, "beitragsbild"));
-
 
 		// falls ein Bild vorhanden ist, füge es in den Content ein
 		if (image != null && image.getMediaId() != -1 && WordpressBeitragsbildOption.NUR_BEITRAGSBILD != bildVariante) {
@@ -783,11 +788,11 @@ public class ZusammenBean implements Serializable {
 
 	public String getBerichtWerbung() {
 		StringBuilder text = new StringBuilder();
-		if (liga != null && !liga.isBlank()) {
-			String textLiga = BerichtHelper.getLigaJugend(liga);
+		if (ligaAuswahl != null && !ligaAuswahl.isBlank()) {
+			String textLiga = BerichtHelper.getLigaJugend(ligaAuswahl);
 
 			if (!textLiga.isBlank()) {
-				text.append("<Strong>" + BerichtHelper.getLigaJugend(liga) + "</Strong><br>");
+				text.append("<Strong>" + textLiga + "</Strong><br>");
 			}
 		}
 		text.append("<Strong>");

@@ -39,6 +39,14 @@ public class IndexForwardFilter implements Filter {
 		String name = req.getParameter("v");
 		String vereinnr = BerichtHelper.bestimmenVereinnr(name);
 
+		boolean vereinPerParameterAngegeben = name != null && !name.isBlank();
+
+		if (vereinPerParameterAngegeben && vereinnr == null && req.getParameter("vereinnr") == null) {
+			RequestDispatcher dispatcher = req.getRequestDispatcher("/fehlenderVerein.xhtml");
+			dispatcher.forward(req, resp);
+			return;
+		}
+
 		if (vereinnr == null) {
 			vereinnr = req.getParameter("vereinnr");
 		}

@@ -120,8 +120,10 @@
 
 							<p:slider for="hueInput_#{configTable.rowIndex}" minValue="0"
 								maxValue="360" step="1" style="border: 0;"
-								onSlide="updatePreview('previewBox_#{configTable.rowIndex}', ui.value)" />
-
+								onSlide="updatePreview('previewBox_#{configTable.rowIndex}', ui.value)">
+								<p:ajax event="slideEnd"
+									process="hueInput_#{configTable.rowIndex}" update="configTable" />
+							</p:slider>
 							<h:panelGroup layout="block"
 								style="width: 50px; height: 30px; border: 0; background-color: hsl(#{empty eintrag.wert ? 0 : eintrag.wert}, 90%, 50%);"
 								styleClass="previewBox_#{configTable.rowIndex}" />
@@ -140,7 +142,11 @@
 							<p:slider for="zahlInput_#{configTable.rowIndex}"
 								minValue="#{configBean.minWert(eintrag)}"
 								maxValue="#{configBean.maxWert(eintrag)}"
-								step="#{configBean.schrittweite(eintrag)}" />
+								step="#{configBean.schrittweite(eintrag)}">
+								<p:ajax event="slideEnd"
+									process="zahlInput_#{configTable.rowIndex}"
+									update="configTable" />
+							</p:slider>
 						</h:panelGrid>
 					</ui:fragment>
 					<ui:fragment rendered="#{eintrag.inhaltformatEnum}">
