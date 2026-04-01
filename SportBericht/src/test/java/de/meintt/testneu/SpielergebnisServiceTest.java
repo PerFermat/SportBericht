@@ -16,9 +16,9 @@ class SpielergebnisServiceTest {
 
 	ConfigManager config;
 	String ergebnis;
-	String vereinnr = "20233"; // <-- passe an, falls nötig
+	String vereinnr = "13031"; // <-- passe an, falls nötig
 
-	String url = "https://ttvwh.click-tt.de/cgi-bin/WebObjects/nuLigaTTDE.woa/wa/clubMeetingReport?meeting=15834025&championship=Pokal+Bez.+SN+25%2F26&club=3947&group=513877";
+	String url = "https://ttvwh.click-tt.de/cgi-bin/WebObjects/nuLigaTTDE.woa/wa/clubMeetingReport?meeting=15833530&championship=Pokal+Bez.+SN+25%2F26&club=3572&group=513757";
 	SpielergebnisProvider provider;
 	NamensSpeicher ns = new NamensSpeicher();
 
@@ -27,7 +27,7 @@ class SpielergebnisServiceTest {
 	void setUp() {
 		config = ConfigManager.getInstance();
 		try {
-			provider = SpielergebnisFactory.create(vereinnr, url, ns, true);
+			provider = SpielergebnisFactory.create(vereinnr, url, ns, false);
 			// Hier stehen die von dir gewünschten Zeilen am Anfang
 			ergebnis = provider.getSpielErgebnis();
 			System.out.println(ergebnis);

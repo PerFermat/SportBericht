@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>HTML-Konfiguration – #{configHtmlBean.verein}</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{configHtmlBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet name="css/styles.css" />
+</h:head>
+
+<h:body>
+	<div class="tabheader-area">
+		<h:outputLink value="#{configHtmlBean.vereinHomepage}" target="_blank">
+			<img src="#{configHtmlBean.bestimmenIcon}" style="vertical-align: middle;"
+				width="50" />
+		</h:outputLink>
+		<h2>HTML-Konfiguration – #{configHtmlBean.verein}</h2>
+		<h:form>
+			<p:commandButton value="Zurück" action="index.xhtml" immediate="true">
+				<f:param name="vereinnr" value="#{configHtmlBean.vereinnr}" />
+			</p:commandButton>
+		</h:form>
+	</div>
+
+	<h:form id="configHtmlForm" style="max-width: 1200px; margin: 0 auto;">
+		<p:messages id="messages" showDetail="true" closable="true" />
+		<p:panel header="Konfiguration HTML-Seiten">
+			<ui:repeat value="#{configHtmlBean.configHtmlEintraege}" var="spalte"
+				varStatus="status">
+				<div style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+					<div
+						style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+						<p:commandButton
+							icon="#{spalte.expanded ? 'pi pi-minus' : 'pi pi-plus'}"
+							actionListener="#{configHtmlBean.toggleExpanded(spalte)}"
+							process="configHtmlForm" update="configHtmlForm"
+							styleClass="p-button-rounded p-button-text" />
+
+						<h:outputText value="Datei #{status.index + 1}"
+							style="font-weight: bold; min-width: 80px;" />
+
+						<p:selectOneMenu value="#{spalte.art}" style="min-width: 220px;"
+							autoWidth="false">
+							<f:selectItem itemLabel="Art auswählen" itemValue="" />
+							<f:selectItems value="#{configHtmlBean.artOptionen}" />
+						</p:selectOneMenu>
+
+						<p:inputText value="#{spalte.dateiname}" placeholder="Dateiname"
+							style="min-width: 220px;" />
+
+						<p:commandButton icon="pi pi-trash"
+							actionListener="#{configHtmlBean.removeConfigHtml(spalte)}"
+							process="configHtmlForm" update="configHtmlForm"
+							styleClass="p-button-rounded p-button-danger p-button-text"
+							title="Spalte löschen" />
+					</div>
+
+					<ui:fragment rendered="#{spalte.expanded}">
+						<div style="padding: 10px 0 0 38px;">
+							<ui:repeat value="#{spalte.urls}" var="quelle" varStatus="urlStatus">
+								<div
+									style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
+									<h:outputText value="Quelle #{urlStatus.index + 1}"
+										style="min-width: 70px;" />
+									<p:inputText value="#{quelle.url}" placeholder="URL"
+										style="min-width: 280px;" />
+									<p:inputText value="#{quelle.ueberschrift}"
+										placeholder="Überschrift" style="min-width: 200px;" />
+									<p:selectOneMenu value="#{quelle.typ}" style="min-width: 140px;"
+										autoWidth="false">
+										<f:selectItem itemLabel="Typ auswählen" itemValue="" />
+										<f:selectItems value="#{configHtmlBean.typOptionen}" />
+									</p:selectOneMenu>
+									<h:panelGroup>
+										<h:outputText value="Liga: " />
+										<p:selectOneRadio value="#{quelle.liga}" layout="lineDirection">
+											<f:selectItem itemLabel="Ja" itemValue="true" />
+											<f:selectItem itemLabel="Nein" itemValue="false" />
+										</p:selectOneRadio>
+									</h:panelGroup>
+									<p:commandButton icon="pi pi-trash"
+										actionListener="#{configHtmlBean.removeUrl(spalte, quelle)}"
+										process="configHtmlForm" update="configHtmlForm"
+										styleClass="p-button-rounded p-button-danger p-button-text"
+										title="Eintrag löschen" />
+								</div>
+							</ui:repeat>
+
+							<p:commandButton value="Bereich hinzufügen"
+								actionListener="#{configHtmlBean.addUrl(spalte)}" process="configHtmlForm"
+								update="configHtmlForm" />
+						</div>
+					</ui:fragment>
+				</div>
+			</ui:repeat>
+
+			<div style="display: flex; gap: 10px; margin-top: 10px;">
+				<p:commandButton value="Neue Datei erstellen"
+					actionListener="#{configHtmlBean.addConfigHtml}" process="configHtmlForm"
+					update="configHtmlForm" />
+				<p:commandButton value="Speichern" actionListener="#{configHtmlBean.speichern}"
+					update="configHtmlForm" />
+			</div>
+		</p:panel>
+	</h:form>
+</h:body>
+</html>

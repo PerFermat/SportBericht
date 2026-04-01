@@ -1145,6 +1145,99 @@ public class DatabaseService {
 		return null;
 	}
 
+	public List<ConfigHtml> ladeConfigHtml(String vereinnr) {
+		List<ConfigHtml> result = new ArrayList<>();
+		String sql = "SELECT id, vereinnr, art, dateiname FROM config_html WHERE vereinnr = ? ORDER BY id ASC";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, vereinnr);
+			try (ResultSet rs = pstmt.executeQuery()) {
+				while (rs.next()) {
+					ConfigHtml row = new ConfigHtml();
+					row.setId(rs.getInt("id"));
+					row.setVereinnr(rs.getString("vereinnr"));
+					row.setArt(rs.getString("art"));
+					row.setDateiname(rs.getString("dateiname"));
+					result.add(row);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	public Map<Integer, List<ConfigHtmlUrl>> ladeConfigHtmlUrlsByHtmlId(String vereinnr) {
+		Map<Integer, List<ConfigHtmlUrl>> result = new HashMap<>();
+		String sql = "SELECT u.id, u.id_html, u.ueberschrift, u.url, u.typ, u.liga "
+				+ "FROM config_html_url u JOIN config_html h ON h.id = u.id_html "
+				+ "WHERE h.vereinnr = ? ORDER BY u.id_html ASC, u.id ASC";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, vereinnr);
+			try (ResultSet rs = pstmt.executeQuery()) {
+				while (rs.next()) {
+					ConfigHtmlUrl row = new ConfigHtmlUrl();
+					row.setId(rs.getInt("id"));
+					row.setIdHtml(rs.getInt("id_html"));
+					row.setUeberschrift(rs.getString("ueberschrift"));
+					row.setUrl(rs.getString("url"));
+					row.setTyp(rs.getString("typ"));
+					row.setLiga(rs.getBoolean("liga"));
+					result.computeIfAbsent(row.getIdHtml(), key -> new ArrayList<>()).add(row);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	public void speichereConfigHtmlKonfiguration(String vereinnr, List<ConfigHtml> configHtmlEintraege) {
+		String deleteSql = "DELETE FROM config_html WHERE vereinnr = ?";
+		String insertHtmlSql = "INSERT INTO config_html (vereinnr, art, dateiname) VALUES (?, ?, ?)";
+		String insertUrlSql = "INSERT INTO config_html_url (id_html, ueberschrift, url, typ, liga) VALUES (?, ?, ?, ?, ?)";
+
+		try (Connection conn = openConnection()) {
+			conn.setAutoCommit(false);
+			try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
+					PreparedStatement insertHtmlStmt = conn.prepareStatement(insertHtmlSql,
+							Statement.RETURN_GENERATED_KEYS);
+					PreparedStatement insertUrlStmt = conn.prepareStatement(insertUrlSql)) {
+				deleteStmt.setString(1, vereinnr);
+				deleteStmt.executeUpdate();
+
+				for (ConfigHtml html : configHtmlEintraege) {
+					insertHtmlStmt.setString(1, vereinnr);
+					insertHtmlStmt.setString(2, html.getArt());
+					insertHtmlStmt.setString(3, html.getDateiname());
+					insertHtmlStmt.executeUpdate();
+					try (ResultSet keys = insertHtmlStmt.getGeneratedKeys()) {
+						if (!keys.next()) {
+							continue;
+						}
+						int idHtml = keys.getInt(1);
+						for (ConfigHtmlUrl url : html.getUrls()) {
+							insertUrlStmt.setInt(1, idHtml);
+							insertUrlStmt.setString(2, url.getUeberschrift());
+							insertUrlStmt.setString(3, url.getUrl());
+							insertUrlStmt.setString(4, url.getTyp());
+							insertUrlStmt.setBoolean(5, url.isLiga());
+							insertUrlStmt.addBatch();
+						}
+					}
+				}
+				insertUrlStmt.executeBatch();
+				conn.commit();
+			} catch (SQLException ex) {
+				conn.rollback();
+				throw ex;
+			} finally {
+				conn.setAutoCommit(true);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void kopierenLogData(String ergebnisLink, String altLink, String was) {
 
 		String sql = "INSERT INTO TischtennisBericht.log_tabelle ("
