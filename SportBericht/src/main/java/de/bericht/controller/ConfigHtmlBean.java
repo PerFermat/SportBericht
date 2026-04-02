@@ -198,4 +198,12 @@ public class ConfigHtmlBean implements Serializable {
 		return List.of("Tabelle", "Spielplan", "Verzeichnis", "Datenbank");
 	}
 
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
+	}
+
 }

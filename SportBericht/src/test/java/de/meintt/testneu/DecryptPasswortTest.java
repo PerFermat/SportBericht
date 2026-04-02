@@ -25,6 +25,7 @@ class DecryptPasswortTest {
 //			
 			String decrypted = c.decryptPasswort(vereinnr, hash);
 			System.out.println(decrypted);
+			System.out.println(c.encryptPasswort("13031", decrypted));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
