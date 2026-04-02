@@ -10,6 +10,7 @@ public class GesamtspielplanConfigMannschaft implements Serializable {
 	private Integer idSpalte;
 	private String liga;
 	private String mannschaft;
+	private String spieler;
 
 	public Integer getId() {
 		return id;
@@ -41,6 +42,14 @@ public class GesamtspielplanConfigMannschaft implements Serializable {
 
 	public void setLiga(String liga) {
 		this.liga = liga;
+	}
+
+	public String getSpieler() {
+		return spieler;
+	}
+
+	public void setSpieler(String spieler) {
+		this.spieler = spieler;
 	}
 
 	public String getMannschaft() {

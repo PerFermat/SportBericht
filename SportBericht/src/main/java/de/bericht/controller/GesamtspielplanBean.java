@@ -49,6 +49,7 @@ import com.lowagie.text.pdf.PdfWriter;
 import com.lowagie.text.pdf.draw.VerticalPositionMark;
 
 import de.bericht.service.AnzeigeSpalte;
+import de.bericht.service.AufstellungSpieler;
 import de.bericht.service.DatabaseService;
 import de.bericht.service.EmailService;
 import de.bericht.service.GesamtspielplanConfigMannschaft;
@@ -97,7 +98,7 @@ public class GesamtspielplanBean implements Serializable {
 	private GesamtspielplanEintrag selectedEintrag;
 	private String selectedBetreuer;
 	private GesamtspielplanEintrag selectedVerfuegbarkeitEintrag;
-	private String selectedVerfuegbarkeitSpalteKey;
+	private String selectedVerfuegbarkeitSpielerKey;
 	private final List<SpielerRueckmeldung> zugesagtSpieler = new ArrayList<>();
 	private final List<SpielerRueckmeldung> abgesagtSpieler = new ArrayList<>();
 	private final List<SpielerRueckmeldung> offeneSpieler = new ArrayList<>();
@@ -516,11 +517,11 @@ public class GesamtspielplanBean implements Serializable {
 
 	public void openVerfuegbarkeitDialog(GesamtspielplanEintrag eintrag) {
 		if (eintrag == null || eintrag.isJugend() || !eintrag.isZukunftsspiel()) {
-			selectedVerfuegbarkeitSpalteKey = null;
+			selectedVerfuegbarkeitSpielerKey = null;
 			return;
 		}
 		selectedVerfuegbarkeitEintrag = eintrag;
-		selectedVerfuegbarkeitSpalteKey = findeSpaltenKeyFuerEintrag(eintrag);
+		selectedVerfuegbarkeitSpielerKey = findeSpielerKeyFuerEintrag(eintrag);
 		VerfuegbarkeitsSnapshot snapshot = verfuegbarkeitBySpielKey.getOrDefault(buildVerfuegbarkeitsKey(eintrag),
 				new VerfuegbarkeitsSnapshot(List.of(), List.of(), List.of(), List.of()));
 		zugesagtSpieler.clear();
@@ -534,7 +535,7 @@ public class GesamtspielplanBean implements Serializable {
 
 	}
 
-	private String findeSpaltenKeyFuerEintrag(GesamtspielplanEintrag eintrag) {
+	private String findeSpielerKeyFuerEintrag(GesamtspielplanEintrag eintrag) {
 		if (eintrag == null) {
 			return null;
 		}
@@ -543,14 +544,17 @@ public class GesamtspielplanBean implements Serializable {
 		if (liga == null || team == null) {
 			return null;
 		}
-		for (AnzeigeSpalte spalte : spalten) {
-			for (String sourceKey : spalte.getSourceKeys()) {
-				if ((liga + "|" + team).equals(sourceKey)) {
-					return spalte.getKey();
+		for (ConfigSpalteModel spalte : configSpalten) {
+			for (ConfigMannschaftModel configMannschaft : spalte.getMannschaften()) {
+				if (!liga.equals(trimToNull(configMannschaft.getLiga()))
+						|| !team.equals(trimToNull(configMannschaft.getMannschaft()))) {
+					continue;
 				}
+				return trimToNull(configMannschaft.getSpieler());
 			}
 		}
 		return null;
+
 	}
 
 	public List<SpielerRueckmeldung> getZugesagtSpieler() {
@@ -569,8 +573,13 @@ public class GesamtspielplanBean implements Serializable {
 		return offeneSpieler;
 	}
 
-	public String getSelectedVerfuegbarkeitSpalteKey() {
-		return selectedVerfuegbarkeitSpalteKey;
+	public String getSelectedVerfuegbarkeitSpielerKey() {
+		return selectedVerfuegbarkeitSpielerKey;
+	}
+
+	public String getVerfuegbarkeitSpielerKey(GesamtspielplanEintrag eintrag) {
+		return findeSpielerKeyFuerEintrag(eintrag);
+
 	}
 
 	public GesamtspielplanEintrag getSelectedVerfuegbarkeitEintrag() {
@@ -1007,6 +1016,7 @@ public class GesamtspielplanBean implements Serializable {
 			mannschaft.setIdSpalte(row.getIdSpalte());
 			mannschaft.setLiga(row.getLiga());
 			mannschaft.setMannschaft(row.getMannschaft());
+			mannschaft.setSpieler(row.getSpieler());
 			spalte.getMannschaften().add(mannschaft);
 		}
 		reindexConfigSpalten();
@@ -1135,6 +1145,7 @@ public class GesamtspielplanBean implements Serializable {
 		if (!gefilterteMannschaften.contains(ausgewaehlteMannschaft)) {
 			mannschaft.setMannschaft(null);
 		}
+		validiereSpielerAuswahl(mannschaft);
 		synchronisiereAnzeigeMitErsterAuswahl();
 	}
 
@@ -1155,7 +1166,28 @@ public class GesamtspielplanBean implements Serializable {
 		if (!gefilterteLigen.contains(ausgewaehlteLiga)) {
 			mannschaft.setLiga(null);
 		}
+		validiereSpielerAuswahl(mannschaft);
 		synchronisiereAnzeigeMitErsterAuswahl();
+	}
+
+	public void onSpielerChange(ConfigMannschaftModel mannschaft) {
+		if (mannschaft == null) {
+			return;
+		}
+		mannschaft.setSpieler(trimToNull(mannschaft.getSpieler()));
+	}
+
+	private void validiereSpielerAuswahl(ConfigMannschaftModel mannschaft) {
+		if (mannschaft == null) {
+			return;
+		}
+		String spielerKey = trimToNull(mannschaft.getSpieler());
+		if (spielerKey == null) {
+			return;
+		}
+		if (!getVerfuegbareSpielerKonfigurationen(mannschaft).contains(spielerKey)) {
+			mannschaft.setSpieler(null);
+		}
 	}
 
 	public void removeConfigMannschaft(ConfigSpalteModel spalte, ConfigMannschaftModel mannschaft) {
@@ -1209,6 +1241,7 @@ public class GesamtspielplanBean implements Serializable {
 				child.setVereinnr(vereinnr);
 				child.setLiga(nullSafe(mannschaft.getLiga()));
 				child.setMannschaft(nullSafe(mannschaft.getMannschaft()));
+				child.setSpieler(nullSafe(mannschaft.getSpieler()));
 				row.getMannschaften().add(child);
 			}
 			dbSpalten.add(row);
@@ -1611,6 +1644,32 @@ public class GesamtspielplanBean implements Serializable {
 		return getVerfuegbareMannschaften(mannschaft);
 	}
 
+	public List<String> getVerfuegbareSpielerKonfigurationen(ConfigMannschaftModel mannschaft) {
+		if (mannschaft == null) {
+			return List.of();
+		}
+		String liga = trimToNull(mannschaft.getLiga());
+		if (liga == null) {
+			return List.of();
+		}
+		Map<String, String> optionen = new LinkedHashMap<>();
+		for (AufstellungSpieler spieler : databaseService.ladeAufstellungSpieler(vereinnr)) {
+			String aufstellungMannschaft = trimToNull(spieler.getMannschaft());
+			String rang = trimToNull(spieler.getRang());
+			if (aufstellungMannschaft == null || rang == null) {
+				continue;
+			}
+			int hauptRang = parseRangHauptwert(rang);
+			String wert = aufstellungMannschaft + "-Mannschaft-" + hauptRang;
+			optionen.putIfAbsent(wert, wert);
+		}
+		return optionen.values().stream().sorted().collect(Collectors.toList());
+	}
+
+	public List<String> verfuegbareSpielerKonfigurationen(ConfigMannschaftModel mannschaft) {
+		return getVerfuegbareSpielerKonfigurationen(mannschaft);
+	}
+
 	public List<String> getVerfuegbareMannschaften() {
 		return verfuegbareMannschaften;
 	}
@@ -1799,6 +1858,7 @@ public class GesamtspielplanBean implements Serializable {
 		private Integer idSpalte;
 		private String liga;
 		private String mannschaft;
+		private String spieler;
 
 		public Integer getId() {
 			return id;
@@ -1831,6 +1891,15 @@ public class GesamtspielplanBean implements Serializable {
 		public void setMannschaft(String mannschaft) {
 			this.mannschaft = mannschaft;
 		}
+
+		public String getSpieler() {
+			return spieler;
+		}
+
+		public void setSpieler(String spieler) {
+			this.spieler = spieler;
+		}
+
 	}
 
 	private Boolean parseBooleanObj(String value) {

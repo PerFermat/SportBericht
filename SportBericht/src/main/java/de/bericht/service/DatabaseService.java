@@ -1783,7 +1783,7 @@ public class DatabaseService {
 
 	public List<GesamtspielplanConfigMannschaft> ladeGesamtspielplanConfigMannschaften(String vereinnr) {
 		List<GesamtspielplanConfigMannschaft> result = new ArrayList<>();
-		String sql = "SELECT id, vereinnr, id_spalte, liga, mannschaft FROM config_gesamtspielplan_mannschaft WHERE vereinnr = ? ORDER BY id_spalte ASC, id ASC";
+		String sql = "SELECT id, vereinnr, id_spalte, liga, mannschaft, spieler FROM config_gesamtspielplan_mannschaft WHERE vereinnr = ? ORDER BY id_spalte ASC, id ASC";
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql);) {
 			pstmt.setString(1, vereinnr);
 			try (ResultSet rs = pstmt.executeQuery()) {
@@ -1794,6 +1794,7 @@ public class DatabaseService {
 					mannschaft.setIdSpalte(rs.getInt("id_spalte"));
 					mannschaft.setLiga(rs.getString("liga"));
 					mannschaft.setMannschaft(rs.getString("mannschaft"));
+					mannschaft.setSpieler(rs.getString("spieler"));
 					result.add(mannschaft);
 				}
 			}
@@ -1833,7 +1834,7 @@ public class DatabaseService {
 		String deleteSpalten = "DELETE FROM config_gesamtspielplan WHERE vereinnr = ?";
 		String deleteRunden = "DELETE FROM config_gesamtspielplan_runde WHERE vereinnr = ?";
 		String insertSpalte = "INSERT INTO config_gesamtspielplan (vereinnr, spalte, liga_anzeige, mannschaft_anzeige, betreuer) VALUES (?, ?, ?, ?, ?)";
-		String insertMannschaft = "INSERT INTO config_gesamtspielplan_mannschaft (vereinnr, id_spalte, liga, mannschaft) VALUES (?, ?, ?, ?)";
+		String insertMannschaft = "INSERT INTO config_gesamtspielplan_mannschaft (vereinnr, id_spalte, liga, mannschaft, spieler) VALUES (?, ?, ?, ?, ?)";
 		String insertRunde = "INSERT INTO config_gesamtspielplan_runde (vereinnr, name, datum_von, datum_bis) VALUES (?, ?, ?, ?)";
 
 		try (Connection conn = openConnection()) {
@@ -1871,6 +1872,7 @@ public class DatabaseService {
 							insertMannschaftStmt.setInt(2, idSpalte);
 							insertMannschaftStmt.setString(3, mannschaft.getLiga());
 							insertMannschaftStmt.setString(4, mannschaft.getMannschaft());
+							insertMannschaftStmt.setString(5, mannschaft.getSpieler());
 							insertMannschaftStmt.addBatch();
 						}
 					}

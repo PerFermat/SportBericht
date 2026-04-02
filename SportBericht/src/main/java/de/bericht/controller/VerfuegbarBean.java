@@ -15,8 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import de.bericht.service.AufstellungSpieler;
@@ -36,20 +34,17 @@ import jakarta.servlet.http.HttpServletRequest;
 public class VerfuegbarBean implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private static final Pattern SPALTEN_PATTERN = Pattern.compile("^\\s*(sp\\d+)\\s*\\(([^)]*)\\)\\s*:\\s*(.+)$",
-			Pattern.CASE_INSENSITIVE);
 	private static final DateTimeFormatter DATUM_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 	private static final List<String> VERFUEGBARKEIT_OPTIONEN = List.of("Ja", "Ja (aber noch nicht sicher)",
 			"Nein (aber noch nicht sicher)", "Nein", "Ja (im Notfall)");
 
-	private final ConfigManager configManager = ConfigManager.getInstance();
-	private transient boolean dbFehlerGemeldet;
 	private final DatabaseService databaseService = new DatabaseService();
 
 	private String vereinnr;
-	private String spaltenKey;
+	private String spielerFilterKey;
 	private String mannschaft;
 	private String liga;
+	private String spielTeam;
 	private String selectedSpieler;
 	private String ruecksprung;
 	private String halbserie;
@@ -75,10 +70,12 @@ public class VerfuegbarBean implements Serializable {
 			vereinnr = request.getParameter("vereinnr");
 		}
 
-		spaltenKey = request.getParameter("sp");
+		spielerFilterKey = request.getParameter("sp");
 		ruecksprung = request.getParameter("ruecksprung");
 		halbserie = request.getParameter("runde");
-		if (vereinnr == null || vereinnr.isBlank() || spaltenKey == null || spaltenKey.isBlank()) {
+		liga = normalize(request.getParameter("liga"));
+		spielTeam = normalize(request.getParameter("team"));
+		if (vereinnr == null || vereinnr.isBlank() || spielerFilterKey == null || spielerFilterKey.isBlank()) {
 			return;
 		}
 
@@ -91,20 +88,25 @@ public class VerfuegbarBean implements Serializable {
 	}
 
 	private void ladeSpaltenKontext() {
-		String config = ConfigManager.getConfigValue(vereinnr, "gesamtspielplan.spalten");
-		SpaltenDefinition definition = findeSpalte(config, spaltenKey);
-		if (definition == null || definition.quellen().isEmpty()) {
+		String[] teile = spielerFilterKey.split("-Mannschaft-", 2);
+		if (teile.length != 2) {
 			return;
 		}
-		liga = definition.quellen().get(0).liga();
-		mannschaft = definition.quellen().get(0).mannschaft();
+		mannschaft = normalize(teile[0]);
+		if (mannschaft == null) {
+			return;
+		}
+		try {
+			Integer.parseInt(teile[1].trim());
+		} catch (NumberFormatException e) {
+			mannschaft = null;
+		}
+
 	}
 
 	private void ladeSpiele() {
 		spiele.clear();
-		String config = ConfigManager.getConfigValue(vereinnr, "gesamtspielplan.spalten");
-		SpaltenDefinition definition = findeSpalte(config, spaltenKey);
-		if (definition == null || definition.quellen().isEmpty()) {
+		if (istLeer(liga) || istLeer(spielTeam)) {
 			return;
 		}
 
@@ -113,7 +115,7 @@ public class VerfuegbarBean implements Serializable {
 			String rowLiga = row.get("liga");
 			String heim = row.get("heim");
 			String gast = row.get("gast");
-			if (!passtZurSpalte(definition, rowLiga, heim, gast)) {
+			if (!liga.equals(rowLiga) || (!spielTeam.equals(heim) && !spielTeam.equals(gast))) {
 				continue;
 			}
 			VerfuegbarSpiel spiel = new VerfuegbarSpiel();
@@ -162,10 +164,14 @@ public class VerfuegbarBean implements Serializable {
 	}
 
 	private boolean isSpielberechtigt(AufstellungSpieler spieler) {
-		if (!liga.startsWith(spieler.getMannschaft())) {
+		if (mannschaft == null || spieler == null) {
 			return false;
 		}
-		return extrahiereZahlVorPunkt(spieler.getRang()) == extrahiereRoemischeZahl(mannschaft);
+		if (!mannschaft.equals(spieler.getMannschaft())) {
+			return false;
+		}
+		return extrahiereZahlVorPunkt(spieler.getRang()) == extrahiereZahlAusSpielerKey(spielerFilterKey);
+
 	}
 
 	public List<String> getSpielerNamen() {
@@ -362,45 +368,8 @@ public class VerfuegbarBean implements Serializable {
 		return (datum == null ? "" : datum) + "|" + normalizeZeitWert(zeit);
 	}
 
-	private boolean passtZurSpalte(SpaltenDefinition definition, String rowLiga, String heim, String gast) {
-		for (QuellenDefinition quelle : definition.quellen()) {
-			if (quelle.liga().equals(rowLiga)
-					&& (quelle.mannschaft().equals(heim) || quelle.mannschaft().equals(gast))) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private SpaltenDefinition findeSpalte(String input, String key) {
-		if (input == null || input.isBlank() || key == null || key.isBlank()) {
-			return null;
-		}
-		for (String rawSpalte : input.split("\\|")) {
-			Matcher matcher = SPALTEN_PATTERN.matcher(rawSpalte.trim());
-			if (!matcher.matches()) {
-				continue;
-			}
-			String parsedKey = matcher.group(1).trim();
-			if (!parsedKey.equalsIgnoreCase(key.trim())) {
-				continue;
-			}
-			String quellenTeil = matcher.group(3).trim();
-			List<QuellenDefinition> quellen = new ArrayList<>();
-			for (String rawQuelle : quellenTeil.split(";")) {
-				String[] ligaUndTeam = rawQuelle.trim().split("/", 2);
-				if (ligaUndTeam.length != 2) {
-					continue;
-				}
-				String qLiga = ligaUndTeam[0].trim();
-				String qTeam = ligaUndTeam[1].trim();
-				if (!qLiga.isBlank() && !qTeam.isBlank()) {
-					quellen.add(new QuellenDefinition(qLiga, qTeam));
-				}
-			}
-			return new SpaltenDefinition(parsedKey, quellen);
-		}
-		return null;
+	private boolean istLeer(String value) {
+		return value == null || value.trim().isEmpty();
 	}
 
 	private LocalDate parseDatumSafe(String datum) {
@@ -505,45 +474,26 @@ public class VerfuegbarBean implements Serializable {
 			return -1;
 		}
 		int pos = text.indexOf(".");
-		if (pos == -1) {
-			return -1;
-		}
+		String hauptteil = pos == -1 ? text : text.substring(0, pos);
 		try {
-			return Integer.parseInt(text.substring(0, pos));
+			return Integer.parseInt(hauptteil.trim());
 		} catch (NumberFormatException e) {
 			return -1;
 		}
 	}
 
-	public int extrahiereRoemischeZahl(String text) {
-		if (text == null || text.isBlank()) {
-			return 1;
+	private int extrahiereZahlAusSpielerKey(String value) {
+		if (value == null) {
+			return -1;
 		}
-		String[] teile = text.trim().split(" ");
-		String letztesWort = teile[teile.length - 1].toUpperCase();
-		switch (letztesWort) {
-		case "I":
-			return 1;
-		case "II":
-			return 2;
-		case "III":
-			return 3;
-		case "IV":
-			return 4;
-		case "V":
-			return 5;
-		case "VI":
-			return 6;
-		case "VII":
-			return 7;
-		case "VIII":
-			return 8;
-		case "IX":
-			return 9;
-		case "X":
-			return 10;
-		default:
-			return 1;
+		String[] teile = value.split("-Mannschaft-", 2);
+		if (teile.length != 2) {
+			return -1;
+		}
+		try {
+			return Integer.parseInt(teile[1].trim());
+		} catch (NumberFormatException e) {
+			return -1;
 		}
 	}
 
@@ -600,12 +550,6 @@ public class VerfuegbarBean implements Serializable {
 			return "";
 		}
 		return buildKey(spiel.getDatum(), spiel.getZeit());
-	}
-
-	private record QuellenDefinition(String liga, String mannschaft) {
-	}
-
-	private record SpaltenDefinition(String key, List<QuellenDefinition> quellen) {
 	}
 
 	private record RangParts(int haupt, int neben) {

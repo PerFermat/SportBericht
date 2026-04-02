@@ -72,15 +72,7 @@
 									colspan="1">
 									<div class="column-group-title-content">
 										#{spalte.mannschaft} <br /> #{spalte.liga}
-									</div> <p:commandButton styleClass="column-header-nav-button"
-										ajax="false" action="verfuegbar.xhtml" process="@this"
-										title="Verfügbarkeit für #{spalte.mannschaft} öffnen">
-										<f:param name="sp" value="#{spalte.key}" />
-										<f:param name="vereinnr"
-											value="#{gesamtspielplanBean.vereinnr}" />
-										<f:param name="runde" value="#{gesamtspielplanBean.halbserie}" />
-										<f:param name="ruecksprung" value="gesamtspielplan.xhtml" />
-									</p:commandButton>
+									</div>
 								</th>
 							</ui:repeat>
 						</tr>
@@ -261,12 +253,16 @@
 						<div class="verf-dialog-footer-link">
 							<p:commandButton value="Verfügbarkeit bearbeiten" ajax="false"
 								action="verfuegbar.xhtml"
-								rendered="#{not empty gesamtspielplanBean.selectedVerfuegbarkeitSpalteKey}">
+								rendered="#{not empty gesamtspielplanBean.selectedVerfuegbarkeitSpielerKey}">
 								<f:param name="sp"
-									value="#{gesamtspielplanBean.selectedVerfuegbarkeitSpalteKey}" />
+									value="#{gesamtspielplanBean.selectedVerfuegbarkeitSpielerKey}" />
 								<f:param name="vereinnr" value="#{gesamtspielplanBean.vereinnr}" />
 								<f:param name="runde" value="#{gesamtspielplanBean.halbserie}" />
 								<f:param name="ruecksprung" value="gesamtspielplan.xhtml" />
+								<f:param name="liga"
+									value="#{gesamtspielplanBean.selectedVerfuegbarkeitEintrag.liga}" />
+								<f:param name="team"
+									value="#{gesamtspielplanBean.selectedVerfuegbarkeitEintrag.hatheim ? gesamtspielplanBean.selectedVerfuegbarkeitEintrag.heim : gesamtspielplanBean.selectedVerfuegbarkeitEintrag.gast}" />
 							</p:commandButton>
 						</div>
 					</h:panelGroup>
@@ -362,6 +358,16 @@
 														value="#{gesamtspielplanBean.verfuegbareMannschaften(configMannschaft)}" />
 													<p:ajax
 														listener="#{gesamtspielplanBean.onMannschaftChange(configMannschaft)}"
+														process="@this"
+														update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
+												</p:selectOneMenu>
+												<p:selectOneMenu value="#{configMannschaft.spieler}">
+													<f:selectItem itemLabel="Spielerfilter wählen" itemValue=""
+														noSelectionOption="true" />
+													<f:selectItems
+														value="#{gesamtspielplanBean.verfuegbareSpielerKonfigurationen(configMannschaft)}" />
+													<p:ajax
+														listener="#{gesamtspielplanBean.onSpielerChange(configMannschaft)}"
 														process="@this"
 														update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
 												</p:selectOneMenu>
