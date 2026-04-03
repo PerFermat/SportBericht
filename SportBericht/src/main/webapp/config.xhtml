@@ -185,6 +185,12 @@
 					oncomplete="PF('configDialog').show();" />
 				<p:commandButton value="Aktuallisieren Homepage-Configs-Einträge"
 					action="#{configBean.insertHomepage}" update="configTable" />
+
+				<p:commandButton value="Konfiguration der iFrames-Internetseiten" action="configHtml.xhtml"
+					immediate="true" rendered="#{configBean.tischtennis}">
+					<f:param name="vereinnr" value="#{configBean.vereinnr}" />
+					<f:param name="p" value="#{configBean.passwort}" />
+				</p:commandButton>
 			</div>
 
 		</p:panel>

@@ -36,6 +36,7 @@ public class ConfigHtmlBean implements Serializable {
 		FacesContext context = FacesContext.getCurrentInstance();
 		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 		vereinnr = BerichtHelper.bestimmenVereinnr(request.getParameter("v"));
+		String passwort = request.getParameter("p");
 		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = request.getParameter("vereinnr");
 		}
@@ -47,7 +48,12 @@ public class ConfigHtmlBean implements Serializable {
 			}
 			return;
 		}
-		ladeDaten();
+		if (passwort.equals(ConfigManager.getAdminPasswort(vereinnr))) {
+			ladeDaten();
+		} else {
+			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+					"Admin-Passwort falsch", "Die HTML-Konfiguration kann nicht geändert werden."));
+		}
 	}
 
 	private void ladeDaten() {

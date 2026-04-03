@@ -62,6 +62,7 @@ public class ConfigBean implements Serializable {
 	private String passwortDialogAnzeige;
 	private String passwortDialogInput;
 	private final SecureRandom secureRandom = new SecureRandom();
+	private final String FALLBACK_VEREINNR_EINMALPASSWORT = "13014";
 	private String einmalpasswort;
 	private String einmalpasswortEingabe;
 	private boolean einmalpasswortGeprueft;
@@ -85,7 +86,7 @@ public class ConfigBean implements Serializable {
 			return;
 		}
 
-		erstelleUndSendeEinmalpasswort(false);
+		// erstelleUndSendeEinmalpasswort(true);
 
 		ladeConfigEintraegeMitBedeutung();
 	}
@@ -349,13 +350,37 @@ public class ConfigBean implements Serializable {
 			emailService.sendEmail(vereinnr, "Einmalpasswort Konfiguration",
 					"Das Einmalpasswort für die Konfigurationsfreigabe lautet: " + einmalpasswort, null, null, false);
 			if (zeigeMeldung) {
-				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"Einmalpasswort versendet", "Das Einmalpasswort wurde per E-Mail verschickt."));
+				FacesContext.getCurrentInstance().addMessage(null,
+						new FacesMessage(FacesMessage.SEVERITY_INFO, "Einmalpasswort versendet",
+								"Das Einmalpasswort wurde per E-Mail an " + empfaenger + " verschickt."));
 			}
 		} catch (MessagingException e) {
-			einmalpasswort = null;
+			if (!sendeEinmalpasswortMitFallback(empfaenger)) {
+				einmalpasswort = null;
+			}
+
+		}
+	}
+
+	private boolean sendeEinmalpasswortMitFallback(String empfaenger) {
+		if (!isNotBlank(empfaenger)) {
+			return false;
+		}
+		try {
+			EmailService fallbackEmailService = new EmailService(FALLBACK_VEREINNR_EINMALPASSWORT, empfaenger, null);
+			fallbackEmailService.sendEmail(FALLBACK_VEREINNR_EINMALPASSWORT, "Einmalpasswort Konfiguration",
+					"Das Einmalpasswort für die Konfigurationsfreigabe lautet: " + einmalpasswort
+							+ " . Dieses Passwort wurde mit dem Account von Hattenhofen versendet. Bitte überprüfe die mail.smtp-Einträge und korrigiere sie",
+					null, null, false);
+			FacesContext.getCurrentInstance().addMessage(null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN,
+							"Einmalpasswort über den Account von Hattenhofen an " + empfaenger + " versendet. ",
+							"Bitte mail.smtp*-Einträge korrigieren."));
+			return true;
+		} catch (MessagingException fallbackException) {
 			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					"Versand fehlgeschlagen", "Einmalpasswort konnte nicht versendet werden."));
+					"Einmapasswort konnte nicht versendet werden", "Bitte an michael.spahr@web.de wenden."));
+			return false;
 		}
 	}
 
@@ -652,6 +677,10 @@ public class ConfigBean implements Serializable {
 
 	public boolean isEinmalpasswortGeprueft() {
 		return einmalpasswortGeprueft;
+	}
+
+	public String getPasswort() {
+		return ConfigManager.getAdminPasswort(vereinnr);
 	}
 
 	public void zurueck() {
