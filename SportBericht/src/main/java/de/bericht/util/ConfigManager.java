@@ -363,4 +363,26 @@ public class ConfigManager {
 		return SportartVerein.TENNIS == SportartVerein.fromConfig(getConfigValue(vereinnr, "sportart.verein"));
 	}
 
+	public static String getSftpUrl(String vereinnr) {
+		return getConfigValue(vereinnr, "sftp.url");
+	}
+
+	public static String getSftpPort(String vereinnr) {
+		return getConfigValue(vereinnr, "sftp.port");
+	}
+
+	public static String getSftpUser(String vereinnr) {
+		return getConfigValue(vereinnr, "sftp.user");
+	}
+
+	public static String getSftpPasswort(String vereinnr) {
+		String encrypted = getConfigValue(vereinnr, "sftp.passwort");
+		try {
+			String decrypted = decryptPasswort(vereinnr, encrypted);
+			return decrypted;
+		} catch (Exception e) {
+			return encrypted;
+		}
+	}
+
 }
