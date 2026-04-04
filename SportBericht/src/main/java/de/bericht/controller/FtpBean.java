@@ -32,9 +32,11 @@ public class FtpBean implements Serializable {
 	private Boolean freigabe;
 
 	private enum UploadThema {
-		HALLENBELEGUNG("HALLENBELEGUNG", "Hallenbelegung", "Hallenbelegung", "Hallenbelegung.pdf",
+		HALLENBELEGUNGN("HALLENBELEGUNGN", "Hallenbelegung neuer Monat", "Hallenbelegung", "Hallenbelegung.pdf",
 				"Hallenbelegungalt.pdf"),
-		KINDERFOTOS("KINDERFOTOS", "Einverständniserklärung Kinderfotos", "Test", null, null);
+		HALLENBELEGUNGE("HALLENBELEGUNGE", "Hallenbelegung ersetzen aktuellen Monat", "Hallenbelegung",
+				"Hallenbelegung.pdf", null),
+		KINDERFOTOS("KINDERFOTOS", "Einverständniserklärung Kinderfotos", "Foto", null, null);
 
 		private final String key;
 		private final String label;
@@ -51,12 +53,12 @@ public class FtpBean implements Serializable {
 		}
 
 		public static UploadThema fromKey(String key) {
-			return Arrays.stream(values()).filter(v -> v.key.equals(key)).findFirst().orElse(HALLENBELEGUNG);
+			return Arrays.stream(values()).filter(v -> v.key.equals(key)).findFirst().orElse(HALLENBELEGUNGN);
 		}
 	}
 
 	private String vereinnr;
-	private String ausgewaehltesThema = UploadThema.HALLENBELEGUNG.key;
+	private String ausgewaehltesThema = UploadThema.HALLENBELEGUNGN.key;
 	private Part uploadedDatei;
 
 	@PostConstruct
@@ -80,7 +82,7 @@ public class FtpBean implements Serializable {
 	}
 
 	public void hochladen() {
-		if (freigabe) {
+		if (!freigabe) {
 			addMessage(FacesMessage.SEVERITY_ERROR, "Fasches Passwort eingegeben",
 					"Bitte die Seite mit \"?v=<verein>&p=<Passwort für den internen Bereich>\" aufrufen");
 			return;
