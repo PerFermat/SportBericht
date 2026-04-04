@@ -2576,11 +2576,12 @@ public class DatabaseService {
 		}
 	}
 
-	public List<VersendeteMail> ladeVersendeteMails() {
+	public List<VersendeteMail> ladeVersendeteMails(String vereinnr) {
 		String sql = "SELECT id, timestamp, empfaenger, empfaenger_cc, empfaenger_bcc, betreff, text, attachmentName "
-				+ "FROM VersendeteMails ORDER BY timestamp DESC";
+				+ "FROM VersendeteMails WHERE vereinnr = ? ORDER BY timestamp DESC ";
 		List<VersendeteMail> mails = new ArrayList<>();
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, vereinnr);
 			ResultSet rs = pstmt.executeQuery();
 			while (rs.next()) {
 				VersendeteMail mail = new VersendeteMail();

@@ -139,7 +139,7 @@ public final class DatabaseSchemaInitializer {
 				"CREATE TABLE IF NOT EXISTS config_gesamtspielplan_mannschaft (id INT NOT NULL AUTO_INCREMENT, vereinnr VARCHAR(10) NOT NULL, id_spalte INT NOT NULL, liga TEXT DEFAULT NULL, mannschaft TEXT DEFAULT NULL, spieler TEXT DEFAULT NULL, PRIMARY KEY (id), KEY idx_config_gesamtspielplan_mannschaft_vereinnr (vereinnr), KEY idx_config_gesamtspielplan_mannschaft_spalte (id_spalte), CONSTRAINT fk_config_gesamtspielplan_mannschaft_spalte FOREIGN KEY (id_spalte) REFERENCES config_gesamtspielplan(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 				"CREATE TABLE IF NOT EXISTS config_gesamtspielplan_runde (id INT NOT NULL AUTO_INCREMENT, vereinnr VARCHAR(10) NOT NULL, name TEXT NOT NULL, datum_von DATE DEFAULT NULL, datum_bis DATE DEFAULT NULL, PRIMARY KEY (id), KEY idx_config_gesamtspielplan_runde_vereinnr (vereinnr)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 				"CREATE TABLE IF NOT EXISTS web_pages (id INT(11) NOT NULL AUTO_INCREMENT, url VARCHAR(1024) NOT NULL, html_content LONGTEXT NOT NULL, created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY url (url) USING HASH) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
-				"CREATE TABLE IF NOT EXISTS VersendeteMails (id BIGINT(20) NOT NULL AUTO_INCREMENT, timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, empfaenger TEXT NOT NULL, empfaenger_cc TEXT DEFAULT NULL, empfaenger_bcc TEXT DEFAULT NULL, betreff VARCHAR(500), text LONGTEXT, attachmentName TEXT , PRIMARY KEY (id), KEY idx_versendete_mails_timestamp (timestamp)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+				"CREATE TABLE IF NOT EXISTS VersendeteMails (id BIGINT(20) NOT NULL AUTO_INCREMENT, vereinnr VARCHAR(10) NOT NULL, timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, empfaenger TEXT NOT NULL, empfaenger_cc TEXT DEFAULT NULL, empfaenger_bcc TEXT DEFAULT NULL, betreff VARCHAR(500), text LONGTEXT, attachmentName TEXT , PRIMARY KEY (id), KEY idx_versendete_mails_timestamp (timestamp)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
 	}
 
 	private static List<String> alterStatements() {
@@ -155,6 +155,7 @@ public final class DatabaseSchemaInitializer {
 				"ALTER TABLE berichte_historie ADD COLUMN IF NOT EXISTS heim VARCHAR(255) DEFAULT NULL",
 				"ALTER TABLE berichte_historie ADD COLUMN IF NOT EXISTS gast VARCHAR(255) DEFAULT NULL",
 				"ALTER TABLE berichte_historie ADD COLUMN IF NOT EXISTS datum VARCHAR(50) DEFAULT NULL",
+				"ALTER TABLE VersendeteMails ADD COLUMN IF NOT EXISTS vereinnr VARCHAR(10) DEFAULT NULL",
 				"ALTER TABLE berichte_historie ADD COLUMN IF NOT EXISTS ergebnis VARCHAR(100) DEFAULT NULL",
 				"ALTER TABLE berichte_historie MODIFY COLUMN timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
 				"ALTER TABLE config_gesamtspielplan_mannschaft ADD COLUMN IF NOT EXISTS spieler TEXT DEFAULT NULL");

@@ -47,11 +47,19 @@ public class VersendeteMailsBean implements Serializable {
 			vereinnr = request.getParameter("vereinnr");
 		}
 		ruecksprung = request.getParameter("ruecksprung");
-		ladeMails();
+		if (!(request.getParameter("p") == null)
+				&& request.getParameter("p").equals(ConfigManager.getUserPasswort(vereinnr))) {
+			ladeMails();
+		} else {
+			VersendeteMail leer = new VersendeteMail();
+			leer.setBetreff("Keine Mails geladen - Falsches Passwort");
+			alleMails.add(leer);
+			gruppiereMails(filtereMails(alleMails, suchbegriff));
+		}
 	}
 
 	public void ladeMails() {
-		alleMails = dbService.ladeVersendeteMails();
+		alleMails = dbService.ladeVersendeteMails(vereinnr);
 		gruppiereMails(filtereMails(alleMails, suchbegriff));
 	}
 
