@@ -1,10 +1,15 @@
 package de.bericht.service;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.naming.InitialContext;
@@ -39,7 +44,7 @@ public final class DatabaseSchemaInitializer {
 				for (String sql : alterStatements()) {
 					stmt.execute(sql);
 				}
-
+				createMissingIndexes(conn);
 				INITIALIZED.set(true);
 			} catch (SQLException e) {
 				throw new IllegalStateException("Fehler beim Initialisieren des Datenbankschemas", e);
@@ -159,6 +164,78 @@ public final class DatabaseSchemaInitializer {
 				"ALTER TABLE berichte_historie ADD COLUMN IF NOT EXISTS ergebnis VARCHAR(100) DEFAULT NULL",
 				"ALTER TABLE berichte_historie MODIFY COLUMN timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
 				"ALTER TABLE config_gesamtspielplan_mannschaft ADD COLUMN IF NOT EXISTS spieler TEXT DEFAULT NULL");
+	}
+
+	private static void createMissingIndexes(Connection conn) throws SQLException {
+		List<IndexDefinition> indexes = List.of(
+				new IndexDefinition("spielplan_tabelle", "idx_spielplan_tabelle_vereinnr",
+						"CREATE INDEX idx_spielplan_tabelle_vereinnr ON spielplan_tabelle (vereinnr)"),
+				new IndexDefinition("VersendeteMails", "idx_versendete_mails_vereinnr_timestamp",
+						"CREATE INDEX idx_versendete_mails_vereinnr_timestamp ON VersendeteMails (vereinnr, timestamp)"),
+				new IndexDefinition("adressliste", "idx_adressliste_vereinnr_name_vorname",
+						"CREATE INDEX idx_adressliste_vereinnr_name_vorname ON adressliste (vereinnr, name, vorname)"),
+				new IndexDefinition("spieler_verfuegbarkeit", "idx_spieler_verfuegbarkeit_vereinnr_name_datum_uhrzeit",
+						"CREATE INDEX idx_spieler_verfuegbarkeit_vereinnr_name_datum_uhrzeit ON spieler_verfuegbarkeit (vereinnr, name, datum, uhrzeit)"),
+				new IndexDefinition("config", "idx_config_eintrag_wert",
+						"CREATE INDEX idx_config_eintrag_wert ON config (eintrag, wert(191))"),
+				new IndexDefinition("aufstellung", "idx_aufstellung_vereinnr",
+						"CREATE INDEX idx_aufstellung_vereinnr ON aufstellung (vereinnr)"),
+				new IndexDefinition("berichte", "idx_berichte_vereinnr_mitspielberichte",
+						"CREATE INDEX idx_berichte_vereinnr_mitspielberichte ON berichte (vereinnr, mitSpielberichte)"),
+				new IndexDefinition("log_tabelle", "idx_log_vereinnr_ergebnis_name",
+						"CREATE INDEX idx_log_vereinnr_ergebnis_name ON log_tabelle (vereinnr, ergebnislink, name)"));
+
+		for (IndexDefinition index : indexes) {
+			if (indexExists(conn, index.tableName(), index.indexName())) {
+				continue;
+			}
+
+			try (Statement stmt = conn.createStatement()) {
+				stmt.execute(index.createSql());
+			}
+		}
+	}
+
+	private static boolean indexExists(Connection conn, String tableName, String indexName) throws SQLException {
+		DatabaseMetaData metaData = conn.getMetaData();
+		String catalog = conn.getCatalog();
+		String wantedName = indexName.toLowerCase(Locale.ROOT);
+		Set<String> names = new HashSet<>();
+
+		try (ResultSet rs = metaData.getIndexInfo(catalog, null, tableName, false, false)) {
+			while (rs.next()) {
+				String currentName = rs.getString("INDEX_NAME");
+				if (currentName != null) {
+					names.add(currentName.toLowerCase(Locale.ROOT));
+				}
+			}
+		}
+
+		return names.contains(wantedName);
+	}
+
+	private static final class IndexDefinition {
+		private final String tableName;
+		private final String indexName;
+		private final String createSql;
+
+		private IndexDefinition(String tableName, String indexName, String createSql) {
+			this.tableName = tableName;
+			this.indexName = indexName;
+			this.createSql = createSql;
+		}
+
+		private String tableName() {
+			return tableName;
+		}
+
+		private String indexName() {
+			return indexName;
+		}
+
+		private String createSql() {
+			return createSql;
+		}
 	}
 
 }
