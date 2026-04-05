@@ -145,7 +145,7 @@ public class DatabaseService {
 
 	public List<Spiel> listeBerichteMitSpielMetadaten(String vereinnr) {
 		String sql = "SELECT ergebnisLink, ueberschrift, liga, heim, gast, datum, ergebnis, mitSpielberichte FROM berichte "
-				+ "WHERE vereinnr = ? AND ergebnisLink <> '-'";
+				+ "WHERE vereinnr = ? AND ergebnisLink <> '-' AND berichtText <> '' ";
 		List<Spiel> spiele = new ArrayList<>();
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, vereinnr);
@@ -2559,17 +2559,18 @@ public class DatabaseService {
 		return url + "?useUnicode=true&characterEncoding=UTF-8";
 	}
 
-	public void speichernMail(String empfaenger, String empfaengerCc, String betreff, String htmlText,
+	public void speichernMail(String vereinnr, String empfaenger, String empfaengerCc, String betreff, String htmlText,
 			String attachmentName) {
 		String sql = "INSERT INTO VersendeteMails "
-				+ "(empfaenger, empfaenger_cc, betreff, text, attachmentName) VALUES (?, ?, ?, ?, ?)";
+				+ "(vereinnr, empfaenger, empfaenger_cc, betreff, text, attachmentName) VALUES (?, ?, ?, ?, ?, ?)";
 
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-			pstmt.setString(1, empfaenger);
-			pstmt.setString(2, empfaengerCc);
-			pstmt.setString(3, betreff);
-			pstmt.setString(4, htmlText);
-			pstmt.setString(5, attachmentName);
+			pstmt.setString(1, vereinnr);
+			pstmt.setString(2, empfaenger);
+			pstmt.setString(3, empfaengerCc);
+			pstmt.setString(4, betreff);
+			pstmt.setString(5, htmlText);
+			pstmt.setString(6, attachmentName);
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			throw new IllegalStateException("Versendete Mail konnte nicht gespeichert werden.", e);

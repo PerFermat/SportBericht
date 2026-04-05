@@ -3,7 +3,6 @@ package de.bericht.service;
 import java.util.List;
 
 import de.bericht.util.ConfigManager;
-import de.bericht.util.TennisGruppeKurz;
 
 public class TennisSpiel extends Spiel {
 
@@ -42,8 +41,8 @@ public class TennisSpiel extends Spiel {
 		this.ergebnis = matches;
 
 		config = ConfigManager.getInstance();
-		String sortlist = config.getConfigValue(vereinnr, "bericht.sortierung");
-		setSortierungAusKonfiguration(sortlist);
+		// String sortlist = config.getConfigValue(vereinnr, "bericht.sortierung");
+		// setSortierungAusKonfiguration(sortlist);
 	}
 
 	private void setSortierungAusKonfiguration(String sortlist) {
@@ -127,6 +126,5 @@ public class TennisSpiel extends Spiel {
 			return "";
 		}
 	}
-
 
 }

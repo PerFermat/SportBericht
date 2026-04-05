@@ -24,9 +24,9 @@ public class TischtennisSpiel extends Spiel {
 		this.ergebnis = ergebnis;
 		this.ergebnisLink = ergebnisLink;
 
-		config = ConfigManager.getInstance();
-		String sortlist = config.getConfigValue(vereinnr, "bericht.sortierung");
-		setSortierungAusKonfiguration(sortlist);
+		// config = ConfigManager.getInstance();
+		// String sortlist = config.getConfigValue(vereinnr, "bericht.sortierung");
+		// setSortierungAusKonfiguration(sortlist);
 	}
 
 	private void setSortierungAusKonfiguration(String sortlist) {

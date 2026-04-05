@@ -137,7 +137,7 @@ public class EmailService {
 
 		Transport.send(message);
 		if (speichern) {
-			ds.speichernMail(recipients, ccEmpfaenger, mailSubject, htmlMailText, attachmentName);
+			ds.speichernMail(vereinnr, recipients, ccEmpfaenger, mailSubject, htmlMailText, attachmentName);
 		}
 
 	}
