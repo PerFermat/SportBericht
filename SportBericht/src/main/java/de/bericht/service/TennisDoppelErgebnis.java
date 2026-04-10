@@ -36,13 +36,13 @@ public class TennisDoppelErgebnis implements SpielDetail {
 
 		this.heim1 = heim1;
 		this.gast1 = gast1;
-		this.heim2 = heim1;
-		this.gast2 = gast1;
-
+		this.heim2 = heim2;
+		this.gast2 = gast2;
 		this.heimInfo = new TennisDoppelInfo(vereinnr, TennisSpielerInfo.parse(vereinnr, heim1, ns, verschluesseln),
 				TennisSpielerInfo.parse(vereinnr, heim2, ns, verschluesseln), ns, verschluesseln);
 		this.gastInfo = new TennisDoppelInfo(vereinnr, TennisSpielerInfo.parse(vereinnr, gast1, ns, verschluesseln),
 				TennisSpielerInfo.parse(vereinnr, gast2, ns, verschluesseln), ns, verschluesseln);
+
 		this.satz1 = satz1;
 		this.satz2 = satz2;
 		this.satz3 = satz3;
@@ -113,7 +113,7 @@ public class TennisDoppelErgebnis implements SpielDetail {
 			return "";
 		}
 		String[] teile = TennisSpielerInfo.parse(vereinnr, vollerName, ns, verschluesseln).getName().split(" ");
-		return teile.length > 0 ? teile[0] : vollerName;
+		return teile.length > 0 ? teile[1] : vollerName;
 	}
 
 	public String getSatz1() {
