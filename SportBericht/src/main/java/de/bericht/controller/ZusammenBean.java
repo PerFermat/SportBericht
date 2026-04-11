@@ -879,7 +879,7 @@ public class ZusammenBean implements Serializable {
 			return "spielplan.xhtml";
 		}
 
-		return "index.xhtml";
+		return "liga.xhtml";
 
 	}
 

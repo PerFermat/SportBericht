@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -1006,6 +1007,27 @@ public class DatabaseService {
 		}
 
 		return werte;
+	}
+
+	public Map<String, String> ladeLoginOrteMitVereinnr() {
+		String sql = "SELECT vereinnr, wert FROM config WHERE eintrag = 'login.Ort' AND wert IS NOT NULL AND TRIM(wert) <> '' ORDER BY wert";
+		Map<String, String> result = new LinkedHashMap<>();
+
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				String ort = rs.getString("wert");
+				String vereinnr = rs.getString("vereinnr");
+				if (ort != null && !ort.isBlank() && vereinnr != null && !vereinnr.isBlank()) {
+					result.put(ort, vereinnr);
+				}
+			}
+			rs.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return result;
 	}
 
 	public Map<String, ConfigBedeutung> ladeConfigBedeutungen() {

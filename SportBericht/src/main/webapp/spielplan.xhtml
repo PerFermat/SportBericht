@@ -34,7 +34,7 @@
 
 		<h2>Spielauswahl – #{spielplanBean.verein} #{spielplanBean.liga}</h2>
 		<h:form>
-			<p:commandButton value="Zurück" action="index.xhtml"
+			<p:commandButton value="Zurück" action="liga.xhtml"
 				actionListener="#{spielplanBean.zurueck}" immediate="true"
 				rendered="#{spielplanBean.tennis}">
 				<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
@@ -142,7 +142,7 @@
 							styleClass="myButtonLight">
 							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 							<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
-							<f:param name="ruecksprung" value="index.xhtml" />
+							<f:param name="ruecksprung" value="liga.xhtml" />
 							<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
 							<f:param name="liga" value="#{spielplanBean.liga}" />
 						</p:commandButton>

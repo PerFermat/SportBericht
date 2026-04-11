@@ -153,7 +153,6 @@ public class ZusammenGesamtBean implements Serializable {
 		return istSpielbericht || spiel.isMitSpielberichte();
 	}
 
-
 	public void setBerichtDatum(String berichtDatum) {
 		this.berichtDatum = berichtDatum;
 	}
@@ -180,7 +179,7 @@ public class ZusammenGesamtBean implements Serializable {
 			return "spielplan.xhtml";
 		}
 
-		return "index.xhtml";
+		return "liga.xhtml";
 
 	}
 
@@ -317,7 +316,7 @@ public class ZusammenGesamtBean implements Serializable {
 		} else {
 			ueberschrift = "Tischtennis Spielberichte "
 					+ berechneKalenderwoche(findeFruehestesDatum(getSpieleFreigegeben()));
-			
+
 		}
 		int bildnr = 0;
 		for (Spiel spiel : getSpieleFreigegeben()) {
