@@ -20,8 +20,6 @@ import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
-import jakarta.servlet.RequestDispatcher;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -126,18 +124,15 @@ public class IndexBean implements Serializable {
 		}
 		try {
 			ExternalContext ec = facesContext.getExternalContext();
-			HttpServletRequest request = (HttpServletRequest) ec.getRequest();
-			HttpServletResponse response = (HttpServletResponse) ec.getResponse();
 			String sportart = ConfigManager.getConfigValue(vereinnr, "sportart.verein");
 			String ziel = "/spielplan.xhtml";
 			if (sportart != null && sportart.equalsIgnoreCase("TENNIS")) {
 				ziel = "/liga.xhtml";
 			}
 			String encodedVerein = URLEncoder.encode(verein, StandardCharsets.UTF_8);
-			RequestDispatcher dispatcher = request.getRequestDispatcher(ziel + "?v=" + encodedVerein);
-			dispatcher.forward(request, response);
+			ec.redirect(ec.getRequestContextPath() + ziel + "?v=" + encodedVerein);
 			facesContext.responseComplete();
-		} catch (IOException | ServletException e) {
+		} catch (IOException e) {
 			addError("Weiterleitung ist fehlgeschlagen.");
 		}
 	}

@@ -24,14 +24,6 @@
         <param-value>saga</param-value>
     </context-param>
 
-    <context-param>
-        <param-name>org.omnifaces.EXCEPTION_TYPES_TO_UNWRAP</param-name>
-        <param-value>
-            jakarta.faces.FacesException,
-            jakarta.servlet.ServletException
-        </param-value>
-    </context-param>
-
     <!-- ================= SERVLET ================= -->
 
     <servlet>

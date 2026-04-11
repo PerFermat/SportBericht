@@ -24,11 +24,6 @@ public class ErrorBean {
 			return null;
 		}
 
-		Object ex = fc.getExternalContext().getRequestMap().get("org.omnifaces.exceptionhandler.exception");
-		if (ex instanceof Throwable throwable) {
-			return throwable;
-		}
-
 		Object request = fc.getExternalContext().getRequest();
 		if (request instanceof HttpServletRequest servletRequest) {
 			Object jakartaEx = servletRequest.getAttribute("jakarta.servlet.error.exception");
