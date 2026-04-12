@@ -98,12 +98,6 @@ public class TennisSpiel extends Spiel {
 		return !"0:0".equals(saetze);
 	}
 
-	public void bericht() {
-		DatabaseService dbService = new DatabaseService();
-		dbService.saveLogData(vereinnr, ergebnisLink, "", "in Bearbeitung", "");
-		logEntries = dbService.getLogEntries(vereinnr, ergebnisLink);
-	}
-
 	@Override
 	public String getSportart() {
 		return "tennis";

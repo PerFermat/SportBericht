@@ -40,6 +40,7 @@ import de.bericht.util.ConfigManager;
 import de.bericht.util.ErgebnisCache;
 import de.bericht.util.Fehler;
 import de.bericht.util.IgnorierteWoerte;
+import de.bericht.util.LoginCookieDaten;
 import de.bericht.util.NamensSpeicher;
 import de.bericht.util.SpielDetail;
 import jakarta.annotation.PostConstruct;
@@ -99,8 +100,21 @@ public class BerichtBean implements Serializable {
 	@PostConstruct
 	public void init() {
 		Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
-		this.vereinnr = params.get("vereinnr");
+		lesenUrlParameter(params);
+		lesenCookieParameter();
 
+		if (uuid == null) {
+			uuid = UUID.randomUUID().toString();
+			dbService.saveLogData(vereinnr, ergebnisLink, name, "in Bearbeitung", "", uuid);
+		}
+
+		ladeBerichtInformationen();
+		ladeBerichtStatus();
+		ladeIgnorierteWoerter();
+
+	}
+
+	private void ladeIgnorierteWoerter() {
 		ignorieren = new IgnorierteWoerte();
 		String woerterIgnorieren = ConfigManager.getConfigValue(vereinnr, "bericht.pruefung.ok");
 		// Aufteilen in ein Array
@@ -111,48 +125,41 @@ public class BerichtBean implements Serializable {
 			ignorieren.hinzufuegen(wort);
 		}
 
-		try {
-			if (params.get("heim") != null) {
-				this.heim = URLDecoder.decode(params.get("heim"), "UTF-8");
-				ignorieren.hinzufuegen(this.heim);
-			}
-			if (params.get("gast") != null) {
-				this.gast = URLDecoder.decode(params.get("gast"), "UTF-8");
-				ignorieren.hinzufuegen(this.gast);
-			}
-		} catch (UnsupportedEncodingException e) {
-			this.heim = "Unbekannt";
-			this.gast = "";
+		if (this.heim != null) {
+			ignorieren.hinzufuegen(this.heim);
 		}
-		this.datum = params.get("datum");
-		this.ergebnis = params.get("ergebnis");
-		this.ergebnisLink = params.get("ergebnisLink");
-		this.name = params.get("name");
-		this.liga = params.get("liga");
-		this.ligaSpiel = params.get("ligaSpiel");
-		this.uuid = params.get("uuid");
-		this.gruppeUrl = params.get("gruppeUrl");
+		if (this.gast != null) {
+			ignorieren.hinzufuegen(this.gast);
+		}
+	}
 
-		if (vereinnr == null) {
-			vereinnr = "13014";
-		}
-		if (ergebnisLink != null && !ergebnisLink.isBlank()) {
-			if (this.ligaSpiel == null || this.ligaSpiel.isEmpty()) {
-				dbService.saveSpielMetadaten(vereinnr, ergebnisLink, liga, heim, gast, datum, ergebnis);
-			} else {
-				dbService.saveSpielMetadaten(vereinnr, ergebnisLink, ligaSpiel, heim, gast, datum, ergebnis);
-			}
-		}
-
+	private void ladeBerichtStatus() {
 		if (dbService.anzahlFreigabe(vereinnr, ergebnisLink) >= 1) {
 			try {
-
 				FacesContext.getCurrentInstance().getExternalContext().redirect(getGenerateBerichtUrlFreigegeben());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			return;
+		}
+
+		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
+		if (dbService.eMailVersand(vereinnr, ergebnisLink) > 0) {
+			email = true;
+		}
+
+		pruefKI = dbService.isKI(vereinnr, ergebnisLink);
+
+	}
+
+	private void ladeBerichtInformationen() {
+		if (ergebnisLink != null && !ergebnisLink.isBlank()) {
+			if (this.ligaSpiel == null || this.ligaSpiel.isEmpty()) {
+				dbService.saveSpielMetadaten(vereinnr, ergebnisLink, liga, heim, gast, datum, ergebnis);
+			} else {
+				dbService.saveSpielMetadaten(vereinnr, ergebnisLink, ligaSpiel, heim, gast, datum, ergebnis);
+			}
 		}
 
 		// Bericht und Bild aus DB laden, falls vorhanden
@@ -185,16 +192,40 @@ public class BerichtBean implements Serializable {
 			}
 
 		}
-		if (uuid == null) {
-			uuid = UUID.randomUUID().toString();
-		}
-		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
-		if (dbService.eMailVersand(vereinnr, ergebnisLink) > 0) {
-			email = true;
-		}
+	}
 
-		pruefKI = dbService.isKI(vereinnr, ergebnisLink);
+	private void lesenCookieParameter() {
+		LoginCookieDaten logging = new LoginCookieDaten();
+		if (vereinnr == null) {
+			vereinnr = logging.getVereinnr();
+		}
+		if (name == null) {
+			name = logging.getName();
+		}
+	}
 
+	private void lesenUrlParameter(Map<String, String> params) {
+
+		this.vereinnr = params.get("vereinnr");
+		try {
+			if (params.get("heim") != null) {
+				this.heim = URLDecoder.decode(params.get("heim"), "UTF-8");
+			}
+			if (params.get("gast") != null) {
+				this.gast = URLDecoder.decode(params.get("gast"), "UTF-8");
+			}
+		} catch (UnsupportedEncodingException e) {
+			this.heim = "Unbekannt";
+			this.gast = "";
+		}
+		this.datum = params.get("datum");
+		this.ergebnis = params.get("ergebnis");
+		this.ergebnisLink = params.get("ergebnisLink");
+		this.name = params.get("name");
+		this.liga = params.get("liga");
+		this.ligaSpiel = params.get("ligaSpiel");
+		this.uuid = params.get("uuid");
+		this.gruppeUrl = params.get("gruppeUrl");
 	}
 
 	public String speichernUndWeiter() {
@@ -992,6 +1023,20 @@ public class BerichtBean implements Serializable {
 
 	public void setLigaSpiel(String ligaSpiel) {
 		this.ligaSpiel = ligaSpiel;
+	}
+
+	public void speichernUndPruefeEmailStatus() {
+		speichern();
+		pruefeEmailStatus();
+	}
+
+	public void pruefeEmailStatus() {
+		pruefeEmailStatus(null);
+	}
+
+	public void speichernUndFreigabe() {
+		speichern();
+		freigabe();
 	}
 
 }

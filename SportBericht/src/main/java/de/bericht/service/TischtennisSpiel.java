@@ -75,16 +75,6 @@ public class TischtennisSpiel extends Spiel {
 		return ergebnis;
 	}
 
-	public void bericht() {
-		dbService.saveLogData(vereinnr, ergebnisLink, "", "in Bearbeitung", "");
-		logEntries = dbService.getLogEntries(vereinnr, ergebnisLink);
-	}
-
-	public void bericht(String alt) {
-		dbService.saveLogData(vereinnr, ergebnisLink, "", "in Bearbeitung", "");
-		logEntries = dbService.getLogEntries(vereinnr, ergebnisLink);
-	}
-
 	public List<LogEntry> getLogEntries() {
 		return logEntries;
 	}

@@ -65,7 +65,7 @@
 			<h:form id="berichtForm" enctype="multipart/form-data">
 				<div class="button-container">
 					<p:commandButton value="Bericht generieren"
-						action="berichtki.xhtml">
+						action="berichtki.xhtml" actionListener="#{berichtBean.speichern}">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 						<f:param name="heim" value="#{berichtBean.heim}" />
 						<f:param name="gast" value="#{berichtBean.gast}" />
@@ -134,9 +134,11 @@
 					<div class="button-container">
 						<p:commandButton value="Rechtschreibung prüfen"
 							action="#{berichtBean.pruefeRechtschreibung}"
+							actionListener="#{berichtBean.speichern}"							
 							update=":berichtForm, :logForm, :fehlerPanel, :errorForm" />
 						<p:commandButton value="Bericht mit KI verbessern"
 							action="#{berichtBean.verbessernKI}"
+							actionListener="#{berichtBean.speichern}"							
 							update=":berichtForm, :logForm, :fehlerPanel, :errorForm" />
 						<p:commandButton value="Bericht mit KI ändern"
 							action="aenderung.xhtml"
@@ -187,17 +189,19 @@
 						update=":berichtForm, :logForm, :logPanel" />
 
 					<p:commandButton value="E-Mail senden"
-						actionListener="#{berichtBean.pruefeEmailStatus}" process="@this"
+						actionListener="#{berichtBean.speichernUndPruefeEmailStatus}" process="@form"
 						oncomplete="handleEmailDialog(#{berichtBean.email ? 'true' : 'false'})"
 						disabled="#{empty berichtBean.name}"
 						update=":berichtForm, :logForm, :growl" />
 					<p:commandButton value="Bild löschen"
 						action="#{berichtBean.bildLoeschen}"
+						actionListener="#{berichtBean.speichern}"						
 						update=":berichtForm, :logForm, :logPanel"
 						disabled="#{empty berichtBean.bildUrl}" />
 					<p:commandButton value="Bild bearbeiten"
 						disabled="#{empty berichtBean.bildUrl}"
-						action="bildBearbeiten.xhtml">
+						action="bildBearbeiten.xhtml"
+						actionListener="#{berichtBean.speichern}">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 						<f:param name="heim" value="#{berichtBean.heim}" />
 						<f:param name="gast" value="#{berichtBean.gast}" />
@@ -211,7 +215,7 @@
 					</p:commandButton>
 					<p:commandButton value="Freigeben" action="spielplan.xhtml"
 						rendered="#{berichtBean.anzFreigabe and berichtBean.ergebnisLink.startsWith('http')}"
-						actionListener="#{berichtBean.freigabe}" immediate="true">
+						actionListener="#{berichtBean.speichernUndFreigabe}">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
 						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />							
@@ -219,7 +223,7 @@
 					</p:commandButton>
 					<p:commandButton value="Freigeben" action="freieBerichte.xhtml"
 						rendered="#{berichtBean.anzFreigabe and not berichtBean.ergebnisLink.startsWith('http')}"
-						actionListener="#{berichtBean.freigabe}" immediate="true">
+						actionListener="#{berichtBean.speichernUndFreigabe}">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />							
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
@@ -288,19 +292,20 @@
 							<div class="dialog-footer-buttons">
 								<p:commandButton value="E-Mail erneut senden"
 									action="#{berichtBean.emailSenden}"
+									actionListener="#{berichtBean.speichern}"
 									update=":berichtForm, :logForm, :growl" icon="pi pi-envelope"
 									styleClass="ui-button-warning" />
 
 								<p:commandButton value="Freigeben" action="spielplan.xhtml"
 									rendered="#{berichtBean.anzFreigabe and berichtBean.ergebnisLink.startsWith('http')}"
-									actionListener="#{berichtBean.freigabe}" immediate="true">
+									actionListener="#{berichtBean.speichernUndFreigabe}">
 									<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 									<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 								</p:commandButton>
 
 								<p:commandButton value="Freigeben" action="freieBerichte.xhtml"
 									rendered="#{berichtBean.anzFreigabe and not berichtBean.ergebnisLink.startsWith('http')}"
-									actionListener="#{berichtBean.freigabe}" immediate="true">
+									actionListener="#{berichtBean.speichernUndFreigabe}">
 									<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 								</p:commandButton>
 
@@ -341,6 +346,7 @@
 							<div class="dialog-footer-buttons">
 								<p:commandButton value="Ja, senden"
 									action="#{berichtBean.emailSenden}"
+									actionListener="#{berichtBean.speichern}"
 									update=":berichtForm,  :logForm, :growl" icon="pi pi-check"
 									styleClass="ui-button-success" />
 
@@ -361,6 +367,8 @@
 					<p:commandButton
 						value="#{berichtBean.spielplan ? 'Spielbericht ausblenden' : 'Spielbericht anzeigen'}"
 						action="#{berichtBean.spielplanAnzeige}"
+						actionListener="#{berichtBean.speichern}"
+						process=":berichtForm"
 						update=":errorForm,  :fehlerPanel" />
 				</div>
 				<h:panelGroup id="fehlerPanelOK"
@@ -428,6 +436,8 @@
 				<div class="button-container">
 					<p:commandButton value="Alter Zustand widerherstellen"
 						action="historien.xhtml"
+						actionListener="#{berichtBean.speichern}"
+						process=":berichtForm"
 						rendered="#{berichtBean.historienTimestamps}">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 						<f:param name="heim" value="#{berichtBean.heim}" />
@@ -441,7 +451,10 @@
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Spielberichtsbogen neu lesen"
-						action="#{berichtBean.spielHtmlLesen}" update=":berichtForm" />
+						action="#{berichtBean.spielHtmlLesen}"
+						actionListener="#{berichtBean.speichern}"
+						process=":berichtForm" update=":berichtForm" />
+
 				</div>
 				<p>
 					<a href="#{berichtBean.generateBerichtUrlLink}">Direkter Link
