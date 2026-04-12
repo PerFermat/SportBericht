@@ -23,6 +23,7 @@ import jakarta.inject.Named;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 @Named("indexBean")
 @ViewScoped
@@ -31,6 +32,8 @@ public class IndexBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final String LOGIN_COOKIE = "sportbericht_login";
 	private static final int COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365 * 10;
+	private static final String SESSION_VEREINNR = "sportbericht_vereinnr";
+	private static final String SESSION_VEREIN = "sportbericht_verein";
 
 	private final DatabaseService db = new DatabaseService();
 
@@ -72,6 +75,10 @@ public class IndexBean implements Serializable {
 		}
 		if (passwort == null || passwort.isBlank()) {
 			addError("Bitte ein Passwort eingeben.");
+			return null;
+		}
+		if (selectedName == null || selectedName.isBlank()) {
+			addError("Bitte ein Name eingeben.");
 			return null;
 		}
 		System.out.println(ConfigManager.getUserPasswort(selectedVereinnr));
@@ -124,13 +131,18 @@ public class IndexBean implements Serializable {
 		}
 		try {
 			ExternalContext ec = facesContext.getExternalContext();
+			Object sessionObj = ec.getSession(true);
+			if (sessionObj instanceof HttpSession session) {
+				session.setAttribute(SESSION_VEREINNR, vereinnr);
+				session.setAttribute(SESSION_VEREIN, verein);
+			}
+
 			String sportart = ConfigManager.getConfigValue(vereinnr, "sportart.verein");
 			String ziel = "/spielplan.xhtml";
 			if (sportart != null && sportart.equalsIgnoreCase("TENNIS")) {
 				ziel = "/liga.xhtml";
 			}
-			String encodedVerein = URLEncoder.encode(verein, StandardCharsets.UTF_8);
-			ec.redirect(ec.getRequestContextPath() + ziel + "?v=" + encodedVerein);
+			ec.redirect(ec.getRequestContextPath() + ziel);
 			facesContext.responseComplete();
 		} catch (IOException e) {
 			addError("Weiterleitung ist fehlgeschlagen.");
@@ -227,5 +239,10 @@ public class IndexBean implements Serializable {
 
 	public boolean isNamenVorhanden() {
 		return namen != null && !namen.isEmpty();
+	}
+
+	public String getVereinnr() {
+		System.out.println(selectedVereinnr);
+		return selectedVereinnr == null ? "13014" : selectedVereinnr;
 	}
 }

@@ -15,12 +15,14 @@ import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 @Named("ligaBean")
 @ViewScoped
 public class LigaBean implements Serializable {
 
 	private static final long serialVersionUID = 1L;
+	private static final String SESSION_VEREINNR = "sportbericht_vereinnr";
 	private List<Liga> ligen;
 	private String verein;
 
@@ -38,10 +40,20 @@ public class LigaBean implements Serializable {
 		String name = request.getParameter("v");
 		vereinnr = BerichtHelper.bestimmenVereinnr(name);
 
-		if (vereinnr == null) {
+		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = request.getParameter("vereinnr");
 		}
-		if (vereinnr == null) {
+		if (vereinnr == null || vereinnr.isBlank()) {
+			HttpSession session = request.getSession(false);
+			if (session != null) {
+				Object sessionVereinnr = session.getAttribute(SESSION_VEREINNR);
+				if (sessionVereinnr instanceof String value && !value.isBlank()) {
+					vereinnr = value;
+				}
+			}
+		}
+		if (vereinnr == null || vereinnr.isBlank()) {
+
 			vereinnr = "13014";
 		}
 

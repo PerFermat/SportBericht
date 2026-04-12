@@ -5,37 +5,62 @@
 	xmlns:p="http://primefaces.org/ui"
 	xmlns:f="http://xmlns.jcp.org/jsf/core">
 <h:head>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
 	<title>SportBericht Login</title>
 </h:head>
-<h:body style="margin:0; font-family:Arial, sans-serif; background:#f5f5f5;">
-	<div style="max-width:460px; margin:24px auto; padding:20px; background:#e2e2e2; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,.12);">
-		<h2 style="margin-top:0; text-align:center;">Anmeldung zum SportBericht</h2>
+<h:body
+	style="margin:0; font-family:Arial, sans-serif; background:#f5f5f5;">
+	<div
+		style="max-width: 460px; margin: 24px auto; padding: 20px; background: #e2e2e2; border-radius: 12px; box-shadow: 0 2px 10px rgba(0, 0, 0, .12);">
+		<h2 style="margin-top: 0; text-align: center;">Anmeldung zum
+			SportBericht</h2>
 
 		<h:form id="loginForm">
 			<p:messages id="messages" showDetail="true" closable="true" />
 
-			<div style="margin-bottom:14px;">
-				<p:outputLabel for="verein" value="Verein *" />
-				<p:selectOneMenu id="verein" value="#{indexBean.selectedVerein}" required="true" style="width:100%;">
-					<f:selectItem itemLabel="Bitte wählen" itemValue="" noSelectionOption="true" />
+			<div style="margin-bottom: 14px;">
+				<p:outputLabel for="verein" value="Verein" />
+				<p:selectOneMenu id="verein" value="#{indexBean.selectedVerein}"
+					required="true" style="width:100%;">
+					<f:selectItem itemLabel="Bitte wählen" itemValue=""
+						noSelectionOption="true" />
 					<f:selectItems value="#{indexBean.vereine}" />
-					<p:ajax listener="#{indexBean.onVereinChange}" update="namen" process="@this" />
+					<p:ajax listener="#{indexBean.onVereinChange}" update="namen"
+						process="@this" />
 				</p:selectOneMenu>
 			</div>
 
-			<div style="margin-bottom:14px;">
+			<div style="margin-bottom: 14px;">
 				<p:outputLabel for="namen" value="Name" />
-				<p:autoComplete id="namen" value="#{indexBean.selectedName}" completeMethod="#{indexBean.completeNamen}"
-					placeholder="Name eingeben" scrollHeight="250" forceSelection="false" dropdown="false" style="width:100%;" />
+				<p:inputText id="namen" value="#{indexBean.selectedName}"
+					placeholder="Name eingeben" style="width:100%;">
+					<p:ajax event="keyup" process="@this" />
+				</p:inputText>
 			</div>
 
-			<div style="margin-bottom:14px;">
-				<p:outputLabel for="passwort" value="Passwort *" />
-				<p:password id="passwort" value="#{indexBean.passwort}" required="true" feedback="false" style="width:100%;" />
+			<div style="margin-bottom: 14px;">
+				<p:outputLabel for="passwort" value="Passwort" />
+				<p:password id="passwort" value="#{indexBean.passwort}"
+					required="true" feedback="false" style="width:100%;" />
 			</div>
 
-			<p:commandButton value="Anmelden" action="#{indexBean.anmelden}" update="@form" ajax="false" style="width:100%;" />
+			<p:commandButton value="Anmelden" action="#{indexBean.anmelden}"
+				update="@form" ajax="false" style="width:100%;" />
+
+			<!-- Info-Box -->
+			<div
+				style="margin-top: 20px; padding: 12px; background: #d9edf7; border: 1px solid #bce8f1; border-radius: 8px; color: #31708f; font-size: 0.9em;">
+				Nach Eingabe der Anmeldedaten werden diese in einem Cookie
+				gespeichert, um die Nutzung der Anwendung zu erleichtern.</div>
+
+			<!-- Impressum Button -->
+			<div style="margin-top: 12px; text-align: center;">
+				<p:commandButton value="Impressum" action="impressum.xhtml">
+					<f:param name="vereinnr" value="#{indexBean.vereinnr}" />
+				</p:commandButton>
+			</div>
+
 		</h:form>
 	</div>
 </h:body>

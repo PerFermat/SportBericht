@@ -26,12 +26,14 @@ import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 @Named("spielplanBean")
 @ViewScoped
 public class SpielplanBean implements Serializable {
 
 	private static final long serialVersionUID = 1L;
+	private static final String SESSION_VEREINNR = "sportbericht_vereinnr";
 
 	private List<Spiel> spiele;
 
@@ -60,10 +62,19 @@ public class SpielplanBean implements Serializable {
 		gruppeUrl = request.getParameter("gruppeUrl");
 		passwort = request.getParameter("p");
 
-		if (vereinnr == null) {
+		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = request.getParameter("vereinnr");
 		}
-		if (vereinnr == null) {
+		if (vereinnr == null || vereinnr.isBlank()) {
+			HttpSession session = request.getSession(false);
+			if (session != null) {
+				Object sessionVereinnr = session.getAttribute(SESSION_VEREINNR);
+				if (sessionVereinnr instanceof String value && !value.isBlank()) {
+					vereinnr = value;
+				}
+			}
+		}
+		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = "13014";
 		}
 		int i = 0;
@@ -90,7 +101,6 @@ public class SpielplanBean implements Serializable {
 
 			String wasRaw = ConfigManager.getConfigValue(vereinnr, "spielplan.vorschau.was");
 			SpielplanVorschauWas was = SpielplanVorschauWas.fromConfig(wasRaw);
-
 
 			if (was != null) {
 				provider.generiereVorschauBericht(vereinnr, was.name());
@@ -255,7 +265,7 @@ public class SpielplanBean implements Serializable {
 
 	public boolean isPasswortOK() {
 		String userPasswort = ConfigManager.getUserPasswort(vereinnr);
-		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);		
+		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);
 		if (userPasswort.equals(passwort) | adminPasswort.equals(passwort)) {
 			return true;
 		}
