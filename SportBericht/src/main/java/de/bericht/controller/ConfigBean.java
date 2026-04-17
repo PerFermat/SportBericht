@@ -21,6 +21,7 @@ import de.bericht.util.ConfigBedeutung;
 import de.bericht.util.ConfigEintrag;
 import de.bericht.util.ConfigKategorie;
 import de.bericht.util.ConfigManager;
+import de.bericht.util.LoginCookieDaten;
 import de.bericht.util.OpenAIModelFetcher;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -66,6 +67,7 @@ public class ConfigBean implements Serializable {
 	private String einmalpasswort;
 	private String einmalpasswortEingabe;
 	private boolean einmalpasswortGeprueft;
+	private String passwort;
 
 	private final ConfigService service = new ConfigService();
 
@@ -85,10 +87,29 @@ public class ConfigBean implements Serializable {
 			}
 			return;
 		}
+		passwort = request.getParameter("p");
+		lesenCookieParameter();
 
-		// erstelleUndSendeEinmalpasswort(true);
-
+		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);
+		if (adminPasswort.equals(passwort)) {
+			System.out.println(passwort);
+			einmalpasswortGeprueft = true;
+		}
 		ladeConfigEintraegeMitBedeutung();
+	}
+
+	private void lesenCookieParameter() {
+		LoginCookieDaten logging = new LoginCookieDaten();
+		if (vereinnr == null || vereinnr.isBlank()) {
+			vereinnr = logging.getVereinnr();
+			if (passwort == null) {
+				passwort = logging.getPasswort();
+			}
+		} else {
+			if (passwort == null && vereinnr.equals(logging.getVereinnr())) {
+				passwort = logging.getPasswort();
+			}
+		}
 	}
 
 	public void speichern() {

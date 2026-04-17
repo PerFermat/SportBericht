@@ -11,11 +11,11 @@ import de.bericht.service.LigaService;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.ErgebnisCache;
+import de.bericht.util.LoginCookieDaten;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 
 @Named("ligaBean")
 @ViewScoped
@@ -43,26 +43,20 @@ public class LigaBean implements Serializable {
 		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = request.getParameter("vereinnr");
 		}
-		if (vereinnr == null || vereinnr.isBlank()) {
-			HttpSession session = request.getSession(false);
-			if (session != null) {
-				Object sessionVereinnr = session.getAttribute(SESSION_VEREINNR);
-				if (sessionVereinnr instanceof String value && !value.isBlank()) {
-					vereinnr = value;
-				}
-			}
-		}
-		if (vereinnr == null || vereinnr.isBlank()) {
-
-			vereinnr = "13014";
-		}
-
+		lesenCookieParameter();
 		String url = ConfigManager.getSpielplanURL(vereinnr);
 
 		LigaService ls = new LigaService(url);
 		ligen = ls.getLigen();
 		verein = ls.getVerein();
 
+	}
+
+	private void lesenCookieParameter() {
+		LoginCookieDaten logging = new LoginCookieDaten();
+		if (vereinnr == null || vereinnr.isBlank()) {
+			vereinnr = logging.getVereinnr();
+		}
 	}
 
 	public List<Liga> getLigen() {

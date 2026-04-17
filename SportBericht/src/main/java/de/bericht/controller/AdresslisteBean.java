@@ -113,9 +113,8 @@ public class AdresslisteBean implements Serializable {
 		}
 
 		passwort = request.getParameter("p");
-		if (vereinnr == null || vereinnr.isBlank()) {
-			lesenCookieParameter();
-		}
+		lesenCookieParameter();
+		System.out.println(passwort);
 
 		if (vereinnr == null || vereinnr.isBlank()) {
 			addError("Keine Vereinnummer übergeben (Parameter v oder vereinnr fehlt).");
@@ -125,22 +124,33 @@ public class AdresslisteBean implements Serializable {
 		schreibzugriff = pruefeSchreibzugriff(request.getParameter("p"));
 		String userPasswort = ConfigManager.getUserPasswort(vereinnr);
 		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);
-		if (userPasswort.equals(passwort) | adminPasswort.equals(passwort)) {
+		if (userPasswort.equals(passwort) || adminPasswort.equals(passwort)) {
 			ladeEintraege();
 		} else {
 			eintraege = new ArrayList<>();
 			return;
 		}
 
+		if (adminPasswort.equals(passwort)) {
+			neuSpeichernFreigeschaltet = true;
+			schreibzugriff = true;
+			neuPasswortAngefordert = true;
+			editAktionenFreigeschaltet = true;
+		}
+
 	}
 
 	private void lesenCookieParameter() {
 		LoginCookieDaten logging = new LoginCookieDaten();
-		if (vereinnr == null) {
+		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = logging.getVereinnr();
-		}
-		if (passwort == null) {
-			passwort = logging.getPasswort();
+			if (passwort == null) {
+				passwort = logging.getPasswort();
+			}
+		} else {
+			if (passwort == null && vereinnr.equals(logging.getVereinnr())) {
+				passwort = logging.getPasswort();
+			}
 		}
 	}
 

@@ -13,6 +13,7 @@ import de.bericht.service.DatabaseService;
 import de.bericht.service.SpielcodeEintrag;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
+import de.bericht.util.LoginCookieDaten;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
@@ -28,6 +29,7 @@ public class SpielcodesBean implements Serializable {
 	private final ConfigManager configManager = ConfigManager.getInstance();
 
 	private String vereinnr;
+	private String passwort;
 	private final List<SpielcodeEintrag> spiele = new ArrayList<>();
 	private final DatabaseService databaseService = new DatabaseService();
 
@@ -39,17 +41,30 @@ public class SpielcodesBean implements Serializable {
 		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = request.getParameter("vereinnr");
 		}
-		if (vereinnr == null || vereinnr.isBlank()) {
-			vereinnr = "13014";
-		}
+		lesenCookieParameter();
+
 		String userPasswort = ConfigManager.getUserPasswort(vereinnr);
-		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);		
-		if (userPasswort.equals(request.getParameter("p")) | adminPasswort.equals(request.getParameter("p"))) {
+		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);
+		if (userPasswort.equals(passwort) | adminPasswort.equals(passwort)) {
 			ladeSpiele();
 		} else {
 			return;
 		}
 
+	}
+
+	private void lesenCookieParameter() {
+		LoginCookieDaten logging = new LoginCookieDaten();
+		if (vereinnr == null || vereinnr.isBlank()) {
+			vereinnr = logging.getVereinnr();
+			if (passwort == null) {
+				passwort = logging.getPasswort();
+			}
+		} else {
+			if (passwort == null && vereinnr.equals(logging.getVereinnr())) {
+				passwort = logging.getPasswort();
+			}
+		}
 	}
 
 	private void ladeSpiele() {

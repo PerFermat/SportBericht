@@ -14,6 +14,7 @@ import com.jcraft.jsch.SftpException;
 
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
+import de.bericht.util.LoginCookieDaten;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -58,6 +59,7 @@ public class FtpBean implements Serializable {
 	}
 
 	private String vereinnr;
+	private String passwort;
 	private String ausgewaehltesThema = UploadThema.HALLENBELEGUNGN.key;
 	private Part uploadedDatei;
 
@@ -70,8 +72,10 @@ public class FtpBean implements Serializable {
 			vereinnr = request.getParameter("vereinnr");
 		}
 
-		if (!(request.getParameter("p") == null)
-				&& request.getParameter("p").equals(ConfigManager.getUserPasswort(vereinnr))) {
+		passwort = request.getParameter("p");
+		lesenCookieParameter();
+		if (!(passwort == null) && (passwort.equals(ConfigManager.getUserPasswort(vereinnr))
+				|| passwort.equals(ConfigManager.getAdminPasswort(vereinnr)))) {
 			this.freigabe = true;
 		} else {
 			addMessage(FacesMessage.SEVERITY_ERROR, "Fasches Passwort eingegeben",
@@ -79,6 +83,20 @@ public class FtpBean implements Serializable {
 			this.freigabe = false;
 		}
 
+	}
+
+	private void lesenCookieParameter() {
+		LoginCookieDaten logging = new LoginCookieDaten();
+		if (vereinnr == null || vereinnr.isBlank()) {
+			vereinnr = logging.getVereinnr();
+			if (passwort == null) {
+				passwort = logging.getPasswort();
+			}
+		} else {
+			if (passwort == null && vereinnr.equals(logging.getVereinnr())) {
+				passwort = logging.getPasswort();
+			}
+		}
 	}
 
 	public void hochladen() {

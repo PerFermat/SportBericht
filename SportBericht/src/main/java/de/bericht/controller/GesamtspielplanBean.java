@@ -59,6 +59,7 @@ import de.bericht.service.GesamtspielplanEintrag;
 import de.bericht.service.SpielerRueckmeldung;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
+import de.bericht.util.LoginCookieDaten;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -109,6 +110,7 @@ public class GesamtspielplanBean implements Serializable {
 	private String speicherEinmalpasswort;
 	private String speicherEinmalpasswortEingabe;
 	private boolean speicherFreigeschaltet;
+	private String passwort;
 
 	@PostConstruct
 	public void init() {
@@ -118,9 +120,7 @@ public class GesamtspielplanBean implements Serializable {
 		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = request.getParameter("vereinnr");
 		}
-		if (vereinnr == null || vereinnr.isBlank()) {
-			vereinnr = "13014";
-		}
+		lesenCookieParameter();
 
 		verein_prefix = ConfigManager.getSpielplanVerein(vereinnr);
 		ladePersistierteGesamtspielplanKonfiguration();
@@ -130,6 +130,24 @@ public class GesamtspielplanBean implements Serializable {
 		halbserie = defaultRundeName();
 		ladeGesamtspielplan();
 		aktualisiereKonfigurationErforderlich();
+
+		if (passwort != null && passwort.equals(ConfigManager.getAdminPasswort(vereinnr))) {
+			speicherFreigeschaltet = true;
+		}
+	}
+
+	private void lesenCookieParameter() {
+		LoginCookieDaten logging = new LoginCookieDaten();
+		if (vereinnr == null || vereinnr.isBlank()) {
+			vereinnr = logging.getVereinnr();
+			if (passwort == null) {
+				passwort = logging.getPasswort();
+			}
+		} else {
+			if (passwort == null && vereinnr.equals(logging.getVereinnr())) {
+				passwort = logging.getPasswort();
+			}
+		}
 	}
 
 	public void ladeGesamtspielplan() {

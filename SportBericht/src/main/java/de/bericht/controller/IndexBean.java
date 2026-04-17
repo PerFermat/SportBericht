@@ -68,7 +68,7 @@ public class IndexBean implements Serializable {
 	}
 
 	public String anmelden() {
-		onVereinChange();
+		selectedVereinnr = vereinZuNr.get(selectedVerein);
 		if (selectedVereinnr == null || selectedVereinnr.isBlank()) {
 			addError("Bitte einen Verein auswählen.");
 			return null;
@@ -81,10 +81,9 @@ public class IndexBean implements Serializable {
 			addError("Bitte ein Name eingeben.");
 			return null;
 		}
-		System.out.println(ConfigManager.getUserPasswort(selectedVereinnr));
-		System.out.println(passwort);
 
-		if (!Objects.equals(ConfigManager.getUserPasswort(selectedVereinnr), passwort)) {
+		if (!(Objects.equals(ConfigManager.getUserPasswort(selectedVereinnr), passwort)
+				|| Objects.equals(ConfigManager.getAdminPasswort(selectedVereinnr), passwort))) {
 			addError("Passwort ist falsch.");
 			return null;
 		}
@@ -105,22 +104,27 @@ public class IndexBean implements Serializable {
 			String encryptedPasswort = data.get("pwd");
 			String name = data.get("name");
 			if (verein == null || vereinnr == null || encryptedPasswort == null) {
+				loescheCookie();
 				return;
 			}
 			String decrypted = ConfigManager.decryptPasswort(vereinnr, encryptedPasswort);
-			String expected = ConfigManager.getUserPasswort(vereinnr);
-			if (!Objects.equals(decrypted, expected)) {
+			String expectedUser = ConfigManager.getUserPasswort(vereinnr);
+			String expectedAdmin = ConfigManager.getAdminPasswort(vereinnr);
+			if (!(Objects.equals(decrypted, expectedUser) || Objects.equals(decrypted, expectedAdmin))) {
+				loescheCookie();
 				return;
 			}
-			List<String> gefundeneNamen = db.ladeBetreuerNamenAusAdressliste(vereinnr);
-			if (!gefundeneNamen.isEmpty() && name != null && !name.isBlank() && !gefundeneNamen.contains(name)) {
-				return;
+			String vereinAusMap = findeVereinZuVereinnr(vereinnr);
+			if (vereinAusMap != null && !vereinAusMap.isBlank()) {
+				verein = vereinAusMap;
 			}
+
 			selectedVerein = verein;
 			selectedVereinnr = vereinnr;
 			selectedName = name;
 			weiterleitenOhneUrlAenderung(vereinnr, verein);
 		} catch (Exception ignored) {
+			loescheCookie();
 		}
 	}
 
@@ -166,12 +170,35 @@ public class IndexBean implements Serializable {
 			HttpServletResponse response = (HttpServletResponse) ec.getResponse();
 			Cookie cookie = new Cookie(LOGIN_COOKIE, value);
 			cookie.setHttpOnly(true);
-			cookie.setPath("/");
+			String contextPath = ec.getRequestContextPath();
+			cookie.setPath(contextPath == null || contextPath.isBlank() ? "/" : contextPath);
 			cookie.setMaxAge(COOKIE_MAX_AGE_SECONDS);
 			response.addCookie(cookie);
 		} catch (Exception e) {
 			addError("Cookie konnte nicht gespeichert werden.");
 		}
+	}
+
+	private void loescheCookie() {
+		try {
+			ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+			HttpServletResponse response = (HttpServletResponse) ec.getResponse();
+			Cookie cookie = new Cookie(LOGIN_COOKIE, "");
+			String contextPath = ec.getRequestContextPath();
+			cookie.setPath(contextPath == null || contextPath.isBlank() ? "/" : contextPath);
+			cookie.setMaxAge(0);
+			cookie.setHttpOnly(true);
+			response.addCookie(cookie);
+		} catch (Exception ignored) {
+		}
+	}
+
+	private String findeVereinZuVereinnr(String vereinnr) {
+		if (vereinZuNr == null || vereinnr == null || vereinnr.isBlank()) {
+			return null;
+		}
+		return vereinZuNr.entrySet().stream().filter(entry -> Objects.equals(entry.getValue(), vereinnr))
+				.map(Map.Entry::getKey).findFirst().orElse(null);
 	}
 
 	private Map<String, String> parseCookie(String value) {

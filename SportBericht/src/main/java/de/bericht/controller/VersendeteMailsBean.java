@@ -13,6 +13,7 @@ import de.bericht.service.DatabaseService;
 import de.bericht.service.VersendeteMail;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
+import de.bericht.util.LoginCookieDaten;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -36,6 +37,7 @@ public class VersendeteMailsBean implements Serializable {
 	private List<MonatsGruppe> gruppen = new ArrayList<>();
 	private VersendeteMail ausgewaehlteMail;
 	private boolean mobileDetailAnsicht;
+	private String passwort;
 
 	@PostConstruct
 	public void init() {
@@ -46,15 +48,32 @@ public class VersendeteMailsBean implements Serializable {
 		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = request.getParameter("vereinnr");
 		}
+		passwort = request.getParameter("p");
+		lesenCookieParameter();
+
 		ruecksprung = request.getParameter("ruecksprung");
-		if (!(request.getParameter("p") == null)
-				&& request.getParameter("p").equals(ConfigManager.getUserPasswort(vereinnr))) {
+		if (!(passwort == null) && (passwort.equals(ConfigManager.getUserPasswort(vereinnr))
+				|| passwort.equals(ConfigManager.getAdminPasswort(vereinnr)))) {
 			ladeMails();
 		} else {
 			VersendeteMail leer = new VersendeteMail();
 			leer.setBetreff("Keine Mails geladen - Falsches Passwort");
 			alleMails.add(leer);
 			gruppiereMails(filtereMails(alleMails, suchbegriff));
+		}
+	}
+
+	private void lesenCookieParameter() {
+		LoginCookieDaten logging = new LoginCookieDaten();
+		if (vereinnr == null || vereinnr.isBlank()) {
+			vereinnr = logging.getVereinnr();
+			if (passwort == null) {
+				passwort = logging.getPasswort();
+			}
+		} else {
+			if (passwort == null && vereinnr.equals(logging.getVereinnr())) {
+				passwort = logging.getPasswort();
+			}
 		}
 	}
 
