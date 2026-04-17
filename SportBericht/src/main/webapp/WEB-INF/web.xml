@@ -47,7 +47,12 @@
     <!-- ================= SESSION ================= -->
 
     <session-config>
-        <session-timeout>180</session-timeout>
+        <session-timeout>525600</session-timeout>
+       	<cookie-config>
+            <path>/</path>
+            <http-only>true</http-only>
+            <secure>true</secure>
+        </cookie-config>        
         <tracking-mode>COOKIE</tracking-mode>
     </session-config>
 

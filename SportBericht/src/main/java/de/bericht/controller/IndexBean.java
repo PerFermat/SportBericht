@@ -146,7 +146,7 @@ public class IndexBean implements Serializable {
 			if (sportart != null && sportart.equalsIgnoreCase("TENNIS")) {
 				ziel = "/liga.xhtml";
 			}
-			ec.redirect(ec.getRequestContextPath() + ziel);
+			ec.dispatch(ziel);
 			facesContext.responseComplete();
 		} catch (IOException e) {
 			addError("Weiterleitung ist fehlgeschlagen.");
@@ -172,6 +172,7 @@ public class IndexBean implements Serializable {
 			cookie.setHttpOnly(true);
 			String contextPath = ec.getRequestContextPath();
 			cookie.setPath(contextPath == null || contextPath.isBlank() ? "/" : contextPath);
+
 			cookie.setMaxAge(COOKIE_MAX_AGE_SECONDS);
 			response.addCookie(cookie);
 		} catch (Exception e) {
