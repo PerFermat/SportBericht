@@ -99,6 +99,14 @@ public class LoginCookieDaten implements Serializable {
 		return verschluesseltesPasswort;
 	}
 
+	public String getPasswort() {
+		try {
+			return ConfigManager.decryptPasswort(vereinnr, verschluesseltesPasswort);
+		} catch (Exception e) {
+			return verschluesseltesPasswort;
+		}
+	}
+
 	public boolean isVollstaendig() {
 		return verein != null && !verein.isBlank() && vereinnr != null && !vereinnr.isBlank()
 				&& verschluesseltesPasswort != null && !verschluesseltesPasswort.isBlank();

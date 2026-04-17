@@ -46,6 +46,7 @@ import de.bericht.service.TelegrammService;
 import de.bericht.util.AdressEintrag;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
+import de.bericht.util.LoginCookieDaten;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -76,6 +77,7 @@ public class AdresslisteBean implements Serializable {
 	private Map<String, Boolean> sichtbareSpalten;
 	private boolean schreibzugriff;
 	private String editEinmalpasswort;
+	private String passwort;
 	private String editEinmalpasswortEingabe;
 	private boolean editAktionenFreigeschaltet;
 	private String neuEinmalpasswort;
@@ -109,6 +111,12 @@ public class AdresslisteBean implements Serializable {
 		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = request.getParameter("vereinnr");
 		}
+
+		passwort = request.getParameter("p");
+		if (vereinnr == null || vereinnr.isBlank()) {
+			lesenCookieParameter();
+		}
+
 		if (vereinnr == null || vereinnr.isBlank()) {
 			addError("Keine Vereinnummer übergeben (Parameter v oder vereinnr fehlt).");
 			eintraege = new ArrayList<>();
@@ -117,13 +125,23 @@ public class AdresslisteBean implements Serializable {
 		schreibzugriff = pruefeSchreibzugriff(request.getParameter("p"));
 		String userPasswort = ConfigManager.getUserPasswort(vereinnr);
 		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);
-		if (userPasswort.equals(request.getParameter("p")) | adminPasswort.equals(request.getParameter("p"))) {
+		if (userPasswort.equals(passwort) | adminPasswort.equals(passwort)) {
 			ladeEintraege();
 		} else {
 			eintraege = new ArrayList<>();
 			return;
 		}
 
+	}
+
+	private void lesenCookieParameter() {
+		LoginCookieDaten logging = new LoginCookieDaten();
+		if (vereinnr == null) {
+			vereinnr = logging.getVereinnr();
+		}
+		if (passwort == null) {
+			passwort = logging.getPasswort();
+		}
 	}
 
 	private void initialisiereStandardSpalten() {
