@@ -25,11 +25,14 @@ import de.bericht.util.LoginCookieDaten;
 import de.bericht.util.OpenAIModelFetcher;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
+import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Named
 @ViewScoped
@@ -92,7 +95,6 @@ public class ConfigBean implements Serializable {
 
 		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);
 		if (adminPasswort.equals(passwort)) {
-			System.out.println(passwort);
 			einmalpasswortGeprueft = true;
 		}
 		ladeConfigEintraegeMitBedeutung();
@@ -125,12 +127,23 @@ public class ConfigBean implements Serializable {
 		return eintrag != null && (Boolean.TRUE.equals(eintrag.getFarbe()) || eintrag.isInhaltformatFarbe());
 	}
 
+	public String cookieLoeschenUndZumLogin() {
+		ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+		HttpServletResponse response = (HttpServletResponse) externalContext.getResponse();
+		Cookie cookie = new Cookie(LoginCookieDaten.LOGIN_COOKIE_NAME, "");
+		String contextPath = externalContext.getRequestContextPath();
+		cookie.setPath(contextPath == null || contextPath.isBlank() ? "/" : contextPath);
+		cookie.setHttpOnly(true);
+		cookie.setMaxAge(0);
+		response.addCookie(cookie);
+		return "index.xhtml?faces-redirect=true";
+	}
+
 	public void speichereEintrag(ConfigEintrag eintrag) {
 		if (!einmalpasswortGeprueft) {
 			return;
 		}
 
-		System.out.println(eintrag.getWert() + " wird gespeichert ");
 		if (eintrag == null || !isNotBlank(eintrag.getEintrag())) {
 			return;
 		}

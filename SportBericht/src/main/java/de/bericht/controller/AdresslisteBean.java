@@ -114,7 +114,6 @@ public class AdresslisteBean implements Serializable {
 
 		passwort = request.getParameter("p");
 		lesenCookieParameter();
-		System.out.println(passwort);
 
 		if (vereinnr == null || vereinnr.isBlank()) {
 			addError("Keine Vereinnummer übergeben (Parameter v oder vereinnr fehlt).");

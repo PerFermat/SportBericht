@@ -30,13 +30,8 @@
 		<h2>Impressum</h2>
 		<h:form>
 			<div class="button-container">
-				<p:commandButton value="Zurück" action="liga.xhtml"
-					immediate="true" rendered="#{impressumBean.tennis}">
-					<f:param name="vereinnr" value="#{impressumBean.vereinnr}" />
-				</p:commandButton>
-				<p:commandButton value="Zurück" action="spielplan.xhtml"
-					immediate="true" rendered="#{impressumBean.tischtennis}">
-					<f:param name="vereinnr" value="#{impressumBean.vereinnr}" />
+			<p:commandButton value="Zurück" action="#{impressumBean.zurueck}"
+					immediate="true">
 				</p:commandButton>
 			</div>
 		</h:form>

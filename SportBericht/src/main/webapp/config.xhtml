@@ -60,12 +60,21 @@
 				<p:commandButton value="Einmalpasswort prüfen"
 					actionListener="#{configBean.pruefeEinmalpasswort}"
 					update="otpConfigForm configTabelle" />
+				<p:spacer width="10" />
+				<p:commandButton value="Cookie löschen und neu anmelden"
+					action="#{configBean.cookieLoeschenUndZumLogin}" ajax="false"
+					immediate="true" />					
 			</div>
 		</p:panel>
 	</h:form>
 	<h:form id="configTabelle" style="max-width: 1500px; margin: 0 auto;">
 		<p:panel header="Konfiguration"
 			rendered="#{configBean.einmalpasswortGeprueft}">
+			<div style="margin-bottom: 10px;">
+				<p:commandButton value="Cookie löschen und neu anmelden"
+					action="#{configBean.cookieLoeschenUndZumLogin}" ajax="false"
+					immediate="true" />
+			</div>			
 			<h:panelGrid columns="4" style="width:100%; margin-bottom:10px;">
 				<h:outputLabel for="suchfeld" value="Suche:" />
 				<p:inputText id="suchfeld" value="#{configBean.suchText}"

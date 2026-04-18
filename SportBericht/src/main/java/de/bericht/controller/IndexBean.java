@@ -146,7 +146,11 @@ public class IndexBean implements Serializable {
 			if (sportart != null && sportart.equalsIgnoreCase("TENNIS")) {
 				ziel = "/liga.xhtml";
 			}
-			ec.dispatch(ziel);
+			if (ec.getRequestContextPath().toUpperCase().contains("BERICHT")) {
+				ec.redirect(ziel.startsWith("/") ? ziel.substring(1) : ziel);
+			} else {
+				ec.redirect(ziel);
+			}
 			facesContext.responseComplete();
 		} catch (IOException e) {
 			addError("Weiterleitung ist fehlgeschlagen.");
@@ -270,7 +274,6 @@ public class IndexBean implements Serializable {
 	}
 
 	public String getVereinnr() {
-		System.out.println(selectedVereinnr);
 		return selectedVereinnr == null ? "13014" : selectedVereinnr;
 	}
 }

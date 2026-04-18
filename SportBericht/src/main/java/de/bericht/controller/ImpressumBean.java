@@ -15,13 +15,27 @@ public class ImpressumBean implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private String vereinnr;
+	private static final String DEFAULT_TENNIS_SEITE = "liga.xhtml";
+	private static final String DEFAULT_TISCHTENNIS_SEITE = "spielplan.xhtml";
+	private static final String RUECKSPRUNG_STANDARD = "index.xhtml";
+
+	private String ruecksprung;
 
 	@PostConstruct
 	public void init() {
 		FacesContext context = FacesContext.getCurrentInstance();
 		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 		vereinnr = request.getParameter("vereinnr");
+		ruecksprung = request.getParameter("ruecksprung");
 
+	}
+
+	public String getRuecksprung() {
+		return ruecksprung;
+	}
+
+	public void setRuecksprung(String ruecksprung) {
+		this.ruecksprung = ruecksprung;
 	}
 
 	public String getVereinnr() {
@@ -52,7 +66,17 @@ public class ImpressumBean implements Serializable {
 		return ConfigManager.isTischtennis(vereinnr);
 	}
 
-	public void zurueck() {
-
+	public String zurueck() {
+		if (ruecksprung != null && ruecksprung.matches("[a-zA-Z0-9_-]+\\.xhtml")) {
+			return ruecksprung;
+		}
+		if (isTennis()) {
+			return DEFAULT_TENNIS_SEITE;
+		}
+		if (isTischtennis()) {
+			return DEFAULT_TISCHTENNIS_SEITE;
+		}
+		return RUECKSPRUNG_STANDARD;
 	}
+
 }
