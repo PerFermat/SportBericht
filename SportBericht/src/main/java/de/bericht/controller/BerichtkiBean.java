@@ -126,6 +126,7 @@ public class BerichtkiBean implements Serializable {
 		this.anzahlKi = dbService.anzahlKI(vereinnr, ergebnisLink, "generiert");
 		this.liga = params.get("liga");
 		this.uuid = params.get("uuid");
+
 		modelle = new OpenAIModelFetcher(ConfigManager.getChatGptPasswort(vereinnr));
 		selectedModel = ConfigManager.getConfigValue(vereinnr, "bericht.ki.model");
 		if (!isHttpLink()) {
@@ -164,6 +165,7 @@ public class BerichtkiBean implements Serializable {
 		if (uuid == null) {
 			uuid = UUID.randomUUID().toString();
 		}
+
 	}
 
 	public List<String> getModelle() {

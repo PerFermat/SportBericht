@@ -92,7 +92,7 @@ public class BerichtBean implements Serializable {
 	private List<Fehler> fehlerListe = new ArrayList<>();
 
 	private DatabaseService dbService = new DatabaseService();
-	IgnorierteWoerte ignorieren;
+	IgnorierteWoerte ignorieren = new IgnorierteWoerte();
 
 	public BerichtBean() {
 	}
@@ -115,9 +115,25 @@ public class BerichtBean implements Serializable {
 	}
 
 	private void ladeIgnorierteWoerter() {
-		ignorieren = new IgnorierteWoerte();
 		String woerterIgnorieren = ConfigManager.getConfigValue(vereinnr, "bericht.pruefung.ok");
+		if (this.heim != null) {
+			ignorieren.hinzufuegen(this.heim);
+		}
+		if (this.gast != null) {
+			ignorieren.hinzufuegen(this.gast);
+		}
+
 		// Aufteilen in ein Array
+		if (woerterIgnorieren == null) {
+			return;
+		}
+		if (woerterIgnorieren.isBlank()) {
+			return;
+		}
+		if (woerterIgnorieren.isEmpty()) {
+			return;
+		}
+
 		String[] woerterArray = woerterIgnorieren.split(",");
 
 		// Durchlaufen mit einer for-each-Schleife
@@ -125,12 +141,6 @@ public class BerichtBean implements Serializable {
 			ignorieren.hinzufuegen(wort);
 		}
 
-		if (this.heim != null) {
-			ignorieren.hinzufuegen(this.heim);
-		}
-		if (this.gast != null) {
-			ignorieren.hinzufuegen(this.gast);
-		}
 	}
 
 	private void ladeBerichtStatus() {
@@ -226,6 +236,10 @@ public class BerichtBean implements Serializable {
 		this.ligaSpiel = params.get("ligaSpiel");
 		this.uuid = params.get("uuid");
 		this.gruppeUrl = params.get("gruppeUrl");
+		if (this.ligaSpiel == null || this.ligaSpiel.isBlank() || this.ligaSpiel.isEmpty()
+				|| this.ligaSpiel.equals("null")) {
+			this.ligaSpiel = this.liga;
+		}
 	}
 
 	public String speichernUndWeiter() {

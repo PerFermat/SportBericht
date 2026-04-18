@@ -11,8 +11,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import de.bericht.service.DatabaseService;
+import de.bericht.service.EmailService;
+import de.bericht.util.AdressEintrag;
+import de.bericht.util.ConfigEintrag;
 import de.bericht.util.ConfigManager;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -20,6 +24,7 @@ import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,6 +39,7 @@ public class IndexBean implements Serializable {
 	private static final int COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365 * 10;
 	private static final String SESSION_VEREINNR = "sportbericht_vereinnr";
 	private static final String SESSION_VEREIN = "sportbericht_verein";
+	private static final Pattern EMAIL_TRENNZEICHEN = Pattern.compile("[,;\\s]+");
 
 	private final DatabaseService db = new DatabaseService();
 
@@ -45,6 +51,8 @@ public class IndexBean implements Serializable {
 	private String selectedVereinnr;
 	private String selectedName;
 	private String passwort;
+	private boolean passwortVergessenSichtbar;
+	private String passwortVergessenEmail;
 
 	@PostConstruct
 	public void init() {
@@ -90,6 +98,93 @@ public class IndexBean implements Serializable {
 		speichereCookie();
 		weiterleitenOhneUrlAenderung(selectedVereinnr, selectedVerein);
 		return null;
+	}
+
+	public void zeigePasswortVergessen() {
+		passwortVergessenSichtbar = true;
+	}
+
+	public void passwortVergessenSenden() {
+		selectedVereinnr = vereinZuNr.get(selectedVerein);
+		if (selectedVereinnr == null || selectedVereinnr.isBlank()) {
+			addError("Bitte zuerst einen Verein auswählen.");
+			return;
+		}
+
+		String email = passwortVergessenEmail == null ? "" : passwortVergessenEmail.trim();
+		if (email.isBlank()) {
+			addError("Bitte eine E-Mail-Adresse eingeben.");
+			return;
+		}
+
+		if (!istEmailInConfigOderAdressliste(selectedVereinnr, email)) {
+			String berechtigung = ConfigManager.getConfigValue(selectedVereinnr, "config.berechtigung");
+			addError("e-Mail unbekannt. Bitte wende dich an den Admin "
+					+ (berechtigung == null || berechtigung.isBlank() ? "-" : berechtigung));
+			return;
+		}
+
+		String userPasswort = ConfigManager.getUserPasswort(selectedVereinnr);
+		boolean adminMitsenden = istInConfigBerechtigung(selectedVereinnr, email);
+		StringBuilder nachricht = new StringBuilder();
+		nachricht.append("Dein user.passwort lautet: ").append(userPasswort == null ? "" : userPasswort);
+		if (adminMitsenden) {
+			String adminPasswort = ConfigManager.getAdminPasswort(selectedVereinnr);
+			nachricht.append("<br/>Dein admin.passwort lautet: ").append(adminPasswort == null ? "" : adminPasswort);
+		}
+
+		try {
+			new EmailService(selectedVereinnr, "TO:" + email).sendEmail(selectedVereinnr, "Passwort SportBericht",
+					nachricht.toString(), null, null, false);
+			addInfo("Passwort wurde an " + email + " gesendet.");
+		} catch (MessagingException e) {
+			addError("E-Mail konnte nicht versendet werden.");
+		}
+	}
+
+	private boolean istEmailInConfigOderAdressliste(String vereinnr, String email) {
+		if (istEmailInConfig(vereinnr, email)) {
+			return true;
+		}
+		List<AdressEintrag> eintraege = db.ladeAdressEintraege(vereinnr);
+		for (AdressEintrag eintrag : eintraege) {
+			if (email.equalsIgnoreCase(nullToEmpty(eintrag.getEmailPrivat()).trim())
+					|| email.equalsIgnoreCase(nullToEmpty(eintrag.getEmailGesch()).trim())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean istEmailInConfig(String vereinnr, String email) {
+		List<ConfigEintrag> eintraege = db.ladeConfigEintraege(vereinnr);
+		for (ConfigEintrag eintrag : eintraege) {
+			if (enthaeltEmail(eintrag.getWert(), email)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean istInConfigBerechtigung(String vereinnr, String email) {
+		String berechtigung = ConfigManager.getConfigValue(vereinnr, "config.berechtigung");
+		return enthaeltEmail(berechtigung, email);
+	}
+
+	private boolean enthaeltEmail(String wert, String email) {
+		if (wert == null || wert.isBlank() || email == null || email.isBlank()) {
+			return false;
+		}
+		for (String teil : EMAIL_TRENNZEICHEN.split(wert.trim())) {
+			if (email.equalsIgnoreCase(teil.trim())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private String nullToEmpty(String value) {
+		return value == null ? "" : value;
 	}
 
 	private void pruefeCookieUndRedirect() {
@@ -273,7 +368,24 @@ public class IndexBean implements Serializable {
 		return namen != null && !namen.isEmpty();
 	}
 
+	private void addInfo(String text) {
+		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, text, text));
+	}
+
 	public String getVereinnr() {
 		return selectedVereinnr == null ? "13014" : selectedVereinnr;
 	}
+
+	public boolean isPasswortVergessenSichtbar() {
+		return passwortVergessenSichtbar;
+	}
+
+	public String getPasswortVergessenEmail() {
+		return passwortVergessenEmail;
+	}
+
+	public void setPasswortVergessenEmail(String passwortVergessenEmail) {
+		this.passwortVergessenEmail = passwortVergessenEmail;
+	}
+
 }

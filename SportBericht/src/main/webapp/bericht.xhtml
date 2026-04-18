@@ -15,6 +15,11 @@
 	<h:outputStylesheet library="css" name="styles.css" />
 	<!-- Einbinden des externen Skripts -->
 	<h:outputScript name="js/script.js" />
+	<h:outputScript target="head">
+		if (window.history &amp;&amp; window.history.replaceState) {
+			window.history.replaceState(null, document.title, "#{request.contextPath}/");
+		}
+	</h:outputScript>
 </h:head>
 
 <h:body>
@@ -46,7 +51,7 @@
 			href="#{berichtBean.ergebnisLink}"
 			rendered="#{not empty berichtBean.ergebnisLink and berichtBean.ergebnisLink.startsWith('http')}" />
 		<h3>
-			<h:outputText value="#{berichtBean.liga}" />
+			<h:outputText value="#{berichtBean.ligaSpiel}" />
 			<h:outputText value=": " />
 			<h:outputText value="#{berichtBean.heim}" />
 			<h:outputText value=" - " />

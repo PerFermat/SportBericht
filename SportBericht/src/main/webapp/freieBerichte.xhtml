@@ -14,6 +14,11 @@
 		type="text/css" />
 	<h:outputStylesheet name="css/styles.css" />
 	<h:outputScript library="js" name="script.js" target="head" />
+	<h:outputScript target="head">
+		if (window.history &amp;&amp; window.history.replaceState) {
+			window.history.replaceState(null, document.title, "#{request.contextPath}/");
+		}
+	</h:outputScript>	
 	<link rel="icon" type="image/ico" href="resources/images/favicon.ico" />
 </h:head>
 

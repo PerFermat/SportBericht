@@ -35,7 +35,7 @@
 				<f:param name="ergebnis" value="#{berichtkiBean.ergebnis}" />
 				<f:param name="ergebnisLink" value="#{berichtkiBean.ergebnisLink}" />
 				<f:param name="uuid" value="#{berichtkiBean.uuid}" />
-				<f:param name="ligaSpiel" value="#{berichtKiBean.ligaSpiel}" />				
+				<f:param name="ligaSpiel" value="#{berichtkiBean.ligaSpiel}" />				
 				<f:param name="liga" value="#{berichtkiBean.liga}" />
 				<f:param name="gruppeUrl" value="#{berichtkiBean.gruppeUrl}" />
 			</p:commandButton>
@@ -48,7 +48,7 @@
 				href="#{berichtkiBean.ergebnisLink}"
 				rendered="#{not empty berichtkiBean.ergebnisLink and berichtkiBean.ergebnisLink.startsWith('http')}" />
 			<h3>
-				<h:outputText value="#{berichtkiBean.liga}" />
+				<h:outputText value="#{berichtkiBean.ligaSpiel}" />
 				<h:outputText value=": " />
 				<h:outputText value="#{berichtkiBean.heim}" />
 				<h:outputText value=" - " />
@@ -361,7 +361,7 @@ Empfohlen:   <br />
 						<f:param name="ergebnisLink" value="#{berichtkiBean.ergebnisLink}" />
 						<f:param name="uuid" value="#{berichtkiBean.uuid}" />
 						<f:param name="liga" value="#{berichtkiBean.liga}" />
-						<f:param name="ligaSpiel" value="#{berichtKiBean.ligaSpiel}" />							
+						<f:param name="ligaSpiel" value="#{berichtkiBean.ligaSpiel}" />							
 						<f:param name="gruppeUrl" value="#{berichtkiBean.gruppeUrl}" />
 					</p:commandButton>
 				</div>
@@ -409,7 +409,7 @@ Empfohlen:   <br />
 									value="#{berichtkiBean.ergebnisLink}" />
 								<f:param name="uuid" value="#{berichtkiBean.uuid}" />
 								<f:param name="liga" value="#{berichtkiBean.liga}" />
-								<f:param name="ligaSpiel" value="#{berichtKiBean.ligaSpiel}" />									
+								<f:param name="ligaSpiel" value="#{berichtkiBean.ligaSpiel}" />									
 								<f:param name="gruppeUrl" value="#{berichtkiBean.gruppeUrl}" />
 							</p:commandButton>
 							<p:commandButton

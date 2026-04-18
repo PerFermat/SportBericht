@@ -59,7 +59,18 @@ public class SpielplanBean implements Serializable {
 		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 		vereinnr = BerichtHelper.bestimmenVereinnr(request.getParameter("v"));
 		liga = request.getParameter("liga");
+		if (liga != null) {
+			if (liga.equals("null")) {
+				liga = null;
+			}
+		}
+
 		gruppeUrl = request.getParameter("gruppeUrl");
+		if (gruppeUrl != null) {
+			if (gruppeUrl.equals("null")) {
+				gruppeUrl = null;
+			}
+		}
 		passwort = request.getParameter("p");
 
 		if (vereinnr == null || vereinnr.isBlank()) {
@@ -68,10 +79,9 @@ public class SpielplanBean implements Serializable {
 
 		lesenCookieParameter();
 		int i = 0;
-
 		SpielplanProvider provider;
 		try {
-			if (gruppeUrl == null) {
+			if (gruppeUrl == null || gruppeUrl.isEmpty() || gruppeUrl.isBlank()) {
 				provider = SpielplanFactory.create(vereinnr);
 				gruppeUrl = provider.getFallbackSourceUrl();
 			} else {

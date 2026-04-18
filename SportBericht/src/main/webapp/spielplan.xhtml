@@ -115,7 +115,8 @@
 				<p:column headerText="Bericht" styleClass="col-bericht">
 					<div class="buttontab-container">
 						<!-- Button "Bericht" wird nur angezeigt, wenn in der Ergebnis-Spalte ein Wert steht -->
-						<p:commandButton value="Bericht" action="bericht.xhtml"
+						<p:commandButton value="Bericht" action="bericht.xhtml"	
+							ajax="false"
 							rendered="#{not empty spiel.ergebnis and not spielplanBean.hasFreigabe(spiel.ergebnisLink)}"
 							styleClass="myButton">
 							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
@@ -190,6 +191,7 @@
 						<f:param name="liga" value="#{spielplanBean.liga}" />
 					</p:commandButton>
 					<p:commandButton value="Bericht" action="bericht.xhtml"
+						ajax="false"
 						rendered="#{not empty spielplanBean.berichtDatum and
                              not empty spielplanBean.freierText and
                              not spielplanBean.hasFreigabe(spielplanBean.freierLink)}"
