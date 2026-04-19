@@ -107,7 +107,6 @@
 					<div class="buttontab-container">
 						<!-- Button "Bericht" wird nur angezeigt, wenn in der Ergebnis-Spalte ein Wert steht -->
 						<p:commandButton value="Bericht" action="bericht.xhtml"
-							actionListener="#{spiel.bericht}"
 							rendered="#{not freieBerichteBean.hasFreigabe(spiel.ergebnisLink)}"
 							styleClass="myButton">
 							<f:param name="vereinnr" value="#{freieBerichteBean.vereinnr}" />
