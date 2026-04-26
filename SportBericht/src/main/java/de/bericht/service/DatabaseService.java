@@ -1051,7 +1051,7 @@ public class DatabaseService {
 	}
 
 	public List<ConfigKategorie> ladeConfigKategorien() {
-		String sql = "SELECT config_eintrag, kategorie FROM config_Kategorie ORDER BY config_eintrag, kategorie";
+		String sql = "SELECT config_eintrag, kategorie FROM config_Kategorie ORDER BY kategorie, config_eintrag";
 		List<ConfigKategorie> kategorien = new ArrayList<>();
 
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {

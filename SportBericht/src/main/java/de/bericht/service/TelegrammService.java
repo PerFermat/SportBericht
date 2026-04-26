@@ -30,6 +30,10 @@ public class TelegrammService {
 		if (botToken == null || botToken.isEmpty()) {
 			return -1;
 		}
+		String chat_Id = ConfigManager.getConfigValue(vereinnr, "telegram.chat_id");
+		if (chat_Id == null || chat_Id.isEmpty()) {
+			return -1;
+		}
 
 		String chatId = getLatestChatId(vereinnr, botToken);
 

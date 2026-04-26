@@ -656,7 +656,6 @@ public class AdresslisteBean implements Serializable {
 		} catch (Exception e) {
 			addError("Info-E-Mail konnte nicht gesendet werden: " + e.getMessage());
 		}
-
 		TelegrammService telegrammService = new TelegrammService();
 		try {
 			telegrammService.sendTelegramm(vereinnr, nachricht, null, null);

@@ -52,7 +52,7 @@ public class EmailService {
 	}
 
 	public void bestimmeEmpfaenger(String vereinnr, String name) {
-		recipients = ConfigManager.getConfigValue(vereinnr, "mail.smtp.recipients");
+		recipients = ConfigManager.getMailEmpfaenger(vereinnr);
 		ccEmpfaenger = null;
 
 		String cctrennzeichen = "CC:";

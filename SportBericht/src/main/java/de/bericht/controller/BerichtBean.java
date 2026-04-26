@@ -13,6 +13,8 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -240,6 +242,18 @@ public class BerichtBean implements Serializable {
 				|| this.ligaSpiel.equals("null")) {
 			this.ligaSpiel = this.liga;
 		}
+
+		// Datumsmuster TT.MM.JJJJ
+		String datumRegex = "^\\d{2}\\.\\d{2}\\.\\d{4}.*";
+
+		if (ergebnisLink.startsWith("https") || ergebnisLink.matches(datumRegex)) {
+			// alles ok, nichts ändern
+		} else {
+			// aktuelles Datum holen
+			String aktuellesDatum = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+
+			ergebnisLink = aktuellesDatum + "-" + ergebnisLink;
+		}
 	}
 
 	public String speichernUndWeiter() {
@@ -354,11 +368,12 @@ public class BerichtBean implements Serializable {
 				+ "\n\n\n" + subject + "\n\n" + " Mit freundlichen Grüßen\n" + name + "\n\n";
 		TelegrammService telegramm = new TelegrammService();
 		try {
-			telegramm.sendTelegramm(vereinnr, telegramText, attachment, bildUnterschrift);
-			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolg",
-					"Telegramm wurde erfolgreich versendet! \nTo:"));
-			dbService.saveLogData(vereinnr, ergebnisLink, name, "Telegramm", "J");
-			logEntries = dbService.getLogEntries(vereinnr, ergebnisLink);
+			if (telegramm.sendTelegramm(vereinnr, telegramText, attachment, bildUnterschrift) != -1) {
+				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
+						"Erfolg", "Telegramm wurde erfolgreich versendet! \nTo:"));
+				dbService.saveLogData(vereinnr, ergebnisLink, name, "Telegramm", "J");
+				logEntries = dbService.getLogEntries(vereinnr, ergebnisLink);
+			}
 		} catch (Exception e) {
 			dbService.saveLogData(vereinnr, ergebnisLink, name, "Telegramm", "N");
 			logEntries = dbService.getLogEntries(vereinnr, ergebnisLink);
@@ -1012,7 +1027,7 @@ public class BerichtBean implements Serializable {
 	}
 
 	public String zurueckAction() {
-		return isTennis() ? "spielplan.xhtml" : "spielplan.xhtml";
+		return "spielplan.xhtml";
 	}
 
 	public String getGruppeUrl() {

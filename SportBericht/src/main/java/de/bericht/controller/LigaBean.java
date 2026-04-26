@@ -12,10 +12,13 @@ import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.ErgebnisCache;
 import de.bericht.util.LoginCookieDaten;
+import jakarta.faces.context.ExternalContext;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Named("ligaBean")
 @ViewScoped
@@ -155,4 +158,17 @@ public class LigaBean implements Serializable {
 	public void zurueck() {
 
 	}
+
+	public String cookieLoeschenUndZumLogin() {
+		ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+		HttpServletResponse response = (HttpServletResponse) externalContext.getResponse();
+		Cookie cookie = new Cookie(LoginCookieDaten.LOGIN_COOKIE_NAME, "");
+		String contextPath = externalContext.getRequestContextPath();
+		cookie.setPath(contextPath == null || contextPath.isBlank() ? "/" : contextPath);
+		cookie.setHttpOnly(true);
+		cookie.setMaxAge(0);
+		response.addCookie(cookie);
+		return "index.xhtml?faces-redirect=true";
+	}
+
 }

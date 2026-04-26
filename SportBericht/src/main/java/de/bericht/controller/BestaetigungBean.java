@@ -237,7 +237,7 @@ public class BestaetigungBean implements Serializable {
 		}
 
 		EmailService emailService = new EmailService(vereinnr,
-				ConfigManager.getConfigValue(vereinnr, "email.jugendleiter"), null);
+				ConfigManager.getConfigValue(vereinnr, "mail.info.jugendleiter"), null);
 		String betreff = "Betreuer-Rückmeldung zurückgesetzt: " + safeText(eintrag.getBetreuer());
 		String link = getGenerateBerichtUrl(vereinnr, eintrag.getUniqueKey());
 
@@ -307,7 +307,7 @@ public class BestaetigungBean implements Serializable {
 		}
 
 		EmailService emailService = new EmailService(vereinnr,
-				ConfigManager.getConfigValue(vereinnr, "email.jugendleiter"), null);
+				ConfigManager.getConfigValue(vereinnr, "mail.info.jugendleiter"), null);
 		String betreff = "Betreuer geändert: " + safeText(eintrag.getBetreuer());
 		String link = getGenerateBerichtUrl(vereinnr, eintrag.getUniqueKey());
 
@@ -408,7 +408,7 @@ public class BestaetigungBean implements Serializable {
 		}
 
 		EmailService emailService = new EmailService(vereinnr,
-				ConfigManager.getConfigValue(vereinnr, "email.jugendleiter"), null);
+				ConfigManager.getConfigValue(vereinnr, "mail.info.jugendleiter"), null);
 
 		boolean istBestaetigt = Boolean.TRUE.equals(eintrag.getBestaetigt());
 		String statusText = istBestaetigt ? "OK" : "Nein";

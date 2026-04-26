@@ -236,6 +236,11 @@
 					action="#{spielplanBean.updConfig}" update="output" />
 				<h:outputText id="output" value="#{spielplanBean.updConfig}" />
 				<br />
+				<p:commandButton value="Abmelden"
+					action="#{spielplanBean.cookieLoeschenUndZumLogin}" ajax="false"
+					immediate="true" >						
+				</p:commandButton>
+				<br />
 				<p:commandButton value="Impressum" action="impressum.xhtml">
 					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 					<f:param name="ruecksprung" value="spielplan.xhtml" />

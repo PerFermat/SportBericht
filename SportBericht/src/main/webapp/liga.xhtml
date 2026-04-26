@@ -96,6 +96,11 @@
 					action="#{ligaBean.updConfig}" update="output" />
 				<h:outputText id="output" value="#{ligaBean.updConfig}" />
 				<br />
+				<p:commandButton value="Abmelden"
+					action="#{ligaBean.cookieLoeschenUndZumLogin}" ajax="false"
+					immediate="true" >						
+				</p:commandButton>
+				<br />				
 				<p:commandButton value="Impressum" action="impressum.xhtml">
 					<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
 					<f:param name="ruecksprung" value="liga.xhtml" />

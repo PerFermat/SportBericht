@@ -222,8 +222,8 @@ public class ConfigManager {
 		return getConfigValue(vereinnr, "spielplan.Ort");
 	}
 
-	public String getMailEmpfaenger(String vereinnr) {
-		return getConfigValue(vereinnr, "mail.smtp.recipients");
+	public static String getMailEmpfaenger(String vereinnr) {
+		return getConfigValue(vereinnr, "mail.bericht.empfaenger");
 	}
 
 	public static String getSpielplanLiga(String vereinnr) {
