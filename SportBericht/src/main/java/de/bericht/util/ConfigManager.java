@@ -120,6 +120,20 @@ public class ConfigManager {
 		return resolveProperty("database.user", "DATABASE_USER");
 	}
 
+	public static int getWortanzahlKiBericht(String vereinnr) {
+		String value = getConfigValue(vereinnr, "gericht.ki.wortanzahl");
+
+		if (value == null || value.isBlank()) {
+			return 150;
+		}
+
+		try {
+			return Integer.parseInt(value);
+		} catch (NumberFormatException e) {
+			return 150;
+		}
+	}
+
 	public String getDatabasePasswort() {
 		String encrypted = resolveProperty("database.passwort", "DATABASE_Passwort");
 		if (encrypted == null || encrypted.isBlank()) {

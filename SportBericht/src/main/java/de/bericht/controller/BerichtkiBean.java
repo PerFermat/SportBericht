@@ -166,6 +166,7 @@ public class BerichtkiBean implements Serializable {
 			uuid = UUID.randomUUID().toString();
 		}
 
+		berichtgroesse = ConfigManager.getWortanzahlKiBericht(vereinnr);
 	}
 
 	public List<String> getModelle() {
