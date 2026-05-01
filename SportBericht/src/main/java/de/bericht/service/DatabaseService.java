@@ -2132,9 +2132,9 @@ public class DatabaseService {
 
 	public void saveLoginToken(String token, String vereinnr, String name, String passwortArt,
 			boolean angemeldetBleiben) {
-		String sql = "INSERT INTO login_token (token, vereinnr, name, passwort_art, startzeit, verfallzeit) VALUES (?, ?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO login_token (token, vereinnr, name, passwort_art, startzeit, letzter_zugriff, anzahl_anmeldungen, verfallzeit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 		LocalDateTime jetzt = LocalDateTime.now();
-		LocalDateTime verfallzeit = angemeldetBleiben ? LocalDateTime.of(2037, Month.DECEMBER, 31, 23, 59, 59)
+		LocalDateTime verfallzeit = angemeldetBleiben ? LocalDateTime.of(2199, Month.DECEMBER, 31, 23, 59, 59)
 				: jetzt.plusDays(1);
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, token);
@@ -2142,7 +2142,9 @@ public class DatabaseService {
 			pstmt.setString(3, name);
 			pstmt.setString(4, passwortArt == null || passwortArt.isBlank() ? "USER" : passwortArt);
 			pstmt.setTimestamp(5, Timestamp.valueOf(jetzt));
-			pstmt.setTimestamp(6, Timestamp.valueOf(verfallzeit));
+			pstmt.setTimestamp(6, Timestamp.valueOf(jetzt));
+			pstmt.setInt(7, 1);
+			pstmt.setTimestamp(8, Timestamp.valueOf(verfallzeit));
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			throw new IllegalStateException("Login-Token konnte nicht gespeichert werden.", e);
@@ -2150,7 +2152,7 @@ public class DatabaseService {
 	}
 
 	public Map<String, String> ladeLoginToken(String token) {
-		String sql = "SELECT vereinnr, name, passwort_art FROM login_token WHERE token = ? AND verfallzeit > CURRENT_TIMESTAMP";
+		String sql = "SELECT vereinnr, name, passwort_art, letzter_zugriff, anzahl_anmeldungen FROM login_token WHERE token = ? AND verfallzeit > CURRENT_TIMESTAMP";
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, token);
 			try (ResultSet rs = pstmt.executeQuery()) {
@@ -2159,6 +2161,25 @@ public class DatabaseService {
 					daten.put("vereinnr", rs.getString("vereinnr"));
 					daten.put("name", rs.getString("name"));
 					daten.put("passwort_art", rs.getString("passwort_art"));
+					daten.put("letzter_zugriff", rs.getTimestamp("letzter_zugriff") == null ? ""
+							: rs.getTimestamp("letzter_zugriff").toString());
+					daten.put("anzahl_anmeldungen", String.valueOf(rs.getInt("anzahl_anmeldungen")));
+					Timestamp letzterZugriffTs = rs.getTimestamp("letzter_zugriff");
+
+					boolean updateNoetig = false;
+
+					if (letzterZugriffTs == null) {
+						updateNoetig = true;
+					} else {
+						LocalDateTime letzterZugriff = letzterZugriffTs.toLocalDateTime();
+						if (letzterZugriff.isBefore(LocalDateTime.now().minusHours(1))) {
+							updateNoetig = true;
+						}
+					}
+
+					if (updateNoetig) {
+						aktualisiereLoginTokenZugriff(conn, token);
+					}
 					return daten;
 				}
 			}
@@ -2166,6 +2187,15 @@ public class DatabaseService {
 			throw new IllegalStateException("Login-Token konnte nicht geladen werden.", e);
 		}
 		return null;
+	}
+
+	private void aktualisiereLoginTokenZugriff(Connection conn, String token) throws SQLException {
+		String sql = "UPDATE login_token SET letzter_zugriff = ?, anzahl_anmeldungen = anzahl_anmeldungen + 1 WHERE token = ?";
+		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+			pstmt.setString(2, token);
+			pstmt.executeUpdate();
+		}
 	}
 
 	public void loescheLoginToken(String token) {
