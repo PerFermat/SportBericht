@@ -51,6 +51,7 @@ public class IndexBean implements Serializable {
 	private String selectedVereinnr;
 	private String selectedName;
 	private String passwort;
+	private boolean angemeldetBleiben = false;
 	private boolean passwortVergessenSichtbar;
 	private String passwortVergessenEmail;
 
@@ -271,8 +272,8 @@ public class IndexBean implements Serializable {
 			cookie.setHttpOnly(true);
 			String contextPath = ec.getRequestContextPath();
 			cookie.setPath(contextPath == null || contextPath.isBlank() ? "/" : contextPath);
-
-			cookie.setMaxAge(COOKIE_MAX_AGE_SECONDS);
+			System.out.println(angemeldetBleiben);
+			cookie.setMaxAge(angemeldetBleiben ? COOKIE_MAX_AGE_SECONDS : -1);
 			response.addCookie(cookie);
 		} catch (Exception e) {
 			addError("Cookie konnte nicht gespeichert werden.");
@@ -358,6 +359,14 @@ public class IndexBean implements Serializable {
 
 	public String getPasswort() {
 		return passwort;
+	}
+
+	public boolean isAngemeldetBleiben() {
+		return angemeldetBleiben;
+	}
+
+	public void setAngemeldetBleiben(boolean angemeldetBleiben) {
+		this.angemeldetBleiben = angemeldetBleiben;
 	}
 
 	public void setPasswort(String passwort) {

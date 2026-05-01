@@ -68,15 +68,15 @@ public class ImpressumBean implements Serializable {
 
 	public String zurueck() {
 		if (ruecksprung != null && ruecksprung.matches("[a-zA-Z0-9_-]+\\.xhtml")) {
-			return ruecksprung;
+			return ruecksprung + "?faces-redirect=true";
 		}
 		if (isTennis()) {
-			return DEFAULT_TENNIS_SEITE;
+			return DEFAULT_TENNIS_SEITE + "?faces-redirect=true";
 		}
 		if (isTischtennis()) {
-			return DEFAULT_TISCHTENNIS_SEITE;
+			return DEFAULT_TISCHTENNIS_SEITE + "?faces-redirect=true";
 		}
-		return RUECKSPRUNG_STANDARD;
+		return RUECKSPRUNG_STANDARD + "?faces-redirect=true";
 	}
 
 }

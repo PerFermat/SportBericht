@@ -10,10 +10,22 @@
 	<title>SportBericht Login</title>
 </h:head>
 <h:body
-	style="margin:0; font-family:Arial, sans-serif; background:#f5f5f5;">
+	style="
+        margin:0;
+        font-family:Arial, sans-serif;
+
+        background: url('#{resource['images/login.webp']}') no-repeat center bottom fixed;
+        background-size: cover;
+
+        display: flex;
+        justify-content: center;   /* horizontal zentriert */
+        align-items: center;       /* vertikal zentriert */
+        min-height: 100vh;
+    ">
 	<div
-		style="max-width: 460px; margin: 24px auto; padding: 20px; background: #e2e2e2; border-radius: 12px; box-shadow: 0 2px 10px rgba(0, 0, 0, .12);">
-		<h2 style="margin-top: 0; text-align: center;">Login zum Berichtssystem</h2>
+		style="max-width: 460px; margin: 24px auto; padding: 20px; background: rgba(255, 255, 255, 0.9); border-radius: 12px; box-shadow: 0 2px 10px rgba(0, 0, 0, .12);">
+		<h2 style="margin-top: 0; text-align: center;">Login zum
+			Berichtssystem</h2>
 		<h3 style="margin-top: 0; text-align: center;">Tischtennis/Tennis</h3>
 
 		<h:form id="loginForm">
@@ -45,21 +57,28 @@
 					required="true" feedback="false" style="width:100%;" />
 			</div>
 
+			<div style="margin-bottom: 14px; margin-top: 10px; width: 100%; display: flex; align-items: center;">
+				<p:selectBooleanCheckbox id="angemeldetBleiben" value="#{indexBean.angemeldetBleiben}" />
+				<p:outputLabel for="angemeldetBleiben" value="Angemeldet bleiben" style="margin-left: 8px; width: 100%;" />
+			</div>
+
+
+
 			<p:commandButton value="Anmelden" action="#{indexBean.anmelden}"
 				update="@form" ajax="false" style="width:100%;" />
 
 			<!-- Info-Box -->
 			<div
 				style="margin-top: 20px; padding: 12px; background: #d9edf7; border: 1px solid #bce8f1; border-radius: 8px; color: #31708f; font-size: 0.9em;">
-				Nach Eingabe der Anmeldedaten werden diese in einem Cookie
-				gespeichert, um die Nutzung der Anwendung zu erleichtern.</div>
-
+				Wenn "Angemeldet bleiben" ausgewählt ist, werden die Anmeldedaten dauerhaft in einem Cookie gespeichert.
+				Wenn die Option nicht ausgewählt ist, wird nur ein Sitzungs-Cookie gesetzt und beim Schließen des Browsers automatisch gelöscht.</div>
 			<!-- Impressum Button -->
 			<div
 				style="margin-top: 12px; text-align: center; display: flex; justify-content: center; gap: 10px;">
 				<p:button value="Impressum" outcome="impressum.xhtml">
 					<f:param name="vereinnr" value="#{indexBean.vereinnr}" />
 					<f:param name="ruecksprung" value="index.xhtml" />
+					 <f:param name="faces-redirect" value="true" />
 				</p:button>
 
 				<p:commandButton value="Passwort vergessen" icon="pi pi-envelope"
