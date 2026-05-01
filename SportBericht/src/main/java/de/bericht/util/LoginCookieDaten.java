@@ -1,11 +1,9 @@
 package de.bericht.util;
 
 import java.io.Serializable;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Map;
 
+import de.bericht.service.DatabaseService;
 import jakarta.faces.context.FacesContext;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +20,8 @@ public class LoginCookieDaten implements Serializable {
 	private final String verein;
 	private final String vereinnr;
 	private final String name;
-	private final String verschluesseltesPasswort;
+	private final String token;
+	private final String passwortArt;
 
 	/**
 	 * Liest automatisch den Cookie aus dem aktuellen JSF-Request.
@@ -32,10 +31,14 @@ public class LoginCookieDaten implements Serializable {
 	}
 
 	private LoginCookieDaten(Map<String, String> daten) {
-		this.verein = daten.get("verein");
-		this.vereinnr = daten.get("vereinnr");
-		this.name = daten.get("name");
-		this.verschluesseltesPasswort = daten.get("pwd");
+		this.token = daten.get("token");
+		Map<String, String> tokenDaten = token == null || token.isBlank() ? null
+				: new DatabaseService().ladeLoginToken(token);
+		this.vereinnr = tokenDaten == null ? null : tokenDaten.get("vereinnr");
+		this.name = tokenDaten == null ? null : tokenDaten.get("name");
+		this.verein = vereinnr == null ? null : BerichtHelper.getOrt(vereinnr);
+		this.passwortArt = tokenDaten == null ? "USER" : tokenDaten.getOrDefault("passwort_art", "USER");
+
 	}
 
 	public static LoginCookieDaten fromCookieValue(String cookieValue) {
@@ -57,7 +60,7 @@ public class LoginCookieDaten implements Serializable {
 		if (cookie == null || cookie.getValue() == null || cookie.getValue().isBlank()) {
 			return Map.of();
 		}
-		return parseCookieValue(cookie.getValue());
+		return Map.of("token", cookie.getValue());
 	}
 
 	private static Cookie findCookieInCurrentRequest() {
@@ -78,41 +81,41 @@ public class LoginCookieDaten implements Serializable {
 	}
 
 	private static Map<String, String> parseCookieValue(String cookieValue) {
-		return Arrays.stream(cookieValue.split("&")).map(part -> part.split("=", 2)).filter(parts -> parts.length == 2)
-				.collect(
-						java.util.stream.Collectors.toMap(parts -> dec(parts[0]), parts -> dec(parts[1]), (a, b) -> b));
+		return Map.of("token", cookieValue);
 	}
 
-	public String getVerein() {
-		return verein;
+	public String getToken() {
+		return token;
+
 	}
 
 	public String getVereinnr() {
 		return vereinnr;
 	}
 
-	public String getName() {
-		return name;
+	public String getVerein() {
+		return verein;
+
 	}
 
-	public String getVerschluesseltesPasswort() {
-		return verschluesseltesPasswort;
+	public String getName() {
+		return name;
+
 	}
 
 	public String getPasswort() {
-		try {
-			return ConfigManager.decryptPasswort(vereinnr, verschluesseltesPasswort);
-		} catch (Exception e) {
-			return verschluesseltesPasswort;
+		if (vereinnr == null) {
+			return null;
 		}
+		if ("ADMIN".equalsIgnoreCase(passwortArt)) {
+			return ConfigManager.getAdminPasswort(vereinnr);
+		}
+		return ConfigManager.getUserPasswort(vereinnr);
+
 	}
 
 	public boolean isVollstaendig() {
-		return verein != null && !verein.isBlank() && vereinnr != null && !vereinnr.isBlank()
-				&& verschluesseltesPasswort != null && !verschluesseltesPasswort.isBlank();
+		return token != null && !token.isBlank();
 	}
 
-	private static String dec(String value) {
-		return URLDecoder.decode(value, StandardCharsets.UTF_8);
-	}
 }

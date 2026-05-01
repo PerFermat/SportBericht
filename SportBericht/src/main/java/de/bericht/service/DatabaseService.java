@@ -3,6 +3,7 @@ package de.bericht.service;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -14,6 +15,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -56,6 +58,10 @@ public class DatabaseService {
 	private static final String DEFAULT_JNDI_NAME = "java:/jdbc/TischtennisDS";
 	private static volatile DataSource dataSource;
 	private static boolean spielplanTablePrepared = false;
+	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+	private static final String LOGIN_TOKEN_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	private static final int LOGIN_TOKEN_LENGTH = 30;
+
 	static {
 
 		try {
@@ -2122,6 +2128,63 @@ public class DatabaseService {
 			e.printStackTrace();
 		}
 		return "";
+	}
+
+	public void saveLoginToken(String token, String vereinnr, String name, String passwortArt,
+			boolean angemeldetBleiben) {
+		String sql = "INSERT INTO login_token (token, vereinnr, name, passwort_art, startzeit, verfallzeit) VALUES (?, ?, ?, ?, ?, ?)";
+		LocalDateTime jetzt = LocalDateTime.now();
+		LocalDateTime verfallzeit = angemeldetBleiben ? LocalDateTime.of(2037, Month.DECEMBER, 31, 23, 59, 59)
+				: jetzt.plusDays(1);
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, token);
+			pstmt.setString(2, vereinnr);
+			pstmt.setString(3, name);
+			pstmt.setString(4, passwortArt == null || passwortArt.isBlank() ? "USER" : passwortArt);
+			pstmt.setTimestamp(5, Timestamp.valueOf(jetzt));
+			pstmt.setTimestamp(6, Timestamp.valueOf(verfallzeit));
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new IllegalStateException("Login-Token konnte nicht gespeichert werden.", e);
+		}
+	}
+
+	public Map<String, String> ladeLoginToken(String token) {
+		String sql = "SELECT vereinnr, name, passwort_art FROM login_token WHERE token = ? AND verfallzeit > CURRENT_TIMESTAMP";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, token);
+			try (ResultSet rs = pstmt.executeQuery()) {
+				if (rs.next()) {
+					Map<String, String> daten = new HashMap<>();
+					daten.put("vereinnr", rs.getString("vereinnr"));
+					daten.put("name", rs.getString("name"));
+					daten.put("passwort_art", rs.getString("passwort_art"));
+					return daten;
+				}
+			}
+		} catch (SQLException e) {
+			throw new IllegalStateException("Login-Token konnte nicht geladen werden.", e);
+		}
+		return null;
+	}
+
+	public void loescheLoginToken(String token) {
+		String sql = "DELETE FROM login_token WHERE token = ?";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, token);
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new IllegalStateException("Login-Token konnte nicht gelöscht werden.", e);
+		}
+	}
+
+	public String erstelleZufaelligenLoginToken() {
+		StringBuilder token = new StringBuilder(LOGIN_TOKEN_LENGTH);
+		for (int i = 0; i < LOGIN_TOKEN_LENGTH; i++) {
+			int idx = SECURE_RANDOM.nextInt(LOGIN_TOKEN_ALPHABET.length());
+			token.append(LOGIN_TOKEN_ALPHABET.charAt(idx));
+		}
+		return token.toString();
 	}
 
 	public boolean speichereAufstellung(String uniqueKey, String vereinnr, List<AufstellungSpieler> spielerListe,

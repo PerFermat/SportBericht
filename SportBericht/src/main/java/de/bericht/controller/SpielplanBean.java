@@ -312,6 +312,11 @@ public class SpielplanBean implements Serializable {
 	public String cookieLoeschenUndZumLogin() {
 		ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 		HttpServletResponse response = (HttpServletResponse) externalContext.getResponse();
+		LoginCookieDaten loginCookieDaten = new LoginCookieDaten();
+		if (loginCookieDaten.getToken() != null && !loginCookieDaten.getToken().isBlank()) {
+			new DatabaseService().loescheLoginToken(loginCookieDaten.getToken());
+		}
+
 		Cookie cookie = new Cookie(LoginCookieDaten.LOGIN_COOKIE_NAME, "");
 		String contextPath = externalContext.getRequestContextPath();
 		cookie.setPath(contextPath == null || contextPath.isBlank() ? "/" : contextPath);

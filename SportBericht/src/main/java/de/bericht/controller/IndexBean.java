@@ -2,11 +2,7 @@ package de.bericht.controller;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -91,12 +87,14 @@ public class IndexBean implements Serializable {
 			return null;
 		}
 
-		if (!(Objects.equals(ConfigManager.getUserPasswort(selectedVereinnr), passwort)
-				|| Objects.equals(ConfigManager.getAdminPasswort(selectedVereinnr), passwort))) {
+		boolean userPasswortKorrekt = Objects.equals(ConfigManager.getUserPasswort(selectedVereinnr), passwort);
+		boolean adminPasswortKorrekt = Objects.equals(ConfigManager.getAdminPasswort(selectedVereinnr), passwort);
+		if (!(userPasswortKorrekt || adminPasswortKorrekt)) {
 			addError("Passwort ist falsch.");
 			return null;
 		}
-		speichereCookie();
+		String passwortArt = adminPasswortKorrekt ? "ADMIN" : "USER";
+		speichereCookie(passwortArt);
 		weiterleitenOhneUrlAenderung(selectedVereinnr, selectedVerein);
 		return null;
 	}
@@ -194,22 +192,16 @@ public class IndexBean implements Serializable {
 			return;
 		}
 		try {
-			Map<String, String> data = parseCookie(cookie.getValue());
-			String verein = data.get("verein");
+			String token = cookie.getValue();
+			Map<String, String> data = db.ladeLoginToken(token);
+			if (data == null) {
+				loescheCookie();
+				return;
+			}
 			String vereinnr = data.get("vereinnr");
-			String encryptedPasswort = data.get("pwd");
 			String name = data.get("name");
-			if (verein == null || vereinnr == null || encryptedPasswort == null) {
-				loescheCookie();
-				return;
-			}
-			String decrypted = ConfigManager.decryptPasswort(vereinnr, encryptedPasswort);
-			String expectedUser = ConfigManager.getUserPasswort(vereinnr);
-			String expectedAdmin = ConfigManager.getAdminPasswort(vereinnr);
-			if (!(Objects.equals(decrypted, expectedUser) || Objects.equals(decrypted, expectedAdmin))) {
-				loescheCookie();
-				return;
-			}
+			String verein = findeVereinZuVereinnr(vereinnr);
+
 			String vereinAusMap = findeVereinZuVereinnr(vereinnr);
 			if (vereinAusMap != null && !vereinAusMap.isBlank()) {
 				verein = vereinAusMap;
@@ -261,18 +253,17 @@ public class IndexBean implements Serializable {
 		return namen.stream().filter(name -> name != null && name.toLowerCase().contains(q)).toList();
 	}
 
-	private void speichereCookie() {
+	private void speichereCookie(String passwortArt) {
 		try {
-			String encrypted = ConfigManager.encryptPasswort(selectedVereinnr, passwort);
-			String value = "verein=" + enc(selectedVerein) + "&vereinnr=" + enc(selectedVereinnr) + "&name="
-					+ enc(selectedName == null ? "" : selectedName) + "&pwd=" + enc(encrypted);
+			String value = db.erstelleZufaelligenLoginToken();
+			db.saveLoginToken(value, selectedVereinnr, selectedName == null ? "" : selectedName, passwortArt,
+					angemeldetBleiben);
 			ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
 			HttpServletResponse response = (HttpServletResponse) ec.getResponse();
 			Cookie cookie = new Cookie(LOGIN_COOKIE, value);
 			cookie.setHttpOnly(true);
 			String contextPath = ec.getRequestContextPath();
 			cookie.setPath(contextPath == null || contextPath.isBlank() ? "/" : contextPath);
-			System.out.println(angemeldetBleiben);
 			cookie.setMaxAge(angemeldetBleiben ? COOKIE_MAX_AGE_SECONDS : -1);
 			response.addCookie(cookie);
 		} catch (Exception e) {
@@ -283,6 +274,12 @@ public class IndexBean implements Serializable {
 	private void loescheCookie() {
 		try {
 			ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+			Cookie vorhandenerCookie = findeCookie();
+			if (vorhandenerCookie != null && vorhandenerCookie.getValue() != null
+					&& !vorhandenerCookie.getValue().isBlank()) {
+				db.loescheLoginToken(vorhandenerCookie.getValue());
+			}
+
 			HttpServletResponse response = (HttpServletResponse) ec.getResponse();
 			Cookie cookie = new Cookie(LOGIN_COOKIE, "");
 			String contextPath = ec.getRequestContextPath();
@@ -302,11 +299,6 @@ public class IndexBean implements Serializable {
 				.map(Map.Entry::getKey).findFirst().orElse(null);
 	}
 
-	private Map<String, String> parseCookie(String value) {
-		return Arrays.stream(value.split("&")).map(part -> part.split("=", 2)).filter(arr -> arr.length == 2)
-				.collect(java.util.stream.Collectors.toMap(arr -> dec(arr[0]), arr -> dec(arr[1]), (a, b) -> b));
-	}
-
 	private Cookie findeCookie() {
 		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
 				.getRequest();
@@ -319,14 +311,6 @@ public class IndexBean implements Serializable {
 			}
 		}
 		return null;
-	}
-
-	private String enc(String value) {
-		return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
-	}
-
-	private String dec(String value) {
-		return URLDecoder.decode(value, StandardCharsets.UTF_8);
 	}
 
 	private void addError(String text) {
