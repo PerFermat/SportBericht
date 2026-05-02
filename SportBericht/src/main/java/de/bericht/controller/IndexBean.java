@@ -48,6 +48,7 @@ public class IndexBean implements Serializable {
 	private String selectedName;
 	private String passwort;
 	private boolean angemeldetBleiben = false;
+	private String ruecksprung;
 	private boolean passwortVergessenSichtbar;
 	private String passwortVergessenEmail;
 
@@ -56,6 +57,10 @@ public class IndexBean implements Serializable {
 		vereinZuNr = db.ladeLoginOrteMitVereinnr();
 		vereine = new ArrayList<>(vereinZuNr.keySet());
 		namen = new ArrayList<>();
+		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
+				.getRequest();
+		ruecksprung = normalizeRuecksprung(request.getParameter("ruecksprung"));
+
 		pruefeCookieUndRedirect();
 	}
 
@@ -230,10 +235,7 @@ public class IndexBean implements Serializable {
 			}
 
 			String sportart = ConfigManager.getConfigValue(vereinnr, "sportart.verein");
-			String ziel = "/spielplan.xhtml";
-			if (sportart != null && sportart.equalsIgnoreCase("TENNIS")) {
-				ziel = "/liga.xhtml";
-			}
+			String ziel = bestimmeZielNachLogin(sportart);
 			if (ec.getRequestContextPath().toUpperCase().contains("BERICHT")) {
 				ec.redirect(ziel.startsWith("/") ? ziel.substring(1) : ziel);
 			} else {
@@ -243,6 +245,27 @@ public class IndexBean implements Serializable {
 		} catch (IOException e) {
 			addError("Weiterleitung ist fehlgeschlagen.");
 		}
+	}
+
+	private String bestimmeZielNachLogin(String sportart) {
+		if (ruecksprung != null && !ruecksprung.isBlank()) {
+			return ruecksprung.startsWith("/") ? ruecksprung : "/" + ruecksprung;
+		}
+		if (sportart != null && sportart.equalsIgnoreCase("TENNIS")) {
+			return "/liga.xhtml";
+		}
+		return "/spielplan.xhtml";
+	}
+
+	private String normalizeRuecksprung(String rawRuecksprung) {
+		if (rawRuecksprung == null || rawRuecksprung.isBlank()) {
+			return null;
+		}
+		String value = rawRuecksprung.trim();
+		if (!value.matches("[a-zA-Z0-9_-]+\\.xhtml")) {
+			return null;
+		}
+		return value;
 	}
 
 	public List<String> completeNamen(String query) {

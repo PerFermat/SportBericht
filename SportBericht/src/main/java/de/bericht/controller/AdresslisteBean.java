@@ -114,6 +114,10 @@ public class AdresslisteBean implements Serializable {
 
 		passwort = request.getParameter("p");
 		lesenCookieParameter();
+		if (vereinnr == null || vereinnr.isBlank()) {
+			redirectToLogin();
+			return;
+		}
 
 		if (vereinnr == null || vereinnr.isBlank()) {
 			addError("Keine Vereinnummer übergeben (Parameter v oder vereinnr fehlt).");
@@ -137,6 +141,20 @@ public class AdresslisteBean implements Serializable {
 			editAktionenFreigeschaltet = true;
 		}
 
+	}
+
+	private void redirectToLogin() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		if (context == null) {
+			return;
+		}
+		try {
+			context.getExternalContext().redirect("index.xhtml?ruecksprung=adressliste.xhtml");
+			context.responseComplete();
+		} catch (Exception e) {
+			context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+					"Weiterleitung zum Login fehlgeschlagen.", "Weiterleitung zum Login fehlgeschlagen."));
+		}
 	}
 
 	private void lesenCookieParameter() {

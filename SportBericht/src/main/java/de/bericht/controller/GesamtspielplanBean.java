@@ -121,6 +121,10 @@ public class GesamtspielplanBean implements Serializable {
 			vereinnr = request.getParameter("vereinnr");
 		}
 		lesenCookieParameter();
+		if (vereinnr == null || vereinnr.isBlank()) {
+			redirectToLogin();
+			return;
+		}
 
 		verein_prefix = ConfigManager.getSpielplanVerein(vereinnr);
 		ladePersistierteGesamtspielplanKonfiguration();
@@ -147,6 +151,20 @@ public class GesamtspielplanBean implements Serializable {
 			if (passwort == null && vereinnr.equals(logging.getVereinnr())) {
 				passwort = logging.getPasswort();
 			}
+		}
+	}
+
+	private void redirectToLogin() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		if (context == null) {
+			return;
+		}
+		try {
+			context.getExternalContext().redirect("index.xhtml?ruecksprung=gesamtspielplan.xhtml");
+			context.responseComplete();
+		} catch (Exception e) {
+			context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+					"Weiterleitung zum Login fehlgeschlagen.", "Weiterleitung zum Login fehlgeschlagen."));
 		}
 	}
 
