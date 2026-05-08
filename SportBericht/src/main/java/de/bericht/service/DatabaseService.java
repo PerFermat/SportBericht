@@ -503,6 +503,20 @@ public class DatabaseService {
 				true, false);
 	}
 
+	private String sanitizeRichText(String input) {
+		if (input == null) {
+			return null;
+		}
+		return BerichtHelper.SAFE_HTML_POLICY.sanitize(input);
+	}
+
+	private String sanitizePlainText(String input) {
+		if (input == null) {
+			return null;
+		}
+		return org.jsoup.Jsoup.parse(input).text();
+	}
+
 	public void saveOrUpdateBericht(String vereinnr, String ergebnisLink, String neuerText, boolean berichtTextSetzen,
 			byte[] neuesBild, boolean bildSetzen, String neueUnterschrift, boolean unterschriftSetzen,
 			String neueUeberschrift, boolean ueberschriftSetzen, boolean speichernHistorie) {
@@ -553,10 +567,12 @@ public class DatabaseService {
 				// initialisiert)
 				// Entscheide jetzt, was die neuen finalen Werte sind (entweder alte oder neue,
 				// je nach Flag)
-				String finalText = berichtTextSetzen ? neuerText : alterText;
+				String finalText = berichtTextSetzen ? sanitizeRichText(neuerText) : sanitizeRichText(alterText);
 				byte[] finalBild = bildSetzen ? neuesBild : altesBild;
-				String finalUnterschrift = unterschriftSetzen ? neueUnterschrift : alteUnterschrift;
-				String finalUeberschrift = ueberschriftSetzen ? neueUeberschrift : alteUeberschrift;
+				String finalUnterschrift = unterschriftSetzen ? sanitizeRichText(neueUnterschrift)
+						: sanitizeRichText(alteUnterschrift);
+				String finalUeberschrift = ueberschriftSetzen ? sanitizePlainText(neueUeberschrift)
+						: sanitizePlainText(alteUeberschrift);
 
 				// Prüfen, ob sich irgendwas geändert hat (auch wenn neuer Datensatz: true)
 				if (!existiert || !Objects.equals(alterText, finalText) || !Arrays.equals(altesBild, finalBild)
@@ -619,10 +635,10 @@ public class DatabaseService {
 				PreparedStatement upsertStmt = conn.prepareStatement(upsertSql);
 				upsertStmt.setString(1, vereinnr);
 				upsertStmt.setString(2, ergebnisLink);
-				upsertStmt.setString(3, neuerText);
+				upsertStmt.setString(3, sanitizeRichText(neuerText));
 				upsertStmt.setBytes(4, neuesBild);
-				upsertStmt.setString(5, neueUnterschrift);
-				upsertStmt.setString(6, neueUeberschrift);
+				upsertStmt.setString(5, sanitizeRichText(neueUnterschrift));
+				upsertStmt.setString(6, sanitizePlainText(neueUeberschrift));
 				upsertStmt.executeUpdate();
 				gespeichert = true;
 			}

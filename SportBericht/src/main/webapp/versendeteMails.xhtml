@@ -141,7 +141,7 @@
 
 								<p:commandLink
 									actionListener="#{versendeteMailsBean.mailAuswaehlen(mail)}"
-									update="mailForm msgForm"
+									update="msgForm"
 									styleClass="mail-eintrag-link #{versendeteMailsBean.ausgewaehlteMail ne null and versendeteMailsBean.ausgewaehlteMail.id eq mail.id ? 'aktiv' : ''}">
 									<div>#{mail.betreff}</div>
 									<div class="mail-meta">#{versendeteMailsBean.formatZeitstempel(mail)}</div>

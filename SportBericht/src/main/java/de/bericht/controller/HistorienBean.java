@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import de.bericht.service.DatabaseService;
 import de.bericht.service.LogEntry;
@@ -30,7 +32,7 @@ public class HistorienBean implements Serializable {
 	private String ergebnis;
 	private String name;
 	private String liga;
-	private String ligaSpiel;	
+	private String ligaSpiel;
 	private String ergebnisLink;
 	private String uuid;
 	private String spielErgebnis;
@@ -64,23 +66,29 @@ public class HistorienBean implements Serializable {
 		this.ergebnisLink = params.get("ergebnisLink");
 		this.name = params.get("name");
 		this.liga = params.get("liga");
-		this.ligaSpiel = params.get("ligaSpiel");		
+		this.ligaSpiel = params.get("ligaSpiel");
 		this.uuid = params.get("uuid");
 		this.gruppeUrl = params.get("gruppeUrl");
+		System.out.println("Hallo" + ergebnisLink);
 		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
+		System.out.println("Halloa" + ergebnisLink);
 		logEntries = dbService.getLogEntries(vereinnr, ergebnisLink);
+		System.out.println("Hallob" + ergebnisLink);
 		// Spielergebnisse abrufen
 		if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 			this.spielErgebnis = dbService.loadSpielstatistik(vereinnr, ergebnisLink);
 		}
-
+		System.out.println("Hallo1");
 		ladeAktuellenBericht();
+		System.out.println("Hallo2");
 		ladeHistorienTimestamps();
+		System.out.println("Hallo3");
 
-		if (!historienTimestamps.isEmpty()) {
+		if (historienTimestamps != null && !historienTimestamps.isEmpty()) {
 			ausgewaehlterTimestamp = historienTimestamps.get(0); // Neuester
 			ladeHistorischenBericht(ausgewaehlterTimestamp);
 		}
+		System.out.println("Hallo4");
 	}
 
 	public void ladeAktuellenBericht() {
@@ -251,6 +259,74 @@ public class HistorienBean implements Serializable {
 
 	public String getHistorieUeberschrift() {
 		return BerichtHelper.SAFE_HTML_POLICY.sanitize(historischerBericht.getUeberschrift());
+	}
+
+	private static final Pattern TOKEN_PATTERN = Pattern.compile("\\S+|\\s+");
+
+	private String safe(String value) {
+		return value == null ? "" : value;
+	}
+
+	private List<String> tokenize(String input) {
+		List<String> tokens = new ArrayList<>();
+		Matcher matcher = TOKEN_PATTERN.matcher(safe(input));
+		while (matcher.find()) {
+			tokens.add(matcher.group());
+		}
+		return tokens;
+	}
+
+	private String markDiff(String source, String compareTo, String cssClass) {
+		List<String> a = tokenize(source);
+		List<String> b = tokenize(compareTo);
+		int n = a.size();
+		int m = b.size();
+		int[][] dp = new int[n + 1][m + 1];
+		for (int i = n - 1; i >= 0; i--) {
+			for (int j = m - 1; j >= 0; j--) {
+				if (a.get(i).equals(b.get(j))) {
+					dp[i][j] = dp[i + 1][j + 1] + 1;
+				} else {
+					dp[i][j] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+				}
+			}
+		}
+
+		StringBuilder out = new StringBuilder();
+		int i = 0, j = 0;
+		while (i < n && j < m) {
+			if (a.get(i).equals(b.get(j))) {
+				out.append(a.get(i));
+				i++;
+				j++;
+			} else if (dp[i + 1][j] >= dp[i][j + 1]) {
+				out.append("<span class=\"").append(cssClass).append("\">").append(a.get(i)).append("</span>");
+				i++;
+			} else {
+				j++;
+			}
+		}
+		while (i < n) {
+			out.append("<span class=\"").append(cssClass).append("\">").append(a.get(i)).append("</span>");
+			i++;
+		}
+		return out.toString();
+	}
+
+	public String getAktuelleUeberschriftDiffHtml() {
+		return markDiff(getAktuelleUeberschrift(), getHistorieUeberschrift(), "diff-green");
+	}
+
+	public String getHistorieUeberschriftDiffHtml() {
+		return markDiff(getHistorieUeberschrift(), getAktuelleUeberschrift(), "diff-red");
+	}
+
+	public String getAktuellerBerichtTextDiffHtml() {
+		return markDiff(getAktuellerBerichtText(), getHistorieBerichtText(), "diff-green");
+	}
+
+	public String getHistorieBerichtTextDiffHtml() {
+		return markDiff(getHistorieBerichtText(), getAktuellerBerichtText(), "diff-red");
 	}
 
 	// Diese Methode wird durch den "Speichern"-Button aufgerufen.

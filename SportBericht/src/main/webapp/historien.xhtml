@@ -16,6 +16,10 @@
 	<h:outputStylesheet library="css" name="styles.css" />
 	<!-- Einbinden des externen Skripts -->
 	<h:outputScript library="js" name="script.js" target="head" />
+	<style>
+		.diff-green { background-color: #d4edda; color: #155724; }
+		.diff-red { background-color: #f8d7da; color: #721c24; }
+	</style>	
 </h:head>
 
 <h:body>
@@ -70,11 +74,11 @@
 					<!-- Eingabefeld, wenn obige Bedingung NICHT zutrifft -->
 					<h:panelGroup
 						rendered="#{empty historienBean.ergebnisLink or not historienBean.ergebnisLink.startsWith('http')}">
-						<h:outputText value="#{historienBean.aktuelleUeberschrift}"
+						<h:outputText value="#{historienBean.aktuelleUeberschriftDiffHtml}"
 							style="font-size: 1.5em;">>
 							</h:outputText>
 					</h:panelGroup>
-					<h:outputText value="#{historienBean.aktuellerBerichtText}"
+					<h:outputText value="#{historienBean.aktuellerBerichtTextDiffHtml}"
 						style="width: 100%; box-sizing: border-box; white-space: pre-line;"
 						escape="false" />
 					<!-- Optional: Anzeige der Spielergebnisse -->
@@ -125,7 +129,7 @@
 					<div class="hover-container">
 						<h:panelGroup
 							rendered="#{empty historienBean.ergebnisLink or not historienBean.ergebnisLink.startsWith('http')}">
-							<h:outputText value="#{historienBean.historieUeberschrift}"
+						<h:outputText value="#{historienBean.historieUeberschriftDiffHtml}"
 								style="font-size: 1.5em;">>
 							</h:outputText>
 						</h:panelGroup>
@@ -134,7 +138,7 @@
 							title="Klicken zum Übernehmen" />
 					</div>
 					<div class="hover-container">
-						<h:outputText value="#{historienBean.historieBerichtText}"
+						<h:outputText value="#{historienBean.historieBerichtTextDiffHtml}"
 							escape="false" style="white-space: pre-line;" />
 						<br /> <br />
 						<h:outputText value="#{historienBean.spielErgebnis}"

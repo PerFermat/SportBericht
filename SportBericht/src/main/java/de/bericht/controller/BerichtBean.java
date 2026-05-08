@@ -784,12 +784,12 @@ public class BerichtBean implements Serializable {
 	}
 
 	public void setBerichtText(String berichtText) {
-		this.berichtText = decodeUrl(berichtText);
+		this.berichtText = BerichtHelper.SAFE_HTML_POLICY.sanitize(decodeUrl(berichtText));
 
 	}
 
 	public void setName(String name) {
-		this.name = name;
+		this.name = Jsoup.parse(name == null ? "" : name).text();
 	}
 
 	public String getErgebnisLink() {
@@ -896,7 +896,7 @@ public class BerichtBean implements Serializable {
 	}
 
 	public void setBildUnterschrift(String bildUnterschrift) {
-		this.bildUnterschrift = bildUnterschrift;
+		this.bildUnterschrift = BerichtHelper.SAFE_HTML_POLICY.sanitize(decodeUrl(bildUnterschrift));
 	}
 
 	public boolean isSpielplan() {
@@ -979,7 +979,7 @@ public class BerichtBean implements Serializable {
 	}
 
 	public void setUeberschrift(String ueberschrift) {
-		this.ueberschrift = decodeUrl(ueberschrift);
+		this.ueberschrift = Jsoup.parse(decodeUrl(ueberschrift)).text();
 	}
 
 	public String getToEmpfaenger() {
@@ -1066,6 +1066,18 @@ public class BerichtBean implements Serializable {
 	public void speichernUndFreigabe() {
 		speichern();
 		freigabe();
+	}
+
+	public String zuHistorien() {
+		System.out.println("1");
+		speichern();
+		return "historien.xhtml?faces-redirect=true";
+	}
+
+	public String getZuHistorien() {
+		System.out.println("2");
+		speichern();
+		return "historien.xhtml?faces-redirect=true";
 	}
 
 }
