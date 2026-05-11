@@ -41,8 +41,6 @@ public class TennisSpiel extends Spiel {
 		this.ergebnis = matches;
 
 		config = ConfigManager.getInstance();
-		// String sortlist = config.getConfigValue(vereinnr, "bericht.sortierung");
-		// setSortierungAusKonfiguration(sortlist);
 	}
 
 	private void setSortierungAusKonfiguration(String sortlist) {

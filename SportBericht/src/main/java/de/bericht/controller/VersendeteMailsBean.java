@@ -31,13 +31,13 @@ public class VersendeteMailsBean implements Serializable {
 	private final DatabaseService dbService = new DatabaseService();
 
 	private String vereinnr;
+	private String passwort;
 	private String ruecksprung;
 	private String suchbegriff;
 	private List<VersendeteMail> alleMails = new ArrayList<>();
 	private List<MonatsGruppe> gruppen = new ArrayList<>();
 	private VersendeteMail ausgewaehlteMail;
 	private boolean mobileDetailAnsicht;
-	private String passwort;
 
 	@PostConstruct
 	public void init() {
@@ -45,15 +45,23 @@ public class VersendeteMailsBean implements Serializable {
 		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 
 		vereinnr = BerichtHelper.bestimmenVereinnr(request.getParameter("v"));
+		passwort = request.getParameter("p");
+
 		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = request.getParameter("vereinnr");
 		}
-		passwort = request.getParameter("p");
+
 		lesenCookieParameter();
 
+		boolean passwortOk = false;
+		if (!(passwort == null)) {
+			if (passwort.equals(ConfigManager.getUserPasswort(vereinnr))
+					|| passwort.equals(ConfigManager.getAdminPasswort(vereinnr))) {
+				passwortOk = true;
+			}
+		}
 		ruecksprung = request.getParameter("ruecksprung");
-		if (!(passwort == null) && (passwort.equals(ConfigManager.getUserPasswort(vereinnr))
-				|| passwort.equals(ConfigManager.getAdminPasswort(vereinnr)))) {
+		if (passwortOk) {
 			ladeMails();
 		} else {
 			VersendeteMail leer = new VersendeteMail();
@@ -192,16 +200,24 @@ public class VersendeteMailsBean implements Serializable {
 		return mobileDetailAnsicht;
 	}
 
+	public void onToggle(MonatsGruppe gruppe) {
+		gruppe.setAufgeklappt(!gruppe.isAufgeklappt());
+	}
+
 	public static class MonatsGruppe implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private final String titel;
 		private final List<VersendeteMail> mails;
-		private final boolean aufgeklappt;
+		private boolean aufgeklappt;
 
 		public MonatsGruppe(String titel, List<VersendeteMail> mails, boolean aufgeklappt) {
 			this.titel = titel;
 			this.mails = mails;
-			this.aufgeklappt = aufgeklappt;
+			this.aufgeklappt = true;
+		}
+
+		public void setAufgeklappt(boolean b) {
+			aufgeklappt = b;
 		}
 
 		public String getTitel() {
