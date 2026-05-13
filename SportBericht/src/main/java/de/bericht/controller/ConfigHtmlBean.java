@@ -197,7 +197,7 @@ public class ConfigHtmlBean implements Serializable {
 	}
 
 	public List<String> getArtOptionen() {
-		return List.of("Spielplan", "Mannschaft", "Seitenleiste", "Spielcodes", "Kinderfotos");
+		return List.of("Spielplan", "Mannschaft", "Seitenleiste", "Spielcodes", "Kinderfotos", "Kalender", "Inaktiv");
 	}
 
 	public List<String> getTypOptionen() {
