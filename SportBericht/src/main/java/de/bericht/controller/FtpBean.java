@@ -60,6 +60,7 @@ public class FtpBean implements Serializable {
 
 	private String vereinnr;
 	private String passwort;
+	private String ruecksprung;
 	private String ausgewaehltesThema = UploadThema.HALLENBELEGUNGN.key;
 	private Part uploadedDatei;
 
@@ -71,15 +72,14 @@ public class FtpBean implements Serializable {
 		if (vereinnr == null) {
 			vereinnr = request.getParameter("vereinnr");
 		}
-
+		ruecksprung = request.getParameter("ruecksprung");
 		passwort = request.getParameter("p");
 		lesenCookieParameter();
-		if (!(passwort == null) && (passwort.equals(ConfigManager.getUserPasswort(vereinnr))
-				|| passwort.equals(ConfigManager.getAdminPasswort(vereinnr)))) {
+		if (!(passwort == null) && passwort.equals(ConfigManager.getAdminPasswort(vereinnr))) {
 			this.freigabe = true;
 		} else {
 			addMessage(FacesMessage.SEVERITY_ERROR, "Fasches Passwort eingegeben",
-					"Bitte die Seite mit \"?v=<verein>&p=<Passwort für den internen Bereich>\" aufrufen");
+					"Bitte das Admin-Passwort verwenden");
 			this.freigabe = false;
 		}
 
@@ -102,7 +102,7 @@ public class FtpBean implements Serializable {
 	public void hochladen() {
 		if (!freigabe) {
 			addMessage(FacesMessage.SEVERITY_ERROR, "Fasches Passwort eingegeben",
-					"Bitte die Seite mit \"?v=<verein>&p=<Passwort für den internen Bereich>\" aufrufen");
+					"Bitte das Admin-Passwort verwenden");
 			return;
 		}
 		if (uploadedDatei == null || uploadedDatei.getSize() == 0) {
@@ -247,4 +247,29 @@ public class FtpBean implements Serializable {
 	public void setUploadedDatei(Part uploadedDatei) {
 		this.uploadedDatei = uploadedDatei;
 	}
+
+	public String getRuecksprung() {
+		return ruecksprung;
+	}
+
+	public void setRuecksprung(String ruecksprung) {
+		this.ruecksprung = ruecksprung;
+	}
+
+	public String ruecksprung() {
+		return ruecksprung;
+	}
+
+	public String getBestimmenIcon() {
+		return ConfigManager.getConfigValue(vereinnr, "style.icon");
+	}
+
+	public String getVereinHomepage() {
+		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
+	}
+
+	public String getVerein() {
+		return ConfigManager.getConfigValue(vereinnr, "spielplan.Verein");
+	}
+
 }

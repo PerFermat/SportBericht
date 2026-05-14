@@ -18,7 +18,23 @@
 
 <h:body>
 	<div class="tabheader-area">
+		<h:outputLink value="#{gesamtspielplanBean.vereinHomepage}" target="_blank">
+			<img src="#{gesamtspielplanBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
+		<h:form>
+			<p:commandButton type="button" value="Handbuch"
+				onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
+		</h:form>
 		<h2>Gesamtspielplan – #{gesamtspielplanBean.verein}</h2>
+		<h:form>
+			<p:commandButton
+				value="Zurück"
+				action="#{gesamtspielplanBean.ruecksprung}"	immediate="true"
+				rendered="#{not empty gesamtspielplanBean.ruecksprung}">
+				<f:param name="vereinnr" value="#{gesamtspielplanBean.vereinnr}" />
+			</p:commandButton>
+		</h:form>
 	</div>
 
 	<h:form id="controlsForm" styleClass="controls controls-centered">

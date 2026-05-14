@@ -82,6 +82,7 @@ public class AdresslisteBean implements Serializable {
 	private boolean editAktionenFreigeschaltet;
 	private String neuEinmalpasswort;
 	private String neuEinmalpasswortEingabe;
+	private String ruecksprung;
 	private boolean neuSpeichernFreigeschaltet;
 	private boolean neuPasswortAngefordert;
 	private final Random random = new java.security.SecureRandom();
@@ -124,6 +125,7 @@ public class AdresslisteBean implements Serializable {
 			eintraege = new ArrayList<>();
 			return;
 		}
+		ruecksprung = request.getParameter("ruecksprung");
 		schreibzugriff = pruefeSchreibzugriff(request.getParameter("p"));
 		String userPasswort = ConfigManager.getUserPasswort(vereinnr);
 		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);
@@ -823,5 +825,25 @@ public class AdresslisteBean implements Serializable {
 
 	public boolean isTischtennis() {
 		return ConfigManager.isTischtennis(vereinnr);
+	}
+
+	public String getRuecksprung() {
+		return ruecksprung;
+	}
+
+	public void setRuecksprung(String ruecksprung) {
+		this.ruecksprung = ruecksprung;
+	}
+
+	public String ruecksprung() {
+		return ruecksprung;
+	}
+
+	public String getBestimmenIcon() {
+		return ConfigManager.getConfigValue(vereinnr, "style.icon");
+	}
+
+	public String getVereinHomepage() {
+		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
 	}
 }

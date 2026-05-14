@@ -227,7 +227,12 @@
 
 		</h:form>
 		<h:form id="configForm" rendered="#{spielplanBean.tischtennis}">
-			<div class="button4-container">
+			<div class="button-container">
+				<p:commandButton value="Impressum" action="impressum.xhtml">
+					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+					<f:param name="ruecksprung" value="spielplan.xhtml" />
+				</p:commandButton>			
+				<br />
 				<p:commandButton value="Config ändern" action="config.xhtml">
 					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 				</p:commandButton>
@@ -239,9 +244,30 @@
 				<p:commandButton value="Abmelden"
 					action="#{spielplanBean.cookieLoeschenUndZumLogin}" ajax="false"
 					immediate="true" >						
+				</p:commandButton>				
+			</div>
+			<div class="button-container">
+				<p:commandButton value="Gesamtspielplan" action="gesamtspielplan.xhtml">
+					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+					<f:param name="ruecksprung" value="spielplan.xhtml" />
 				</p:commandButton>
 				<br />
-				<p:commandButton value="Impressum" action="impressum.xhtml">
+				<p:commandButton value="Versendete Mails" action="versendeteMails.xhtml">
+					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+					<f:param name="ruecksprung" value="spielplan.xhtml" />
+				</p:commandButton>
+				<br />
+				<p:commandButton value="FTP-PDFs" action="ftp.xhtml">
+					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+					<f:param name="ruecksprung" value="spielplan.xhtml" />
+				</p:commandButton>
+				<br />
+				<p:commandButton value="Bilder" action="bilder.xhtml">
+					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+					<f:param name="ruecksprung" value="spielplan.xhtml" />
+				</p:commandButton>
+				<br />
+				<p:commandButton value="Adressen" action="adressliste.xhtml">
 					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 					<f:param name="ruecksprung" value="spielplan.xhtml" />
 				</p:commandButton>

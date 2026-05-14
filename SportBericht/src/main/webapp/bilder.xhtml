@@ -106,20 +106,27 @@
 </h:head>
 
 <h:body>
+	<div class="tabheader-area">
+		<h:outputLink value="#{bilderBean.vereinHomepage}" target="_blank">
+			<img src="#{bilderBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
+		<h:form>
+			<p:commandButton type="button" value="Handbuch"
+				onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
+		</h:form>
+		<h2>Spieltagsbilder – #{bilderBean.verein}</h2>
+		<h:form>
+			<p:commandButton
+				value="Zurück"
+				action="#{bilderBean.ruecksprung}"	immediate="true"
+				rendered="#{not empty bilderBean.ruecksprung}">
+				<f:param name="vereinnr" value="#{bilderBean.vereinnr}" />
+			</p:commandButton>
+		</h:form>
+	</div>
+	
 	<div class="image-page">
-		<div class="tabheader-area">
-			<h:outputLink value="#{bilderBean.vereinHomepage}" target="_blank">
-				<img src="#{bilderBean.bestimmenIcon}"
-					style="vertical-align: middle;" width="50" />
-			</h:outputLink>
-			<h:form>
-				<p:commandButton type="button" value="Handbuch"
-					onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
-			</h:form>
-
-			<h2>Spieltagsbilder – #{bilderBean.verein}</h2>
-		</div>
-		<br />
 		<h:form>
 			<ui:repeat value="#{bilderBean.bilderGruppen}" var="gruppe">
 				<h3 class="section-title">#{gruppe.titel}</h3>

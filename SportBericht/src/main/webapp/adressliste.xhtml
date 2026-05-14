@@ -18,12 +18,28 @@
 </h:head>
 
 <h:body>
+	<div class="tabheader-area">
+		<h:outputLink value="#{adresslisteBean.vereinHomepage}" target="_blank">
+			<img src="#{adresslisteBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
+		<h:form>
+			<p:commandButton type="button" value="Handbuch"
+				onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
+		</h:form>
+		<h2>Abteilungsliste – #{adresslisteBean.verein}</h2>
+		<h:form>
+			<p:commandButton
+				value="Zurück"
+				action="#{adresslisteBean.ruecksprung}"	immediate="true"
+				rendered="#{not empty adresslisteBean.ruecksprung}">
+				<f:param name="vereinnr" value="#{adresslisteBean.vereinnr}" />
+			</p:commandButton>
+		</h:form>
+	</div>
+
 	<h:form id="adresslisteForm">
 		<p:growl id="messages" showDetail="false" />
-
-		<div class="header-area">
-			<h2>Abteilungsliste #{adresslisteBean.verein}</h2>
-		</div>
 
 		<div class="button-container adress-toolbar">
 			<div class="adress-toolbar-left"></div>

@@ -42,12 +42,14 @@ public class BilderBean implements Serializable {
 	private List<BilderEintrag> bilder = new ArrayList<>();
 	private List<BilderGruppe> bilderGruppen = new ArrayList<>();
 	private StreamedContent downloadBild;
+	private String ruecksprung;
 
 	@PostConstruct
 	public void init() {
 		FacesContext context = FacesContext.getCurrentInstance();
 		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 		vereinnr = BerichtHelper.bestimmenVereinnr(request.getParameter("v"));
+		ruecksprung = request.getParameter("ruecksprung");
 
 		if (vereinnr == null) {
 			vereinnr = request.getParameter("vereinnr");
@@ -226,6 +228,18 @@ public class BilderBean implements Serializable {
 
 	public void zurueck() {
 
+	}
+
+	public String getRuecksprung() {
+		return ruecksprung;
+	}
+
+	public void setRuecksprung(String ruecksprung) {
+		this.ruecksprung = ruecksprung;
+	}
+
+	public String ruecksprung() {
+		return ruecksprung;
 	}
 
 }

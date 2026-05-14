@@ -16,7 +16,23 @@
 
 <h:body>
 	<div class="tabheader-area">
-		<h2>Datei-Upload</h2>
+		<h:outputLink value="#{ftpBean.vereinHomepage}" target="_blank">
+			<img src="#{ftpBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
+		<h:form>
+			<p:commandButton type="button" value="Handbuch"
+				onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
+		</h:form>
+		<h2>Datei-Upload – #{ftpBean.verein}</h2>
+		<h:form>
+			<p:commandButton
+				value="Zurück"
+				action="#{ftpBean.ruecksprung}"	immediate="true"
+				rendered="#{not empty ftpBean.ruecksprung}">
+				<f:param name="vereinnr" value="#{ftpBean.vereinnr}" />
+			</p:commandButton>
+		</h:form>
 	</div>
 
 	<h:form id="ftpForm" enctype="multipart/form-data"
