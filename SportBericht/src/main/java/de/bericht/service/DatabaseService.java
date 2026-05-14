@@ -2168,7 +2168,7 @@ public class DatabaseService {
 	}
 
 	public Map<String, String> ladeLoginToken(String token) {
-		String sql = "SELECT vereinnr, name, passwort_art, letzter_zugriff, anzahl_anmeldungen FROM login_token WHERE token = ? AND verfallzeit > CURRENT_TIMESTAMP";
+		String sql = "SELECT vereinnr, name, passwort_art, spielplan_link_art, letzter_zugriff, anzahl_anmeldungen FROM login_token WHERE token = ? AND verfallzeit > CURRENT_TIMESTAMP";
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, token);
 			try (ResultSet rs = pstmt.executeQuery()) {
@@ -2177,6 +2177,7 @@ public class DatabaseService {
 					daten.put("vereinnr", rs.getString("vereinnr"));
 					daten.put("name", rs.getString("name"));
 					daten.put("passwort_art", rs.getString("passwort_art"));
+					daten.put("spielplan_link_art", rs.getString("spielplan_link_art"));
 					daten.put("letzter_zugriff", rs.getTimestamp("letzter_zugriff") == null ? ""
 							: rs.getTimestamp("letzter_zugriff").toString());
 					daten.put("anzahl_anmeldungen", String.valueOf(rs.getInt("anzahl_anmeldungen")));
@@ -2203,6 +2204,17 @@ public class DatabaseService {
 			throw new IllegalStateException("Login-Token konnte nicht geladen werden.", e);
 		}
 		return null;
+	}
+
+	public void speichereSpielplanLinkArt(String token, String spielplanLinkArt) {
+		String sql = "UPDATE login_token SET spielplan_link_art = ? WHERE token = ?";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, spielplanLinkArt);
+			pstmt.setString(2, token);
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new IllegalStateException("Spielplan-Link-Art konnte nicht gespeichert werden.", e);
+		}
 	}
 
 	private void aktualisiereLoginTokenZugriff(Connection conn, String token) throws SQLException {

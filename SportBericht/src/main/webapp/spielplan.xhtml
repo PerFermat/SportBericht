@@ -57,7 +57,7 @@
 
 	<!-- Bestehende Tabelle -->
 	<div class="tabellen-container">
-		<h:form>
+		<h:form id="spielplanForm">
 			<p:dataTable value="#{spielplanBean.spiele}" var="spiel" border="1"
 				styleClass="tabelle">
 
@@ -143,13 +143,20 @@
 							<f:param name="frei" value="Nein" />
 						</p:commandButton>
 						<p:commandButton value="Aufstellung" action="aufstellung.xhtml"
-							rendered="#{empty spiel.ergebnis and spielplanBean.passwortOK}"
+							rendered="#{empty spiel.ergebnis and spielplanBean.showAufstellungLink}"
 							styleClass="myButtonLight">
 							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 							<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
-							<f:param name="ruecksprung" value="liga.xhtml" />
+							<f:param name="ruecksprung" value="spielplan.xhtml" />
 							<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
 							<f:param name="liga" value="#{spielplanBean.liga}" />
+						</p:commandButton>
+						<p:commandButton value="Spielcodes" action="zwischenablage.xhtml"
+							rendered="#{empty spiel.ergebnis and spielplanBean.showSpielcodesLink}"
+							styleClass="myButtonLight">
+							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+							<f:param name="ruecksprung" value="spielplan.xhtml" />
+							<f:param name="key" value="#{spiel.generateUniqueKey}" />
 						</p:commandButton>
 					</div>
 				</p:column>
@@ -271,6 +278,18 @@
 					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 					<f:param name="ruecksprung" value="spielplan.xhtml" />
 				</p:commandButton>
+				<br />
+			</div>
+			<div class="button-container">
+				<h:panelGroup layout="block" style="margin-top: 10px;">
+					<h:outputText value="Anzeige bei Spielen ohne Ergebnis:" />
+					<p:selectOneRadio value="#{spielplanBean.linkAnzeigeArt}" layout="pageDirection">
+						<f:selectItem itemLabel="Keine Anzeige" itemValue="NONE" />
+						<f:selectItem itemLabel="Link zu Aufstellung" itemValue="AUFSTELLUNG" />
+						<f:selectItem itemLabel="Link zu Spielcodes" itemValue="SPIELCODES" />
+						<p:ajax event="change" listener="#{spielplanBean.speichereLinkAnzeigeArt}" update="spielplanForm" />
+					</p:selectOneRadio>
+				</h:panelGroup>				
 			</div>
 		</h:form>
 	</div>

@@ -846,4 +846,5 @@ public class AdresslisteBean implements Serializable {
 	public String getVereinHomepage() {
 		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
 	}
+
 }

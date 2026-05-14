@@ -252,4 +252,21 @@ public class VersendeteMailsBean implements Serializable {
 	public void zurueck() {
 
 	}
+
+	public void setRuecksprung(String ruecksprung) {
+		this.ruecksprung = ruecksprung;
+	}
+
+	public String getBestimmenIcon() {
+		return ConfigManager.getConfigValue(vereinnr, "style.icon");
+	}
+
+	public String getVereinHomepage() {
+		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
+	}
+
+	public String getVerein() {
+		return ConfigManager.getConfigValue(vereinnr, "spielplan.Verein");
+	}
+
 }

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import de.bericht.service.DatabaseService;
 import de.bericht.service.SpielcodeEintrag;
 import de.bericht.util.BerichtHelper;
+import de.bericht.util.ConfigManager;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
@@ -22,6 +23,7 @@ public class ZwischenablageBean implements Serializable {
 	private String vereinnr;
 	private String key;
 	private SpielcodeEintrag spiel;
+	private String ruecksprung;
 
 	@PostConstruct
 	public void init() {
@@ -40,7 +42,7 @@ public class ZwischenablageBean implements Serializable {
 		if (key == null || key.isBlank()) {
 			return;
 		}
-
+		ruecksprung = request.getParameter("ruecksprung");
 		spiel = databaseService.ladeSpielcodeEintrag(key, vereinnr);
 	}
 
@@ -58,5 +60,29 @@ public class ZwischenablageBean implements Serializable {
 
 	public boolean isSpielcodeVorhanden() {
 		return spiel != null && spiel.isSpielcodeGefunden();
+	}
+
+	public String getRuecksprung() {
+		return ruecksprung;
+	}
+
+	public void setRuecksprung(String ruecksprung) {
+		this.ruecksprung = ruecksprung;
+	}
+
+	public String ruecksprung() {
+		return ruecksprung;
+	}
+
+	public String getBestimmenIcon() {
+		return ConfigManager.getConfigValue(vereinnr, "style.icon");
+	}
+
+	public String getVereinHomepage() {
+		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
+	}
+
+	public String getVerein() {
+		return ConfigManager.getConfigValue(vereinnr, "spielplan.Verein");
 	}
 }

@@ -2,6 +2,8 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"	
+	xmlns:f="http://xmlns.jcp.org/jsf/core"	
 	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
 <h:head>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0"
@@ -21,6 +23,25 @@
 </h:head>
 
 <h:body>
+	<div class="tabheader-area">
+		<h:outputLink value="#{zwischenablageBean.vereinHomepage}" target="_blank">
+			<img src="#{zwischenablageBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
+		<h:form>
+			<p:commandButton type="button" value="Handbuch"
+				onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
+		</h:form>
+		<h2>Spielcodes – #{zwischenablageBean.verein}</h2>
+		<h:form>
+			<p:commandButton
+				value="Zurück"
+				action="#{zwischenablageBean.ruecksprung}"	immediate="true"
+				rendered="#{not empty zwischenablageBean.ruecksprung}">
+				<f:param name="vereinnr" value="#{zwischenablageBean.vereinnr}" />
+			</p:commandButton>
+		</h:form>
+	</div>
 	<div class="zwischenablage-wrapper">
 		<h:panelGroup rendered="#{zwischenablageBean.spielGefunden}">
 			<div class="zwischenablage-box">
