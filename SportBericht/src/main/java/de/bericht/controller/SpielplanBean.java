@@ -8,7 +8,6 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import de.bericht.provider.SpielplanFactory;
@@ -53,7 +52,6 @@ public class SpielplanBean implements Serializable {
 	DatabaseService db = new DatabaseService();
 
 	private String freierText;
-	private String linkAnzeigeArt = "NONE";
 
 	public SpielplanBean() {
 	}
@@ -83,7 +81,6 @@ public class SpielplanBean implements Serializable {
 		}
 
 		lesenCookieParameter();
-		ladeLinkAnzeigeArtAusLoginToken();
 		int i = 0;
 		SpielplanProvider provider;
 		try {
@@ -281,48 +278,6 @@ public class SpielplanBean implements Serializable {
 
 		int x = 10 / 0; // 💥 ArithmeticException
 
-	}
-
-	private void ladeLinkAnzeigeArtAusLoginToken() {
-		LoginCookieDaten loginCookieDaten = new LoginCookieDaten();
-		String token = loginCookieDaten.getToken();
-		if (token == null || token.isBlank()) {
-			return;
-		}
-		Map<String, String> tokenDaten = db.ladeLoginToken(token);
-		if (tokenDaten == null) {
-			return;
-		}
-		String gespeicherteArt = tokenDaten.get("spielplan_link_art");
-		if ("AUFSTELLUNG".equals(gespeicherteArt) || "SPIELCODES".equals(gespeicherteArt)
-				|| "NONE".equals(gespeicherteArt)) {
-			linkAnzeigeArt = gespeicherteArt;
-		}
-	}
-
-	public void speichereLinkAnzeigeArt() {
-		LoginCookieDaten loginCookieDaten = new LoginCookieDaten();
-		String token = loginCookieDaten.getToken();
-		if (token == null || token.isBlank()) {
-			return;
-		}
-		db.speichereSpielplanLinkArt(token, linkAnzeigeArt);
-	}
-
-	public String getLinkAnzeigeArt() {
-		return linkAnzeigeArt;
-	}
-
-	public void setLinkAnzeigeArt(String linkAnzeigeArt) {
-		this.linkAnzeigeArt = linkAnzeigeArt;
-	}
-
-	public boolean isShowAufstellungLink() {
-		return "AUFSTELLUNG".equals(linkAnzeigeArt);
-	}
-
-	public boolean isShowSpielcodesLink() {
-		return "SPIELCODES".equals(linkAnzeigeArt);
 	}
 
 	public boolean isPasswortOK() {

@@ -143,7 +143,7 @@
 							<f:param name="frei" value="Nein" />
 						</p:commandButton>
 						<p:commandButton value="Aufstellung" action="aufstellung.xhtml"
-							rendered="#{empty spiel.ergebnis and spielplanBean.showAufstellungLink}"
+							rendered="#{empty spiel.ergebnis}"
 							styleClass="myButtonLight">
 							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 							<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
@@ -152,7 +152,7 @@
 							<f:param name="liga" value="#{spielplanBean.liga}" />
 						</p:commandButton>
 						<p:commandButton value="Spielcodes" action="zwischenablage.xhtml"
-							rendered="#{empty spiel.ergebnis and spielplanBean.showSpielcodesLink}"
+							rendered="#{empty spiel.ergebnis}"
 							styleClass="myButtonLight">
 							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 							<f:param name="ruecksprung" value="spielplan.xhtml" />
@@ -279,17 +279,6 @@
 					<f:param name="ruecksprung" value="spielplan.xhtml" />
 				</p:commandButton>
 				<br />
-			</div>
-			<div class="button-container">
-				<h:panelGroup layout="block" style="margin-top: 10px;">
-					<h:outputText value="Anzeige bei Spielen ohne Ergebnis:" />
-					<p:selectOneRadio value="#{spielplanBean.linkAnzeigeArt}" layout="pageDirection">
-						<f:selectItem itemLabel="Keine Anzeige" itemValue="NONE" />
-						<f:selectItem itemLabel="Link zu Aufstellung" itemValue="AUFSTELLUNG" />
-						<f:selectItem itemLabel="Link zu Spielcodes" itemValue="SPIELCODES" />
-						<p:ajax event="change" listener="#{spielplanBean.speichereLinkAnzeigeArt}" update="spielplanForm" />
-					</p:selectOneRadio>
-				</h:panelGroup>				
 			</div>
 		</h:form>
 	</div>
