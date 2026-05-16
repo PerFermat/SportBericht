@@ -47,6 +47,7 @@ import de.bericht.util.ConfigEintrag;
 import de.bericht.util.ConfigKategorie;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.ErgebnisCache;
+import de.bericht.util.SpielCode;
 import de.bericht.util.Stil;
 import de.bericht.util.TennisGruppeKurz;
 
@@ -2455,7 +2456,7 @@ public class DatabaseService {
 		}
 	}
 
-	private String sanitize(String value) {
+	private static String sanitize(String value) {
 		return value == null ? "" : value.trim();
 	}
 
@@ -2809,4 +2810,59 @@ public class DatabaseService {
 		return 0;
 	}
 
+	public void insertSpielCode(String vereinnr, List<SpielCode> spiele) {
+		String insertSQL = """
+				INSERT INTO spielcodes (unique_key, liga, vereinnr, mannschaft, wochentag, datum, uhrzeit, heimmannschaft, gastmannschaft, spiel_code, pin)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				ON DUPLICATE KEY UPDATE
+					liga = VALUES(liga),
+					vereinnr = VALUES(vereinnr),
+					mannschaft = VALUES(mannschaft),
+					heimmannschaft = VALUES(heimmannschaft),
+					gastmannschaft = VALUES(gastmannschaft),
+					spiel_code = VALUES(spiel_code),
+					pin = VALUES(pin)
+				""";
+		try (Connection conn = openConnection();
+				PreparedStatement pstmt = conn.prepareStatement(insertSQL, Statement.RETURN_GENERATED_KEYS)) {
+			for (SpielCode spiel : spiele) {
+				spiel.setVereinnr(vereinnr);
+				spiel.setUniqueKey(generateUniqueKey(spiel, vereinnr));
+
+				pstmt.setString(1, spiel.getUniqueKey());
+				pstmt.setString(2, spiel.getLiga());
+				pstmt.setString(3, spiel.getVereinnr());
+				pstmt.setString(4, spiel.getMannschaft());
+				pstmt.setString(5, spiel.getWochentag());
+				pstmt.setString(6, spiel.getDatum());
+				pstmt.setString(7, spiel.getUhrzeit());
+				pstmt.setString(8, spiel.getHeimmannschaft());
+				pstmt.setString(9, spiel.getGastmannschaft());
+				pstmt.setString(10, spiel.getSpielCode());
+				pstmt.setString(11, spiel.getPin());
+				pstmt.addBatch();
+			}
+			pstmt.executeBatch();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static String generateUniqueKey(SpielCode spiel, String vereinnr) {
+		String keyInput = String.join("|", vereinnr, sanitize(spiel.getHeimmannschaft()),
+				sanitize(spiel.getGastmannschaft()), sanitize(spiel.getLiga()));
+
+		System.out.println(keyInput);
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			byte[] hash = digest.digest(keyInput.getBytes(StandardCharsets.UTF_8));
+			StringBuilder hex = new StringBuilder();
+			for (byte b : hash) {
+				hex.append(String.format("%02x", b));
+			}
+			return hex.toString();
+		} catch (NoSuchAlgorithmException e) {
+			throw new IllegalStateException("SHA-256 ist nicht verfügbar", e);
+		}
+	}
 }
