@@ -5,7 +5,8 @@
 	xmlns:p="http://primefaces.org/ui"
 	xmlns:f="http://xmlns.jcp.org/jsf/core">
 <h:head>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
 	<base href="/" />
 	<title>SpielCode Parser – #{spielCodeParserBean.verein}</title>
 	<link rel="stylesheet"
@@ -15,52 +16,95 @@
 </h:head>
 <h:body>
 	<div class="tabheader-area">
-		<h2>SpielCode Parser – #{spielCodeParserBean.verein}</h2>
-	</div>
-
-	<div class="tabellen-container">
-		<h:form enctype="multipart/form-data">
-			<p:growl id="growl" showDetail="true" />
-
-			<p:panel header="Import aus PDF">
-				<p:panelGrid columns="2" layout="grid" styleClass="ui-fluid">
-					<p:outputLabel for="pdf" value="PDF-Datei" />
-					<p:fileUpload id="pdf" value="#{spielCodeParserBean.pdfDatei}" mode="simple"
-						skinSimple="true" accept="application/pdf" />
-
-					<p:outputLabel for="mannschaft" value="Mannschaft" />
-					<p:autoComplete id="mannschaft" value="#{spielCodeParserBean.mannschaft}"
-						completeMethod="#{spielCodeParserBean.completeMannschaft}"
-						dropdown="true" forceSelection="false" />
-
-					<p:outputLabel for="liga" value="Liga" />
-					<p:autoComplete id="liga" value="#{spielCodeParserBean.liga}"
-						completeMethod="#{spielCodeParserBean.completeLiga}"
-						dropdown="true" forceSelection="false" />
-
-					<p:outputLabel for="typ" value="Typ" />
-					<p:selectOneMenu id="typ" value="#{spielCodeParserBean.typ}">
-						<f:selectItem itemLabel="Bitte wählen" itemValue="" noSelectionOption="true" />
-						<f:selectItem itemLabel="Pin" itemValue="Pin" />
-						<f:selectItem itemLabel="Spielcode" itemValue="Spielcode" />
-					</p:selectOneMenu>
-				</p:panelGrid>
-
-				<p:commandButton value="PDF vorbereiten" actionListener="#{spielCodeParserBean.vorbereiten}"
-					update="growl previewPanel" ajax="false" style="margin-top:10px" />
-				<p:commandButton value="Importieren" actionListener="#{spielCodeParserBean.importieren}"
-					update="growl" ajax="false" style="margin-top:10px; margin-left:10px" />
-			</p:panel>
-
-			<p:outputPanel id="previewPanel" style="margin-top:12px;">
-				<h:panelGroup rendered="#{not empty spielCodeParserBean.pdfPreviewUrl}">
-					<object data="#{spielCodeParserBean.pdfPreviewUrl}" type="application/pdf"
-						width="100%" height="600px">
-						PDF-Vorschau kann nicht angezeigt werden.
-					</object>
-				</h:panelGroup>
-			</p:outputPanel>
+		<h:outputLink value="#{spielCodeParserBean.vereinHomepage}"
+			target="_blank">
+			<img src="#{spielCodeParserBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
+		<h:form>
+			<p:commandButton type="button" value="Handbuch"
+				onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
+		</h:form>
+		<h2>HTML-Konfiguration – #{spielCodeParserBean.verein}</h2>
+		<h:form>
+			<p:commandButton value="Zurück" action="liga.xhtml" immediate="true"
+				rendered="#{spielCodeParserBean.tennis}">
+				<f:param name="vereinnr" value="#{spielCodeParserBean.vereinnr}" />
+			</p:commandButton>
+			<p:commandButton value="Zurück" action="spielplan.xhtml"
+				immediate="true" rendered="#{spielCodeParserBean.tischtennis}">
+				<f:param name="vereinnr" value="#{spielCodeParserBean.vereinnr}" />
+			</p:commandButton>
 		</h:form>
 	</div>
+
+	<h:form enctype="multipart/form-data">
+		<div class="responsive-container">
+			<div class="text-input">
+				<p:growl id="growl" showDetail="true" />
+				<p:panel header="Import aus PDF">
+					<p:panelGrid columns="2" layout="grid" styleClass="ui-fluid">
+						<p:outputLabel for="pdfUpload" value="PDF-Datei" />
+
+						<h:panelGroup id="pdf" layout="block"
+							style="display:flex; align-items:center; width:100%;">
+
+							<p:fileUpload id="pdfUpload" mode="simple"
+								value="#{spielCodeParserBean.pdfDatei}" accept="application/pdf" />
+
+							<div style="margin-left: auto;">
+								<p:commandButton icon="pi pi-eye" title="PDF Vorschau"
+									actionListener="#{spielCodeParserBean.ladeVorschau}"
+									update="growl dateiname previewPanel" ajax="false"
+									styleClass="ui-button-secondary" />
+							</div>
+
+						</h:panelGroup>
+						<p:outputLabel for="dateiname" value="Ausgewählte Datei" />
+						<h:outputText id="dateiname"
+							value="#{spielCodeParserBean.pdfDateiname}" />
+
+						<p:outputLabel for="mannschaft" value="Mannschaft" />
+						<p:autoComplete id="mannschaft"
+							value="#{spielCodeParserBean.mannschaft}"
+							completeMethod="#{spielCodeParserBean.completeMannschaft}"
+							dropdown="true" forceSelection="false" />
+
+						<p:outputLabel for="liga" value="Liga" />
+						<p:autoComplete id="liga" value="#{spielCodeParserBean.liga}"
+							completeMethod="#{spielCodeParserBean.completeLiga}"
+							dropdown="true" forceSelection="false" />
+
+						<p:outputLabel for="typ" value="Typ" />
+						<p:selectOneMenu id="typ" value="#{spielCodeParserBean.typ}">
+							<f:selectItem itemLabel="Bitte wählen" itemValue=""
+								noSelectionOption="true" />
+							<f:selectItem itemLabel="Pin" itemValue="Pin" />
+							<f:selectItem itemLabel="Spielcode" itemValue="Spielcode" />
+						</p:selectOneMenu>
+
+						<p:outputLabel for="replaceDateTime"
+							value="Datum/Uhrzeit bei vorhandenem Spiel ersetzen" />
+						<p:selectBooleanCheckbox id="replaceDateTime"
+							value="#{spielCodeParserBean.datumUhrzeitErsetzen}" />
+					</p:panelGrid>
+
+					<p:commandButton value="Importieren"
+						actionListener="#{spielCodeParserBean.importieren}" update="growl"
+						ajax="false" style="margin-top:10px; margin-left:10px" />
+				</p:panel>
+			</div>
+			<div class="error-table">
+				<p:outputPanel id="previewPanel" style="margin-top:12px;">
+					<h:panelGroup
+						rendered="#{not empty spielCodeParserBean.pdfPreviewUrl}">
+						<object data="#{spielCodeParserBean.pdfPreviewUrl}"
+							type="application/pdf" width="100%" height="700px">PDF-Vorschau
+							kann nicht angezeigt werden.</object>
+					</h:panelGroup>
+				</p:outputPanel>
+			</div>
+		</div>
+	</h:form>
 </h:body>
 </html>

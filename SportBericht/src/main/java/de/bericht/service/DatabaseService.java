@@ -1622,7 +1622,7 @@ public class DatabaseService {
 	}
 
 	public List<Map<String, String>> ladeSpielcodesRohdaten(String vereinnr) {
-		String sql = "SELECT t.liga, t.datum, t.zeit, t.heim, t.gast, s.spiel_code, s.pin "
+		String sql = "SELECT t.liga, s.mannschaft, t.datum, t.zeit, t.heim, t.gast, s.spiel_code, s.pin "
 				+ "FROM spielplan_tabelle t " + "LEFT JOIN spielcodes s ON s.unique_key = t.unique_key "
 				+ "WHERE t.vereinnr = ?";
 		List<Map<String, String>> rows = new ArrayList<>();
@@ -1633,6 +1633,7 @@ public class DatabaseService {
 					Map<String, String> row = new HashMap<>();
 					row.put("liga", rs.getString("liga"));
 					row.put("datum", rs.getString("datum"));
+					row.put("mannschaft", rs.getString("mannschaft"));
 					row.put("zeit", rs.getString("zeit"));
 					row.put("heim", rs.getString("heim"));
 					row.put("gast", rs.getString("gast"));
@@ -2810,19 +2811,25 @@ public class DatabaseService {
 		return 0;
 	}
 
-	public void insertSpielCode(String vereinnr, List<SpielCode> spiele) {
+	public void insertSpielCode(String vereinnr, List<SpielCode> spiele, boolean datumUhrzeitErsetzen) {
+
 		String insertSQL = """
 				INSERT INTO spielcodes (unique_key, liga, vereinnr, mannschaft, wochentag, datum, uhrzeit, heimmannschaft, gastmannschaft, spiel_code, pin)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 				ON DUPLICATE KEY UPDATE
-					liga = VALUES(liga),
-					vereinnr = VALUES(vereinnr),
-					mannschaft = VALUES(mannschaft),
-					heimmannschaft = VALUES(heimmannschaft),
-					gastmannschaft = VALUES(gastmannschaft),
-					spiel_code = VALUES(spiel_code),
-					pin = VALUES(pin)
+					liga = COALESCE(NULLIF(VALUES(liga), ''), liga),
+					vereinnr = COALESCE(NULLIF(VALUES(vereinnr), ''), vereinnr),
+					mannschaft = COALESCE(NULLIF(VALUES(mannschaft), ''), mannschaft),
+					wochentag = COALESCE(NULLIF(VALUES(wochentag), ''), wochentag),
+					datum = IF(?, COALESCE(NULLIF(VALUES(datum), ''), datum), datum),
+					uhrzeit = IF(?, COALESCE(NULLIF(VALUES(uhrzeit), ''), uhrzeit), uhrzeit),
+					heimmannschaft = COALESCE(NULLIF(VALUES(heimmannschaft), ''), heimmannschaft),
+					gastmannschaft = COALESCE(NULLIF(VALUES(gastmannschaft), ''), gastmannschaft),
+					spiel_code = COALESCE(NULLIF(VALUES(spiel_code), ''), spiel_code),
+					pin = COALESCE(NULLIF(VALUES(pin), ''), pin)
+
 				""";
+
 		try (Connection conn = openConnection();
 				PreparedStatement pstmt = conn.prepareStatement(insertSQL, Statement.RETURN_GENERATED_KEYS)) {
 			for (SpielCode spiel : spiele) {
@@ -2840,6 +2847,9 @@ public class DatabaseService {
 				pstmt.setString(9, spiel.getGastmannschaft());
 				pstmt.setString(10, spiel.getSpielCode());
 				pstmt.setString(11, spiel.getPin());
+				pstmt.setBoolean(12, datumUhrzeitErsetzen);
+				pstmt.setBoolean(13, datumUhrzeitErsetzen);
+
 				pstmt.addBatch();
 			}
 			pstmt.executeBatch();

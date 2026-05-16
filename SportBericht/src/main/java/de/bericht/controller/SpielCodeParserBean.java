@@ -39,7 +39,9 @@ public class SpielCodeParserBean implements Serializable {
 	private String typ;
 	private UploadedFile pdfDatei;
 	private byte[] pdfInhalt;
+	private String pdfDateiname;
 	private String pdfPreviewUrl;
+	private boolean datumUhrzeitErsetzen = true;
 	private boolean angemeldet;
 	private List<String> mannschaftOptionen = new ArrayList<>();
 	private List<String> ligaOptionen = new ArrayList<>();
@@ -92,11 +94,14 @@ public class SpielCodeParserBean implements Serializable {
 		ligaOptionen = new ArrayList<>(ligen);
 	}
 
-	public void vorbereiten() {
-		if (!validierePflichtfelder(false)) {
+	public void ladeVorschau() {
+		if (pdfDatei == null) {
+			FacesContext.getCurrentInstance().addMessage(null,
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "Hinweis", "Bitte PDF-Datei auswählen."));
 			return;
 		}
 		try (InputStream input = pdfDatei.getInputStream()) {
+			pdfDateiname = pdfDatei.getFileName();
 			pdfInhalt = input.readAllBytes();
 			pdfPreviewUrl = "data:application/pdf;base64," + java.util.Base64.getEncoder().encodeToString(pdfInhalt);
 		} catch (IOException e) {
@@ -111,11 +116,11 @@ public class SpielCodeParserBean implements Serializable {
 		}
 		if (pdfInhalt == null || pdfInhalt.length == 0) {
 			FacesContext.getCurrentInstance().addMessage(null,
-					new FacesMessage(FacesMessage.SEVERITY_WARN, "Hinweis", "Bitte zuerst die PDF vorbereiten."));
+					new FacesMessage(FacesMessage.SEVERITY_WARN, "Hinweis", "Bitte zuerst Vorschau laden."));
 			return;
 		}
 		try (PDDocument document = PDDocument.load(new ByteArrayInputStream(pdfInhalt))) {
-			new SpielCodeParser(vereinnr, mannschaft.trim(), liga.trim(), typ, document);
+			new SpielCodeParser(vereinnr, mannschaft.trim(), liga.trim(), typ, document, datumUhrzeitErsetzen);
 			ladeOptionen();
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Spielcodes wurden importiert."));
@@ -131,7 +136,7 @@ public class SpielCodeParserBean implements Serializable {
 					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Nicht autorisiert."));
 			return false;
 		}
-		if (pdfDatei == null || pdfDatei.getFileName() == null || pdfDatei.getFileName().isBlank()) {
+		if (pdfDatei == null && (pdfInhalt == null || pdfInhalt.length == 0)) {
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_WARN, "Hinweis", "Bitte PDF-Datei auswählen."));
 			return false;
@@ -211,15 +216,35 @@ public class SpielCodeParserBean implements Serializable {
 		this.pdfDatei = pdfDatei;
 	}
 
+	public String getPdfDateiname() {
+		return pdfDateiname;
+	}
+
 	public String getPdfPreviewUrl() {
 		return pdfPreviewUrl;
 	}
 
-	public List<String> getMannschaftOptionen() {
-		return mannschaftOptionen;
+	public boolean isDatumUhrzeitErsetzen() {
+		return datumUhrzeitErsetzen;
 	}
 
-	public List<String> getLigaOptionen() {
-		return ligaOptionen;
+	public void setDatumUhrzeitErsetzen(boolean datumUhrzeitErsetzen) {
+		this.datumUhrzeitErsetzen = datumUhrzeitErsetzen;
+	}
+
+	public String getBestimmenIcon() {
+		return ConfigManager.getConfigValue(vereinnr, "style.icon");
+	}
+
+	public String getVereinHomepage() {
+		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
+	}
+
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
 	}
 }

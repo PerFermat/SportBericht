@@ -16,10 +16,15 @@ public class SpielCodeParser {
 	}
 
 	public SpielCodeParser(String vereinnr, String mannschaft, String liga, String typ, PDDocument pdfDokument) {
+		this(vereinnr, mannschaft, liga, typ, pdfDokument, true);
+	}
+
+	public SpielCodeParser(String vereinnr, String mannschaft, String liga, String typ, PDDocument pdfDokument,
+			boolean datumUhrzeitErsetzen) {
 		try {
 			spiele = parseFromPDF(mannschaft, liga, typ, pdfDokument);
 			DatabaseService db = new DatabaseService();
-			db.insertSpielCode(vereinnr, spiele);
+			db.insertSpielCode(vereinnr, spiele, datumUhrzeitErsetzen);
 
 		} catch (Exception e) {
 			e.printStackTrace();
