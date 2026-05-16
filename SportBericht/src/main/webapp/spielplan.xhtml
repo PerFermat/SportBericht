@@ -115,7 +115,7 @@
 				<p:column headerText="Bericht" styleClass="col-bericht">
 					<div class="buttontab-container">
 						<!-- Button "Bericht" wird nur angezeigt, wenn in der Ergebnis-Spalte ein Wert steht -->
-						<p:commandButton value="Bericht" action="bericht.xhtml"	
+						<p:commandButton value="Bericht" action="bericht.xhtml"
 							ajax="false"
 							rendered="#{not empty spiel.ergebnis and not spielplanBean.hasFreigabe(spiel.ergebnisLink)}"
 							styleClass="myButton">
@@ -142,22 +142,32 @@
 							<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
 							<f:param name="frei" value="Nein" />
 						</p:commandButton>
-						<p:commandButton value="Aufstellung" action="aufstellung.xhtml"
+						<p:commandButton value="Spielinfo" type="button"
 							rendered="#{empty spiel.ergebnis}"
-							styleClass="myButtonLight">
-							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
-							<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
-							<f:param name="ruecksprung" value="spielplan.xhtml" />
-							<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
-							<f:param name="liga" value="#{spielplanBean.liga}" />
-						</p:commandButton>
-						<p:commandButton value="Spielcodes" action="zwischenablage.xhtml"
-							rendered="#{empty spiel.ergebnis}"
-							styleClass="myButtonLight">
-							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
-							<f:param name="ruecksprung" value="spielplan.xhtml" />
-							<f:param name="key" value="#{spiel.generateUniqueKey}" />
-						</p:commandButton>
+							onclick="PF('spielInfoDialog_#{spiel.generateUniqueKey}').show();"
+							styleClass="myButtonLight" />
+						<p:dialog widgetVar="spielInfoDialog_#{spiel.generateUniqueKey}"
+							header="Spiel-Info" modal="true" closable="true"
+							resizable="false" appendTo="@(body)">
+							<div class="buttontab-container">
+								<p:commandButton value="Aufstellung" action="aufstellung.xhtml"
+									styleClass="myButton">
+									<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+									<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
+									<f:param name="ruecksprung" value="spielplan.xhtml" />
+									<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
+									<f:param name="liga" value="#{spielplanBean.liga}" />
+								</p:commandButton>
+								<br />
+								<br />
+								<p:commandButton value="Spielcode" action="zwischenablage.xhtml"
+									styleClass="myButton">
+									<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+									<f:param name="ruecksprung" value="spielplan.xhtml" />
+									<f:param name="key" value="#{spiel.generateUniqueKey}" />
+								</p:commandButton>
+							</div>
+						</p:dialog>
 					</div>
 				</p:column>
 
@@ -238,7 +248,7 @@
 				<p:commandButton value="Impressum" action="impressum.xhtml">
 					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 					<f:param name="ruecksprung" value="spielplan.xhtml" />
-				</p:commandButton>			
+				</p:commandButton>
 				<br />
 				<p:commandButton value="Config ändern" action="config.xhtml">
 					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
@@ -250,16 +260,18 @@
 				<br />
 				<p:commandButton value="Abmelden"
 					action="#{spielplanBean.cookieLoeschenUndZumLogin}" ajax="false"
-					immediate="true" >						
-				</p:commandButton>				
+					immediate="true">
+				</p:commandButton>
 			</div>
 			<div class="button-container">
-				<p:commandButton value="Gesamtspielplan" action="gesamtspielplan.xhtml">
+				<p:commandButton value="Gesamtspielplan"
+					action="gesamtspielplan.xhtml">
 					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 					<f:param name="ruecksprung" value="spielplan.xhtml" />
 				</p:commandButton>
 				<br />
-				<p:commandButton value="Versendete Mails" action="versendeteMails.xhtml">
+				<p:commandButton value="Versendete Mails"
+					action="versendeteMails.xhtml">
 					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 					<f:param name="ruecksprung" value="spielplan.xhtml" />
 				</p:commandButton>
