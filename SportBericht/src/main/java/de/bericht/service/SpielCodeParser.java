@@ -15,14 +15,14 @@ public class SpielCodeParser {
 	public SpielCodeParser() {
 	}
 
-	public SpielCodeParser(String vereinnr, String mannschaft, String liga, String typ, PDDocument pdfDokument) {
-		this(vereinnr, mannschaft, liga, typ, pdfDokument, true);
+	public SpielCodeParser(String vereinnr, String mannschaft, String liga, PDDocument pdfDokument) {
+		this(vereinnr, mannschaft, liga, pdfDokument, true);
 	}
 
-	public SpielCodeParser(String vereinnr, String mannschaft, String liga, String typ, PDDocument pdfDokument,
+	public SpielCodeParser(String vereinnr, String mannschaft, String liga, PDDocument pdfDokument,
 			boolean datumUhrzeitErsetzen) {
 		try {
-			spiele = parseFromPDF(mannschaft, liga, typ, pdfDokument);
+			spiele = parseFromPDF(mannschaft, liga, pdfDokument);
 			DatabaseService db = new DatabaseService();
 			db.insertSpielCode(vereinnr, spiele, datumUhrzeitErsetzen);
 
@@ -34,8 +34,7 @@ public class SpielCodeParser {
 	// Regex-Muster für römische Zahlen (I bis X)
 	private static final Pattern ROMAN_PATTERN = Pattern.compile("^(I|II|III|IV|V|VI|VII|VIII|IX|X)$");
 
-	public List<SpielCode> parseFromPDF(String mannschaft, String liga, String art, PDDocument document)
-			throws Exception {
+	public List<SpielCode> parseFromPDF(String mannschaft, String liga, PDDocument document) throws Exception {
 		List<SpielCode> spiele = new ArrayList<>();
 
 		PDFTextStripper stripper;
@@ -130,7 +129,7 @@ public class SpielCodeParser {
 				}
 
 				// Erstelle das SpielCode-Objekt und füge es zur Liste hinzu
-				if ("Pin".equals(art)) {
+				if (spielCode.length() <= 4) {
 					spiele.add(new SpielCode(mannschaft, liga, wochentag, datum, uhrzeit, heimMannschaft,
 							gastMannschaft, "", spielCode));
 				} else {

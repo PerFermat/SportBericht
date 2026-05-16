@@ -36,7 +36,6 @@ public class SpielCodeParserBean implements Serializable {
 	private String passwort;
 	private String mannschaft;
 	private String liga;
-	private String typ;
 	private UploadedFile pdfDatei;
 	private byte[] pdfInhalt;
 	private String pdfDateiname;
@@ -95,7 +94,9 @@ public class SpielCodeParserBean implements Serializable {
 	}
 
 	public void ladeVorschau() {
-		if (pdfDatei == null) {
+		if (pdfInhalt != null && pdfDatei == null) {
+			return;
+		} else if (pdfDatei == null) {
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_WARN, "Hinweis", "Bitte PDF-Datei auswählen."));
 			return;
@@ -111,6 +112,7 @@ public class SpielCodeParserBean implements Serializable {
 	}
 
 	public void importieren() {
+		ladeVorschau();
 		if (!validierePflichtfelder(true)) {
 			return;
 		}
@@ -120,7 +122,7 @@ public class SpielCodeParserBean implements Serializable {
 			return;
 		}
 		try (PDDocument document = PDDocument.load(new ByteArrayInputStream(pdfInhalt))) {
-			new SpielCodeParser(vereinnr, mannschaft.trim(), liga.trim(), typ, document, datumUhrzeitErsetzen);
+			new SpielCodeParser(vereinnr, mannschaft.trim(), liga.trim(), document, datumUhrzeitErsetzen);
 			ladeOptionen();
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Spielcodes wurden importiert."));
@@ -146,11 +148,6 @@ public class SpielCodeParserBean implements Serializable {
 					new FacesMessage(FacesMessage.SEVERITY_WARN, "Hinweis", "Mannschaft und Liga sind Pflichtfelder."));
 			return false;
 		}
-		if (mitTyp && (typ == null || typ.isBlank())) {
-			FacesContext.getCurrentInstance().addMessage(null,
-					new FacesMessage(FacesMessage.SEVERITY_WARN, "Hinweis", "Typ ist ein Pflichtfeld."));
-			return false;
-		}
 		return true;
 	}
 
@@ -164,16 +161,12 @@ public class SpielCodeParserBean implements Serializable {
 
 	private List<String> filterOptionen(List<String> optionen, String query) {
 		if (query == null || query.isBlank()) {
-			return optionen;
+			return optionen.stream().sorted().toList();
 		}
+
 		String lower = query.toLowerCase();
-		List<String> result = new ArrayList<>();
-		for (String eintrag : optionen) {
-			if (eintrag.toLowerCase().contains(lower)) {
-				result.add(eintrag);
-			}
-		}
-		return result;
+
+		return optionen.stream().filter(eintrag -> eintrag.toLowerCase().contains(lower)).sorted().toList();
 	}
 
 	public String getVerein() {
@@ -198,14 +191,6 @@ public class SpielCodeParserBean implements Serializable {
 
 	public void setLiga(String liga) {
 		this.liga = liga;
-	}
-
-	public String getTyp() {
-		return typ;
-	}
-
-	public void setTyp(String typ) {
-		this.typ = typ;
 	}
 
 	public UploadedFile getPdfDatei() {

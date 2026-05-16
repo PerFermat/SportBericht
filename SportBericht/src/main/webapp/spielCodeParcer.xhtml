@@ -13,6 +13,11 @@
 		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{spielCodeParserBean.vereinnr}"
 		type="text/css" />
 	<h:outputStylesheet name="css/styles.css" />
+	<h:outputScript target="head">
+		if (window.history &amp;&amp; window.history.replaceState) {
+			window.history.replaceState(null, document.title, "#{request.contextPath}/");
+		}
+	</h:outputScript>
 </h:head>
 <h:body>
 	<div class="tabheader-area">
@@ -74,14 +79,6 @@
 						<p:autoComplete id="liga" value="#{spielCodeParserBean.liga}"
 							completeMethod="#{spielCodeParserBean.completeLiga}"
 							dropdown="true" forceSelection="false" />
-
-						<p:outputLabel for="typ" value="Typ" />
-						<p:selectOneMenu id="typ" value="#{spielCodeParserBean.typ}">
-							<f:selectItem itemLabel="Bitte wählen" itemValue=""
-								noSelectionOption="true" />
-							<f:selectItem itemLabel="Pin" itemValue="Pin" />
-							<f:selectItem itemLabel="Spielcode" itemValue="Spielcode" />
-						</p:selectOneMenu>
 
 						<p:outputLabel for="replaceDateTime"
 							value="Datum/Uhrzeit bei vorhandenem Spiel ersetzen" />

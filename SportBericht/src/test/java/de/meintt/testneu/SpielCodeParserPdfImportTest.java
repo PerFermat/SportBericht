@@ -24,7 +24,7 @@ class SpielCodeParserPdfImportTest {
 		assertFalse(!Files.exists(datei), "Angegebene PDF-Datei existiert nicht: " + datei);
 
 		try (PDDocument document = PDDocument.load(datei.toFile())) {
-			SpielCodeParser scp = new SpielCodeParser("13014", "Erwachsene1", "E BL", "Spielcode", document);
+			SpielCodeParser scp = new SpielCodeParser("13014", "Erwachsene1", "E BL", document);
 			List<SpielCode> result = scp.getSpiele();
 
 			System.out.println("=== Geparste SpielCode-Einträge aus: " + datei + " ===");
