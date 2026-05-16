@@ -10,9 +10,14 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import de.bericht.util.SpielCode;
 
 public class SpielCodeParser {
+	private List<SpielCode> spiele;
+
+	public SpielCodeParser() {
+	}
+
 	public SpielCodeParser(String vereinnr, String mannschaft, String liga, String typ, PDDocument pdfDokument) {
 		try {
-			List<SpielCode> spiele = parseFromPDF(mannschaft, liga, typ, pdfDokument);
+			spiele = parseFromPDF(mannschaft, liga, typ, pdfDokument);
 			DatabaseService db = new DatabaseService();
 			db.insertSpielCode(vereinnr, spiele);
 
@@ -130,6 +135,10 @@ public class SpielCodeParser {
 				}
 			}
 		}
+		return spiele;
+	}
+
+	public List<SpielCode> getSpiele() {
 		return spiele;
 	}
 }
