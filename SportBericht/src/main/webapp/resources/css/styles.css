@@ -1730,4 +1730,12 @@ max-width
 	margin-bottom: 8px;
 }
 
+.hilfeIconWrapper {
+    margin-left: 0.5rem;
+}
 
+.hilfeIcon {
+    color: #4caf50;
+    cursor: help;
+    font-size: 1rem;
+}

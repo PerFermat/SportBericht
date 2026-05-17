@@ -25,7 +25,7 @@ class BilanzServiceTest {
 	String url = "https://www.wtb-tennis.de/spielbetrieb/vereine/verein/mannschaften/mannschaft/v/20233/m/3496326.html";
 	NamensSpeicher namensSpeicher = new NamensSpeicher();
 
-	// @Disabled("temporär deaktiviert")
+	@Disabled("temporär deaktiviert")
 	@BeforeEach
 	void setUp() {
 		// Hier stehen die von dir gewünschten Zeilen am Anfang

@@ -1,8 +1,10 @@
 package de.bericht.service;
 
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 
+import de.bericht.util.AdressEintrag;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import jakarta.activation.DataHandler;
@@ -66,7 +68,39 @@ public class EmailService {
 			ccEmpfaenger = ccteile[1].trim();
 		} else if (toteile.length > 1) {
 			recipients = toteile[1].trim();
+		} else {
+			String privateEmail = ermittlePrivateEmailAusAdressliste(vereinnr, name);
+			if (privateEmail != null && !privateEmail.isBlank()) {
+				ccEmpfaenger = privateEmail;
+			}
 		}
+
+	}
+
+	private String ermittlePrivateEmailAusAdressliste(String vereinnr, String name) {
+		if (vereinnr == null || vereinnr.isBlank() || name == null || name.isBlank()) {
+			return null;
+		}
+		String userNameNormalisiert = normalizeName(name);
+		List<AdressEintrag> adressEintraege = ds.ladeAdressEintraege(vereinnr);
+		for (AdressEintrag eintrag : adressEintraege) {
+			String adresseName = normalizeName((eintrag.getVorname() == null ? "" : eintrag.getVorname()) + " "
+					+ (eintrag.getName() == null ? "" : eintrag.getName()));
+			if (userNameNormalisiert.equalsIgnoreCase(adresseName)) {
+				String emailPrivat = eintrag.getEmailPrivat();
+				if (emailPrivat != null && !emailPrivat.isBlank()) {
+					return emailPrivat.trim();
+				}
+			}
+		}
+		return null;
+	}
+
+	private String normalizeName(String value) {
+		if (value == null) {
+			return "";
+		}
+		return value.trim().replaceAll("\\s+", " ");
 	}
 
 	/**

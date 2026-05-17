@@ -276,6 +276,29 @@ public class IndexBean implements Serializable {
 		return namen.stream().filter(name -> name != null && name.toLowerCase().contains(q)).toList();
 	}
 
+	public boolean isNameFormatGueltig() {
+		if (selectedName == null) {
+			return false;
+		}
+		String normalized = normalizeName(selectedName);
+		return normalized.matches("[^\\s]+\\s+[^\\s]+.*");
+	}
+
+	public boolean isNameInAdressliste() {
+		if (!isNameFormatGueltig() || namen == null || namen.isEmpty()) {
+			return false;
+		}
+		String selected = normalizeName(selectedName);
+		return namen.stream().filter(Objects::nonNull).map(this::normalizeName).anyMatch(selected::equalsIgnoreCase);
+	}
+
+	private String normalizeName(String value) {
+		if (value == null) {
+			return "";
+		}
+		return value.trim().replaceAll("\\s+", " ");
+	}
+
 	private void speichereCookie(String passwortArt) {
 		try {
 			String value = db.erstelleZufaelligenLoginToken();

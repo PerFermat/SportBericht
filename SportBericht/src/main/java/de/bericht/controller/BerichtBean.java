@@ -1069,13 +1069,11 @@ public class BerichtBean implements Serializable {
 	}
 
 	public String zuHistorien() {
-		System.out.println("1");
 		speichern();
 		return "historien.xhtml?faces-redirect=true";
 	}
 
 	public String getZuHistorien() {
-		System.out.println("2");
 		speichern();
 		return "historien.xhtml?faces-redirect=true";
 	}

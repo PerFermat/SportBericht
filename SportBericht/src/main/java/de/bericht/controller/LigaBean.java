@@ -59,7 +59,6 @@ public class LigaBean implements Serializable {
 		LoginCookieDaten logging = new LoginCookieDaten();
 		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = logging.getVereinnr();
-			System.out.println(vereinnr);
 		}
 	}
 

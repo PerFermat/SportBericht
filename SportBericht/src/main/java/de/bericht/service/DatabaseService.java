@@ -2862,7 +2862,6 @@ public class DatabaseService {
 		String keyInput = String.join("|", vereinnr, sanitize(spiel.getHeimmannschaft()),
 				sanitize(spiel.getGastmannschaft()), sanitize(spiel.getLiga()));
 
-		System.out.println(keyInput);
 		try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");
 			byte[] hash = digest.digest(keyInput.getBytes(StandardCharsets.UTF_8));

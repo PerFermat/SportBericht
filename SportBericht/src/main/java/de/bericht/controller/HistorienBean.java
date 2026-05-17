@@ -69,26 +69,19 @@ public class HistorienBean implements Serializable {
 		this.ligaSpiel = params.get("ligaSpiel");
 		this.uuid = params.get("uuid");
 		this.gruppeUrl = params.get("gruppeUrl");
-		System.out.println("Hallo" + ergebnisLink);
 		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
-		System.out.println("Halloa" + ergebnisLink);
 		logEntries = dbService.getLogEntries(vereinnr, ergebnisLink);
-		System.out.println("Hallob" + ergebnisLink);
 		// Spielergebnisse abrufen
 		if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 			this.spielErgebnis = dbService.loadSpielstatistik(vereinnr, ergebnisLink);
 		}
-		System.out.println("Hallo1");
 		ladeAktuellenBericht();
-		System.out.println("Hallo2");
 		ladeHistorienTimestamps();
-		System.out.println("Hallo3");
 
 		if (historienTimestamps != null && !historienTimestamps.isEmpty()) {
 			ausgewaehlterTimestamp = historienTimestamps.get(0); // Neuester
 			ladeHistorischenBericht(ausgewaehlterTimestamp);
 		}
-		System.out.println("Hallo4");
 	}
 
 	public void ladeAktuellenBericht() {

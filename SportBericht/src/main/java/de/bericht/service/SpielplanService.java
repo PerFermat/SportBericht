@@ -120,7 +120,6 @@ public class SpielplanService implements SpielplanProvider {
 					&& heimIndex < cols.size() && gastIndex < cols.size() && punkteIndex < cols.size()) {
 
 				String datumRaw = cols.get(datumIndex).text();
-				System.out.println("Datum raw" + datumRaw);
 				if (datumRaw == null || datumRaw.isBlank()) {
 					datumRaw = letztesDatum;
 				}

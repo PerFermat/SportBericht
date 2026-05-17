@@ -73,8 +73,6 @@ public class SpielCodeParser {
 				String wochentag = "";
 				String datum = "";
 				if (tokens[token].length() > 4) {
-					System.out.println("Token " + tokens[token]);
-					System.out.println("Token " + tokens[token + 1]);
 					wochentag = tokens[token].substring(1, 3);
 					datum = tokens[token++].substring(4);
 				} else {
@@ -94,7 +92,6 @@ public class SpielCodeParser {
 				// eine römische Zahl ist.
 				int heimTokenCount = 2;
 				if (tokens.length > token + heimTokenCount && tokens[token + heimTokenCount].startsWith("(")) {
-					System.out.println("( gefunden)" + tokens[token + heimTokenCount]);
 					heimTokenCount++;
 				}
 				if (tokens.length > token + heimTokenCount
