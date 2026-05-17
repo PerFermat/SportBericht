@@ -469,6 +469,12 @@ body {
 	border-radius: 1px;
 }
 
+.myButtonLight button {
+    background: var(--button-bglight-color) !important;
+    border-color: var(--button-bglight-color) !important;
+    color: white !important;
+}
+
 .ui-button:hover, .custom-file-input:hover, .myButtonfrei:hover,
 	.myButton:hover, .myButtonLight:hover {
 	background-color: var(--button-hover-bg-color) !important;
@@ -476,10 +482,15 @@ body {
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Schatteneffekt */
 }
 
+
 .myButtonLight:hover {
 	background-color: var(--button-hover-bglight-color) !important;
 }
-
+.myButtonLight:hover button {
+    background: var(--button-hover-bg-color) !important;
+    border-color: var(--button-hover-bg-color) !important;
+    color: white !important;
+}
 /* Maus-Down-Effekt (während der Verarbeitung) */
 .ui-button:active, .custom-file-input:active, .myButtonfrei:active, .myButtonLight:active,
 	.myButton:active {

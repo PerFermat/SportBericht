@@ -177,4 +177,12 @@ public class LigaBean implements Serializable {
 		return "index.xhtml?faces-redirect=true";
 	}
 
+	public boolean isFtp() {
+		String url = ConfigManager.getSftpUrl(vereinnr);
+		if (url == null || url.isEmpty()) {
+			return false;
+		}
+		return true;
+	}
+
 }

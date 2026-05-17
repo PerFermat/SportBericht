@@ -87,7 +87,7 @@
 		<!-- Neue feste Zeile über der Tabelle -->
 
 		<h:form id="configForm">
-			<div class="button4-container">
+			<div class="button-container">
 				<p:commandButton value="Config ändern" action="config.xhtml">
 					<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
 				</p:commandButton>
@@ -106,6 +106,35 @@
 					<f:param name="ruecksprung" value="liga.xhtml" />
 				</p:commandButton>
 			</div>
+			<div class="button-container">
+				<p:commandButton value="Gesamtspielplan"
+					action="gesamtspielplan.xhtml">
+					<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
+					<f:param name="ruecksprung" value="liga.xhtml" />
+				</p:commandButton>
+				<br />
+				<p:commandButton value="Versendete Mails"
+					action="versendeteMails.xhtml">
+					<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
+					<f:param name="ruecksprung" value="liga.xhtml" />
+				</p:commandButton>
+				<br />
+				<p:commandButton value="FTP-PDFs" action="ftp.xhtml"  rendered="#{ligaBean.ftp}" >
+					<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
+					<f:param name="ruecksprung" value="liga.xhtml" />
+				</p:commandButton>
+				<br />
+				<p:commandButton value="Bilder" action="bilder.xhtml">
+					<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
+					<f:param name="ruecksprung" value="liga.xhtml" />
+				</p:commandButton>
+				<br />
+				<p:commandButton value="Abteilungsliste" action="adressliste.xhtml">
+					<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
+					<f:param name="ruecksprung" value="liga.xhtml" />
+				</p:commandButton>
+				<br />
+			</div>			
 		</h:form>
 	</div>
 </h:body>

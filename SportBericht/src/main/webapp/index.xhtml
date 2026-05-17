@@ -47,7 +47,7 @@
 			<div style="margin-bottom: 14px;">
 				<p:outputLabel for="namen" value="Name" />
 				<p:inputText id="namen" value="#{indexBean.selectedName}"
-					placeholder="Name eingeben" style="width:100%;">
+					placeholder="Name eingeben" required="true"  style="width:100%;">
 					<p:ajax event="keyup" process="@this" />
 				</p:inputText>
 			</div>
@@ -55,7 +55,7 @@
 			<div style="margin-bottom: 14px;">
 				<p:outputLabel for="passwort" value="Passwort" />
 				<p:password id="passwort" value="#{indexBean.passwort}"
-					required="true" feedback="false" style="width:100%;" />
+					required="true" feedback="false" style="width:100%;"  />
 			</div>
 
 			<div style="margin-bottom: 14px; margin-top: 10px; width: 100%; display: flex; align-items: center;">

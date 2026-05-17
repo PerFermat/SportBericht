@@ -142,32 +142,28 @@
 							<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
 							<f:param name="frei" value="Nein" />
 						</p:commandButton>
-						<p:commandButton value="Spielinfo" type="button"
-							rendered="#{empty spiel.ergebnis}"
-							onclick="PF('spielInfoDialog_#{spiel.generateUniqueKey}').show();"
-							styleClass="myButtonLight" />
-						<p:dialog widgetVar="spielInfoDialog_#{spiel.generateUniqueKey}"
-							header="Spiel-Info" modal="true" closable="true"
-							resizable="false" appendTo="@(body)">
-							<div class="buttontab-container">
-								<p:commandButton value="Aufstellung" action="aufstellung.xhtml"
-									styleClass="myButton">
-									<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
-									<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
-									<f:param name="ruecksprung" value="spielplan.xhtml" />
-									<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
-									<f:param name="liga" value="#{spielplanBean.liga}" />
-								</p:commandButton>
-								<br />
-								<br />
-								<p:commandButton value="Spielcode" action="zwischenablage.xhtml"
-									styleClass="myButton">
-									<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
-									<f:param name="ruecksprung" value="spielplan.xhtml" />
-									<f:param name="key" value="#{spiel.generateUniqueKey}" />
-								</p:commandButton>
-							</div>
-						</p:dialog>
+						<p:menuButton value="Spielinfo"
+							rendered="#{empty spiel.ergebnis}" styleClass="myButtonLight">
+
+							<p:menuitem value="Aufstellung" action="aufstellung.xhtml"
+								icon="pi pi-users">
+
+								<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+								<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
+								<f:param name="ruecksprung" value="spielplan.xhtml" />
+								<f:param name="gruppeUrl" value="#{spielplanBean.gruppeUrl}" />
+								<f:param name="liga" value="#{spielplanBean.liga}" />
+							</p:menuitem>
+
+							<p:menuitem value="Spielcode" action="zwischenablage.xhtml"
+								icon="pi pi-copy">
+
+								<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+								<f:param name="ruecksprung" value="spielplan.xhtml" />
+								<f:param name="key" value="#{spiel.generateUniqueKey}" />
+							</p:menuitem>
+
+						</p:menuButton>
 					</div>
 				</p:column>
 
@@ -276,7 +272,8 @@
 					<f:param name="ruecksprung" value="spielplan.xhtml" />
 				</p:commandButton>
 				<br />
-				<p:commandButton value="FTP-PDFs" action="ftp.xhtml">
+				<p:commandButton value="FTP-PDFs" action="ftp.xhtml"
+					rendered="#{spielplanBean.ftp}">
 					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 					<f:param name="ruecksprung" value="spielplan.xhtml" />
 				</p:commandButton>
