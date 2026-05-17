@@ -23,10 +23,26 @@
 </style>
 </h:head>
 <h:body>
+	<div class="tabheader-area">
+		<h:outputLink value="#{bestaetigungBean.vereinHomepage}" target="_blank">
+			<img src="#{bestaetigungBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
+		<h:form>
+			<p:commandButton type="button" value="Handbuch"
+				onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
+		</h:form>
+		<h2>Rückmeldung zur Jugendbetreuung</h2>
+		<h:form>
+			<p:commandButton
+				value="Zurück"
+				action="#{bestaetigungBean.ruecksprung}"	immediate="true"
+				rendered="#{not empty bestaetigungBean.ruecksprung}">
+				<f:param name="vereinnr" value="#{bestaetigungBean.vereinnr}" />
+			</p:commandButton>
+		</h:form>
+	</div>
 	<div class="bestaetigung-container">
-		<div class="tabheader-area">
-			<h2>Rückmeldung zur Betreuung</h2>
-		</div>
 		<h:form id="bestaetigungForm" styleClass="controls"
 			rendered="#{not empty bestaetigungBean.eintrag}">
 			<h:panelGroup rendered="#{bestaetigungBean.mailGesendetHinweis}">

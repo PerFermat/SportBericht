@@ -155,14 +155,20 @@
 								<f:param name="liga" value="#{spielplanBean.liga}" />
 							</p:menuitem>
 
-							<p:menuitem value="Spielcode" action="zwischenablage.xhtml"
+							<p:menuitem value="Spielcode/Pin" action="zwischenablage.xhtml"
 								icon="pi pi-copy">
 
 								<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 								<f:param name="ruecksprung" value="spielplan.xhtml" />
 								<f:param name="key" value="#{spiel.generateUniqueKey}" />
 							</p:menuitem>
-
+							<p:menuitem value="Jugendbetreuung"
+								action="bestaetigung.xhtml" icon="pi pi-check"
+								rendered="#{spielplanBean.isBetreuungBestaetigungSichtbar(spiel)}">
+								<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+								<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
+								<f:param name="ruecksprung" value="spielplan.xhtml" />
+							</p:menuitem>
 						</p:menuButton>
 					</div>
 				</p:column>

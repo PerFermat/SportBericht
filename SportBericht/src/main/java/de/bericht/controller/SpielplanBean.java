@@ -8,6 +8,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import de.bericht.provider.SpielplanFactory;
@@ -288,6 +289,37 @@ public class SpielplanBean implements Serializable {
 
 		return false;
 
+	}
+
+	public boolean isBetreuungBestaetigungSichtbar(Spiel spiel) {
+		if (spiel == null) {
+			return false;
+		}
+
+		String uniqueKey = spiel.getGenerateUniqueKey();
+		Map<String, Object> betreuerStatus = db.ladeBetreuerStatus(uniqueKey);
+		if (betreuerStatus == null || betreuerStatus.isEmpty()) {
+			return false;
+		}
+
+		String betreuer = (String) betreuerStatus.get("betreuer");
+		if (betreuer == null || betreuer.isBlank()) {
+			return false;
+		}
+
+		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);
+		if (adminPasswort != null && adminPasswort.equals(passwort)) {
+			return true;
+		}
+
+		String userPasswort = ConfigManager.getUserPasswort(vereinnr);
+		if (userPasswort == null || !userPasswort.equals(passwort)) {
+			return false;
+		}
+
+		LoginCookieDaten loginCookieDaten = new LoginCookieDaten();
+		String anmeldename = loginCookieDaten.getName();
+		return anmeldename != null && anmeldename.equalsIgnoreCase(betreuer.trim());
 	}
 
 	public boolean isTennis() {

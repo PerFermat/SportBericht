@@ -12,8 +12,10 @@ import de.bericht.service.EmailService;
 import de.bericht.service.GesamtspielplanEintrag;
 import de.bericht.util.ConfigManager;
 import jakarta.annotation.PostConstruct;
+import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Named("bestaetigungBean")
 @ViewScoped
@@ -39,15 +41,18 @@ public class BestaetigungBean implements Serializable {
 	private List<GesamtspielplanEintrag> tauschSpiele = new ArrayList<>();
 	private boolean mailGesendetHinweis;
 	private String liga;
+	private String ruecksprung;
 
 	@PostConstruct
 	public void init() {
-		uuid = jakarta.faces.context.FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap()
-				.get("UUID");
+		FacesContext context = FacesContext.getCurrentInstance();
+		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
+		uuid = request.getParameter("uuid");
 		if (uuid == null || uuid.isBlank()) {
 			uuid = jakarta.faces.context.FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap()
 					.get("uuid");
 		}
+		ruecksprung = request.getParameter("ruecksprung");
 		ladeEintrag();
 	}
 
@@ -634,4 +639,23 @@ public class BestaetigungBean implements Serializable {
 
 	}
 
+	public String getRuecksprung() {
+		return ruecksprung;
+	}
+
+	public void setRuecksprung(String ruecksprung) {
+		this.ruecksprung = ruecksprung;
+	}
+
+	public String ruecksprung() {
+		return ruecksprung;
+	}
+
+	public String getBestimmenIcon() {
+		return ConfigManager.getConfigValue(vereinnr, "style.icon");
+	}
+
+	public String getVereinHomepage() {
+		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
+	}
 }
