@@ -2,6 +2,7 @@ package de.bericht.service;
 
 public class SpielcodeEintrag {
 
+	private String mannschaft;
 	private String liga;
 	private String datum;
 	private String zeit;
@@ -10,6 +11,14 @@ public class SpielcodeEintrag {
 	private String spielCode;
 	private String pin;
 	private boolean spielcodeGefunden;
+
+	public String getMannschaft() {
+		return mannschaft;
+	}
+
+	public void setMannschaft(String mannschaft) {
+		this.mannschaft = mannschaft;
+	}
 
 	public String getLiga() {
 		return liga;

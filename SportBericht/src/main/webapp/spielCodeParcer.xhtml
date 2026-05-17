@@ -13,11 +13,7 @@
 		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{spielCodeParserBean.vereinnr}"
 		type="text/css" />
 	<h:outputStylesheet name="css/styles.css" />
-	<h:outputScript target="head">
-		if (window.history &amp;&amp; window.history.replaceState) {
-			window.history.replaceState(null, document.title, "#{request.contextPath}/");
-		}
-	</h:outputScript>
+	<h:outputScript library="js" name="script.js" target="head" />		
 </h:head>
 <h:body>
 	<div class="tabheader-area">
@@ -73,22 +69,50 @@
 						<p:autoComplete id="mannschaft"
 							value="#{spielCodeParserBean.mannschaft}"
 							completeMethod="#{spielCodeParserBean.completeMannschaft}"
-							dropdown="true" forceSelection="false" />
+							dropdown="true" forceSelection="false">
+							<p:ajax event="itemSelect" update="spielcodeTabelle" />
+							<p:ajax event="change" update="spielcodeTabelle" />
+						</p:autoComplete>
 
 						<p:outputLabel for="liga" value="Liga" />
 						<p:autoComplete id="liga" value="#{spielCodeParserBean.liga}"
 							completeMethod="#{spielCodeParserBean.completeLiga}"
-							dropdown="true" forceSelection="false" />
-
+							dropdown="true" forceSelection="false">
+							<p:ajax event="itemSelect" update="spielcodeTabelle" />
+							<p:ajax event="change" update="spielcodeTabelle" />
+						</p:autoComplete>
 						<p:outputLabel for="replaceDateTime"
 							value="Datum/Uhrzeit bei vorhandenem Spiel ersetzen" />
 						<p:selectBooleanCheckbox id="replaceDateTime"
 							value="#{spielCodeParserBean.datumUhrzeitErsetzen}" />
 					</p:panelGrid>
-
 					<p:commandButton value="Importieren"
 						actionListener="#{spielCodeParserBean.importieren}" update="growl"
 						ajax="false" style="margin-top:10px; margin-left:10px" />
+					<br />						
+					<br />						
+					<p:dataTable id="spielcodeTabelle" value="#{spielCodeParserBean.gefilterteSpielcodeEintraege}"
+						var="eintrag" style="margin-top:16px" emptyMessage="Keine Spielcodes/Pins vorhanden.">
+						<p:column headerText="Datum">
+							<h:outputText value="#{eintrag.datum}" />
+						</p:column>
+						<p:column headerText="Zeit">
+							<h:outputText value="#{eintrag.zeit}" />
+						</p:column>
+						<p:column headerText="Heim">
+							<h:outputText value="#{eintrag.heim}" />
+						</p:column>
+						<p:column headerText="Gast">
+							<h:outputText value="#{eintrag.gast}" />
+						</p:column>
+						<p:column headerText="SpielCode">
+							<h:outputText value="#{eintrag.spielCode}" />
+						</p:column>
+						<p:column headerText="PIN">
+							<h:outputText value="#{eintrag.pin}" />
+						</p:column>
+					</p:dataTable>
+
 				</p:panel>
 			</div>
 			<div class="error-table">

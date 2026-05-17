@@ -4,17 +4,23 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.primefaces.model.file.UploadedFile;
 
 import de.bericht.service.DatabaseService;
 import de.bericht.service.SpielCodeParser;
+import de.bericht.service.SpielcodeEintrag;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.LoginCookieDaten;
@@ -30,7 +36,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public class SpielCodeParserBean implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-
+	private static final DateTimeFormatter DATUM_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 	private final DatabaseService databaseService = new DatabaseService();
 	private String vereinnr;
 	private String passwort;
@@ -44,6 +50,7 @@ public class SpielCodeParserBean implements Serializable {
 	private boolean angemeldet;
 	private List<String> mannschaftOptionen = new ArrayList<>();
 	private List<String> ligaOptionen = new ArrayList<>();
+	private List<SpielcodeEintrag> spielcodeEintraege = new ArrayList<>();
 
 	@PostConstruct
 	public void init() {
@@ -78,6 +85,7 @@ public class SpielCodeParserBean implements Serializable {
 	private void ladeOptionen() {
 		Set<String> mannschaften = new LinkedHashSet<>();
 		Set<String> ligen = new LinkedHashSet<>();
+		List<SpielcodeEintrag> eintraege = new ArrayList<>();
 		List<Map<String, String>> rows = databaseService.ladeSpielcodesRohdaten(vereinnr);
 		for (Map<String, String> row : rows) {
 			String rowMannschaft = row.get("mannschaft");
@@ -88,7 +96,25 @@ public class SpielCodeParserBean implements Serializable {
 			if (rowLiga != null && !rowLiga.isBlank()) {
 				ligen.add(rowLiga);
 			}
+
+			String spielCode = row.get("spiel_code");
+			String pin = row.get("pin");
+			if ((spielCode == null || spielCode.isBlank()) && (pin == null || pin.isBlank())) {
+				continue;
+			}
+			SpielcodeEintrag eintrag = new SpielcodeEintrag();
+			eintrag.setMannschaft(rowMannschaft);
+			eintrag.setLiga(rowLiga);
+			eintrag.setDatum(row.get("datum"));
+			eintrag.setZeit(row.get("zeit"));
+			eintrag.setHeim(row.get("heim"));
+			eintrag.setGast(row.get("gast"));
+			eintrag.setSpielCode(spielCode);
+			eintrag.setPin(pin);
+			eintraege.add(eintrag);
+
 		}
+		spielcodeEintraege = eintraege;
 		mannschaftOptionen = new ArrayList<>(mannschaften);
 		ligaOptionen = new ArrayList<>(ligen);
 	}
@@ -167,6 +193,38 @@ public class SpielCodeParserBean implements Serializable {
 		String lower = query.toLowerCase();
 
 		return optionen.stream().filter(eintrag -> eintrag.toLowerCase().contains(lower)).sorted().toList();
+	}
+
+	public List<SpielcodeEintrag> getGefilterteSpielcodeEintraege() {
+		return spielcodeEintraege.stream().filter(this::passtMannschaft).filter(this::passtLiga)
+				.sorted(Comparator.comparing(this::parseDatum, Comparator.nullsLast(LocalDate::compareTo))
+						.thenComparing(SpielcodeEintrag::getZeit, Comparator.nullsLast(String::compareTo)))
+				.collect(Collectors.toList());
+	}
+
+	private LocalDate parseDatum(SpielcodeEintrag eintrag) {
+		if (eintrag == null || eintrag.getDatum() == null || eintrag.getDatum().isBlank()) {
+			return null;
+		}
+		try {
+			return LocalDate.parse(eintrag.getDatum(), DATUM_FORMAT);
+		} catch (DateTimeParseException e) {
+			return null;
+		}
+	}
+
+	private boolean passtMannschaft(SpielcodeEintrag eintrag) {
+		if (mannschaft == null || mannschaft.isBlank()) {
+			return true;
+		}
+		return mannschaft.trim().equalsIgnoreCase(String.valueOf(eintrag.getMannschaft()).trim());
+	}
+
+	private boolean passtLiga(SpielcodeEintrag eintrag) {
+		if (liga == null || liga.isBlank()) {
+			return true;
+		}
+		return liga.trim().equalsIgnoreCase(String.valueOf(eintrag.getLiga()).trim());
 	}
 
 	public String getVerein() {

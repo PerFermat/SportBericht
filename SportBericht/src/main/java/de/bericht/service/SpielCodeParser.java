@@ -2,28 +2,40 @@ package de.bericht.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
+import de.bericht.util.ConfigManager;
 import de.bericht.util.SpielCode;
 
 public class SpielCodeParser {
+
 	private List<SpielCode> spiele;
+
+	/*
+	 * Zusätzliche feste Marker zwischen Halle und Mannschaft
+	 */
+	private static final Set<String> ZUSATZ_MARKER = Set.of("t", "v", "t/v");
 
 	public SpielCodeParser() {
 	}
 
 	public SpielCodeParser(String vereinnr, String mannschaft, String liga, PDDocument pdfDokument) {
+
 		this(vereinnr, mannschaft, liga, pdfDokument, true);
 	}
 
 	public SpielCodeParser(String vereinnr, String mannschaft, String liga, PDDocument pdfDokument,
 			boolean datumUhrzeitErsetzen) {
+
 		try {
-			spiele = parseFromPDF(mannschaft, liga, pdfDokument);
+
+			spiele = parseFromPDF(vereinnr, mannschaft, liga, pdfDokument);
+
 			DatabaseService db = new DatabaseService();
+
 			db.insertSpielCode(vereinnr, spiele, datumUhrzeitErsetzen);
 
 		} catch (Exception e) {
@@ -31,112 +43,198 @@ public class SpielCodeParser {
 		}
 	}
 
-	// Regex-Muster für römische Zahlen (I bis X)
-	private static final Pattern ROMAN_PATTERN = Pattern.compile("^(I|II|III|IV|V|VI|VII|VIII|IX|X)$");
+	public List<SpielCode> parseFromPDF(String vereinnr, String mannschaft, String liga, PDDocument document)
+			throws Exception {
 
-	public List<SpielCode> parseFromPDF(String mannschaft, String liga, PDDocument document) throws Exception {
 		List<SpielCode> spiele = new ArrayList<>();
 
-		PDFTextStripper stripper;
-		stripper = new PDFTextStripper();
+		/*
+		 * Verein dynamisch laden
+		 */
+		String verein = ConfigManager.getSpielplanVerein(vereinnr).trim();
+
+		String[] vereinTokens = verein.split("\\s+");
+
+		PDFTextStripper stripper = new PDFTextStripper();
+
 		String text = stripper.getText(document);
 
-		// Zeilenweise verarbeiten
 		String[] lines = text.split("\\r?\\n");
 
-		// Überspringe Header-Zeilen (z.B. die Zeile mit "Datum, Uhrzeit ..." und
-		// weitere Meta-Daten)
-		boolean headerDone = false;
 		for (String line : lines) {
-			// Prüfen, ob die Zeile mit einem Wochentag beginnt
-			if (line.startsWith("Sa.") || line.startsWith("So.") || line.startsWith("Mo.") || line.startsWith("Di.")
-					|| line.startsWith("Mi.") || line.startsWith("Do.") || line.startsWith("Fr.")) {
-				headerDone = true;
-			}
-			if (!headerDone) {
-				continue; // überspringe Zeilen vor dem ersten Datensatz
-			}
-			// Verarbeite nur Zeilen, die mit einem Wochentag beginnen
-			if (line.startsWith("Sa.") || line.startsWith("So.") || line.startsWith("Mo.") || line.startsWith("Di.")
-					|| line.startsWith("Mi.") || line.startsWith("Do.") || line.startsWith("Fr.")) {
 
-				// Zeile in Tokens aufteilen; als Trenner werden ein oder mehrere Leerzeichen
-				// verwendet
-				String[] tokens = line.trim().split("\\s+");
-				if (tokens.length < 8) {
-					// Falls nicht genügend Tokens vorhanden sind, Zeile überspringen
-					continue;
-				}
+			line = line.trim();
 
-				// Die ersten vier Tokens: Wochentag, Datum, Uhrzeit, Spielanzahl (z.B. "(1)")
+			if (line.isEmpty()) {
+				continue;
+			}
+
+			// Nur Spielzeilen verarbeiten
+			if (!(line.startsWith("Sa.") || line.startsWith("So.") || line.startsWith("Mo.") || line.startsWith("Di.")
+					|| line.startsWith("Mi.") || line.startsWith("Do.") || line.startsWith("Fr."))) {
+
+				continue;
+			}
+
+			String[] tokens = line.split("\\s+");
+
+			if (tokens.length < 7) {
+				continue;
+			}
+
+			try {
+
 				int token = 0;
-				String wochentag = "";
-				String datum = "";
-				if (tokens[token].length() > 4) {
-					wochentag = tokens[token].substring(1, 3);
-					datum = tokens[token++].substring(4);
-				} else {
-					wochentag = tokens[token++];
-					datum = tokens[token++];
-				}
+
+				String wochentag = tokens[token++];
+
+				String datum = tokens[token++];
+
 				String uhrzeit = tokens[token++];
+
+				// Halle überspringen
 				token++;
-				if (token < tokens.length
-						&& ("t".equals(tokens[token]) || "t/v".equals(tokens[token]) || "v".equals(tokens[token]))) {
+
+				// optionale Marker überspringen
+				while (token < tokens.length && ZUSATZ_MARKER.contains(tokens[token])) {
+
 					token++;
 				}
 
-				// Bestimme, ob die Heimmannschaft aus 2 oder 3 Tokens besteht:
-				// Es wird geprüft, ob der Token nach den ersten beiden Namensbestandteilen
-				// (also tokens[6])
-				// eine römische Zahl ist.
-				int heimTokenCount = 2;
-				if (tokens.length > token + heimTokenCount && tokens[token + heimTokenCount].startsWith("(")) {
-					heimTokenCount++;
-				}
-				if (tokens.length > token + heimTokenCount
-						&& ROMAN_PATTERN.matcher(tokens[token + heimTokenCount]).matches()) {
-					heimTokenCount++;
-				}
-				// Heimteam: tokens[4] bis tokens[4 + heimTokenCount - 1]
-				StringBuilder heimMannschaftBuilder = new StringBuilder();
-				for (int i = 0; i < heimTokenCount && token < tokens.length; i++) {
-					heimMannschaftBuilder.append(tokens[token++]).append(" ");
-				}
-				String heimMannschaft = heimMannschaftBuilder.toString().trim();
-
-				// Bestimme den Startindex für die Gastmannschaft
-				int guestStart = token;
-				int guestTokenCount = tokens.length - guestStart - 1;
-				// Gastteam: von tokens[guestStart] bis tokens[guestStart + guestTokenCount - 1]
-				StringBuilder gastMannschaftBuilder = new StringBuilder();
-				for (int i = guestStart; i < guestStart + guestTokenCount; i++) {
-					gastMannschaftBuilder.append(tokens[i]).append(" ");
-				}
-				String gastMannschaft = gastMannschaftBuilder.toString().trim();
-
-				// Das letzte Token ist der Spiel-Code
+				// letztes Token = Spielcode
 				String spielCode = tokens[tokens.length - 1];
 
-				if (liga.startsWith("E") && heimMannschaft.equals("TSGV Hattenhofen")) {
+				/*
+				 * Suche Verein innerhalb der Tokens
+				 */
+				int vereinIndex = -1;
+
+				for (int i = token; i <= tokens.length - vereinTokens.length - 1; i++) {
+
+					boolean match = true;
+
+					for (int j = 0; j < vereinTokens.length; j++) {
+
+						if (!tokens[i + j].equals(vereinTokens[j])) {
+
+							match = false;
+							break;
+						}
+					}
+
+					if (match) {
+						vereinIndex = i;
+						break;
+					}
+				}
+
+				/*
+				 * Verein nicht gefunden
+				 */
+				if (vereinIndex == -1) {
+					continue;
+				}
+
+				String heimMannschaft = "";
+				String gastMannschaft = "";
+
+				/*
+				 * Vereinsname inkl. optionaler römischer Zahl
+				 */
+				String vereinMitZusatz = verein;
+
+				int vereinEndIndex = vereinIndex + vereinTokens.length - 1;
+
+				if (vereinEndIndex + 1 < tokens.length && isRoman(tokens[vereinEndIndex + 1])) {
+
+					vereinMitZusatz += " " + tokens[vereinEndIndex + 1];
+
+					vereinEndIndex++;
+				}
+
+				/*
+				 * Verein früh -> Heim Verein spät -> Gast
+				 */
+				if (vereinIndex <= token + 1) {
+
+					/*
+					 * Heimspiel
+					 */
+					heimMannschaft = vereinMitZusatz;
+
+					StringBuilder gast = new StringBuilder();
+
+					for (int i = vereinEndIndex + 1; i < tokens.length - 1; i++) {
+
+						gast.append(tokens[i]).append(" ");
+					}
+
+					gastMannschaft = gast.toString().trim();
+
+				} else {
+
+					/*
+					 * Auswärtsspiel
+					 */
+					gastMannschaft = vereinMitZusatz;
+
+					StringBuilder heim = new StringBuilder();
+
+					for (int i = token; i < vereinIndex; i++) {
+
+						heim.append(tokens[i]).append(" ");
+					}
+
+					heimMannschaft = heim.toString().trim();
+				}
+
+				heimMannschaft = cleanTeamName(heimMannschaft);
+
+				gastMannschaft = cleanTeamName(gastMannschaft);
+
+				if (liga.startsWith("E") && heimMannschaft.equals(verein)) {
 					heimMannschaft += " I";
 				}
-				if (liga.startsWith("E") && gastMannschaft.equals("TSGV Hattenhofen")) {
+				if (liga.startsWith("E") && gastMannschaft.equals(verein)) {
 					gastMannschaft += " I";
 				}
 
-				// Erstelle das SpielCode-Objekt und füge es zur Liste hinzu
 				if (spielCode.length() <= 4) {
+
 					spiele.add(new SpielCode(mannschaft, liga, wochentag, datum, uhrzeit, heimMannschaft,
 							gastMannschaft, "", spielCode));
+
 				} else {
+
 					spiele.add(new SpielCode(mannschaft, liga, wochentag, datum, uhrzeit, heimMannschaft,
 							gastMannschaft, spielCode, ""));
-
 				}
+
+			} catch (Exception e) {
+
+				System.out.println("Fehler beim Parsen der Zeile:");
+
+				System.out.println(line);
+
+				e.printStackTrace();
 			}
 		}
+
 		return spiele;
+	}
+
+	private boolean isRoman(String text) {
+
+		return text.matches("I|II|III|IV|V|VI|VII|VIII|IX|X");
+	}
+
+	private String cleanTeamName(String team) {
+
+		if (team == null) {
+			return "";
+		}
+
+		return team.replaceAll("\\s+", " ").trim();
 	}
 
 	public List<SpielCode> getSpiele() {

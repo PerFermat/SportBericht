@@ -8,11 +8,17 @@
 <h:head>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0"
 		charset="UTF-8" />
-	<title>Konfiguration</title>
+	<base href="/" />
+	<title>SpielCode Parser – #{spielCodeParserBean.verein}</title>
 	<link rel="stylesheet"
-		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{configBean.vereinnr}"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{spielCodeParserBean.vereinnr}"
 		type="text/css" />
-	<h:outputStylesheet library="css" name="styles.css" />
+	<h:outputStylesheet name="css/styles.css" />
+	<h:outputScript target="head">
+		if (window.history &amp;&amp; window.history.replaceState) {
+			window.history.replaceState(null, document.title, "#{request.contextPath}/");
+		}
+	</h:outputScript>
 	<h:outputScript library="js" name="script.js" target="head" />
 </h:head>
 

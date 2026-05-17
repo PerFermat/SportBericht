@@ -297,3 +297,18 @@ function kopiereHtmlBericht() {
 	}
 }
 
+(function setupGlobalScrollReset() {
+	if (window.__scrollResetInitialized) {
+		return;
+	}
+	window.__scrollResetInitialized = true;
+	if ('scrollRestoration' in window.history) {
+		window.history.scrollRestoration = 'manual';
+	}
+	const scrollTop = function() {
+		window.scrollTo(0, 0);
+	};
+	window.addEventListener('load', scrollTop);
+	window.addEventListener('pageshow', scrollTop);
+})();
+
