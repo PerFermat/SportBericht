@@ -13,19 +13,11 @@ import de.bericht.util.WebCache;
 public class AufstellungService {
 	List<Aufstellung> aufstellungen = new ArrayList<>();
 
-	public AufstellungService(String uebergabe) {
+	public AufstellungService(String liga, String uebergabe) {
 		// HTML-Dokument von der URL laden
 
-		String[] teile = uebergabe.split(";");
-
-		String mannschaft = teile[0];
-		String url = null;
-		if (teile.length > 1) {
-			url = teile[1];
-		} else {
-			System.out.println("Falsche übergabe");
-			return;
-		}
+		String mannschaft = liga;
+		String url = uebergabe;
 		Document doc = null;
 		try {
 			doc = WebCache.getPage(url);
