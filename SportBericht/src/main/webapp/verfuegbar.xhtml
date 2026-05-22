@@ -14,6 +14,11 @@
 		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{verfuegbarBean.vereinnr}"
 		type="text/css" />
 	<h:outputStylesheet name="css/styles.css" />
+	<h:outputScript target="head">
+		if (window.history &amp;&amp; window.history.replaceState) {
+			window.history.replaceState(null, document.title, "#{request.contextPath}/");
+		}		
+	</h:outputScript>
 	<style>
 .verfuegbar-container {
 	width: 100%;

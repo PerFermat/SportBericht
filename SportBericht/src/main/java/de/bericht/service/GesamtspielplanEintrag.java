@@ -238,7 +238,8 @@ public class GesamtspielplanEintrag implements Serializable {
 	}
 
 	public boolean isZukunftsspiel() {
-		return zukunftsspiel;
+		return true;
+		// return zukunftsspiel;
 	}
 
 	public void setZukunftsspiel(boolean zukunftsspiel) {

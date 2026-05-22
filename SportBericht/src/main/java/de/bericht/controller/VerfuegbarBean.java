@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -21,6 +20,7 @@ import de.bericht.service.AufstellungSpieler;
 import de.bericht.service.DatabaseService;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
+import de.bericht.util.LoginCookieDaten;
 import de.bericht.util.VerfuegbarSpiel;
 import de.bericht.util.VerfuegbarkeitEintrag;
 import jakarta.annotation.PostConstruct;
@@ -47,7 +47,6 @@ public class VerfuegbarBean implements Serializable {
 	private String spielTeam;
 	private String selectedSpieler;
 	private String ruecksprung;
-	private String halbserie;
 	private final List<VerfuegbarSpiel> spiele = new ArrayList<>();
 	private final List<String> spielerNamen = new ArrayList<>();
 	private final Map<String, String> verfuegbarkeitBySpiel = new HashMap<>();
@@ -61,6 +60,7 @@ public class VerfuegbarBean implements Serializable {
 		FacesContext context = FacesContext.getCurrentInstance();
 		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 
+		selectedSpieler = request.getParameter("name");
 		vereinnr = BerichtHelper.bestimmenVereinnr(request.getParameter("v"));
 		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = request.getParameter("vereinnr");
@@ -69,22 +69,34 @@ public class VerfuegbarBean implements Serializable {
 		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = request.getParameter("vereinnr");
 		}
+		lesenCookieParameter();
 
 		spielerFilterKey = request.getParameter("sp");
 		ruecksprung = request.getParameter("ruecksprung");
-		halbserie = request.getParameter("runde");
 		liga = normalize(request.getParameter("liga"));
 		spielTeam = normalize(request.getParameter("team"));
 		if (vereinnr == null || vereinnr.isBlank() || spielerFilterKey == null || spielerFilterKey.isBlank()) {
 			return;
 		}
-
 		ladeSpaltenKontext();
 		ladeSpiele();
 		ladeSpieler();
 		ladeAlleEintraege();
-		selectedSpieler = request.getParameter("name");
 		onSpielerAenderung();
+	}
+
+	private void lesenCookieParameter() {
+		LoginCookieDaten logging = new LoginCookieDaten();
+		if (vereinnr == null || vereinnr.isBlank()) {
+			vereinnr = logging.getVereinnr();
+			if (selectedSpieler == null) {
+				selectedSpieler = logging.getName();
+			}
+		} else {
+			if (selectedSpieler == null && vereinnr.equals(logging.getVereinnr())) {
+				selectedSpieler = logging.getName();
+			}
+		}
 	}
 
 	private void ladeSpaltenKontext() {
@@ -125,9 +137,7 @@ public class VerfuegbarBean implements Serializable {
 			spiel.setLiga(rowLiga);
 			spiel.setHeim(heim);
 			spiel.setGast(gast);
-			if (passtZurHalbserie(spiel.getDatum())) {
-				spiele.add(spiel);
-			}
+			spiele.add(spiel);
 		}
 
 		spiele.sort(Comparator.comparing((VerfuegbarSpiel s) -> parseDatumSafe(s.getDatum()))
@@ -153,14 +163,29 @@ public class VerfuegbarBean implements Serializable {
 			spieler.setName(row.get("name"));
 			spieler.setA(row.get("a"));
 			spieler.setStatus(row.get("status"));
+
 			if (isSpielberechtigt(spieler)) {
 				spielerListe.add(spieler);
 			}
 		}
 
 		spielerListe.sort(Comparator.comparing(AufstellungSpieler::getRang, this::compareRang));
+
 		spielerNamen.addAll(spielerListe.stream().map(AufstellungSpieler::getName)
 				.filter(name -> name != null && !name.isBlank()).distinct().collect(Collectors.toList()));
+
+		// selectedSpieler von "Vorname Nachname" auf "Nachname, Vorname" umstellen
+		if (selectedSpieler != null && !selectedSpieler.isBlank()) {
+
+			String gefundenerName = spielerListe.stream().map(AufstellungSpieler::getName)
+					.filter(name -> name != null && name.contains(",")).filter(name -> {
+						String[] teile = name.split(",", 2);
+						String umformatiert = teile[1].trim() + " " + teile[0].trim();
+						return umformatiert.equals(selectedSpieler);
+					}).findFirst().orElse(null);
+
+			selectedSpieler = gefundenerName != null ? gefundenerName : "";
+		}
 	}
 
 	private boolean isSpielberechtigt(AufstellungSpieler spieler) {
@@ -571,22 +596,6 @@ public class VerfuegbarBean implements Serializable {
 
 	public void setRuecksprung(String ruecksprung) {
 		this.ruecksprung = ruecksprung;
-	}
-
-	private boolean passtZurHalbserie(String datum) {
-		if (halbserie == null) {
-			return true;
-		}
-
-		LocalDate d = parseDatumSafe(datum);
-		if (d.getYear() == 2999) {
-			return true;
-		}
-		boolean vorrunde = Month.JULY.getValue() <= d.getMonthValue();
-		if ("Rückrunde".equalsIgnoreCase(halbserie)) {
-			return !vorrunde;
-		}
-		return vorrunde;
 	}
 
 	public boolean isTennis() {

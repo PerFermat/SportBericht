@@ -61,6 +61,7 @@ public class DatabaseService {
 	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 	private static final String LOGIN_TOKEN_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	private static final int LOGIN_TOKEN_LENGTH = 30;
+	private static final String AUFSTELLUNG_TABLE = "aufstellung";
 
 	static {
 
@@ -2872,6 +2873,46 @@ public class DatabaseService {
 			return hex.toString();
 		} catch (NoSuchAlgorithmException e) {
 			throw new IllegalStateException("SHA-256 ist nicht verfügbar", e);
+		}
+	}
+
+	public void saveAufstellungen(String vereinnr, List<Aufstellung> aufstellungen) {
+		if (aufstellungen == null || aufstellungen.isEmpty()) {
+			return;
+		}
+
+		String insertSql = "INSERT INTO " + AUFSTELLUNG_TABLE
+				+ " (vereinnr, mannschaft, rang, qttr, name, a, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+		String deleteSql = "DELETE FROM " + AUFSTELLUNG_TABLE + " WHERE vereinnr = ?";
+
+		try (Connection conn = DriverManager.getConnection(
+				config.getDatabaseUrl() + "?useUnicode=true&characterEncoding=UTF-8", config.getDatabaseUser(),
+				config.getDatabasePasswort())) {
+
+			// Bestehende Daten löschen
+			try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+				deleteStmt.setString(1, vereinnr);
+				deleteStmt.executeUpdate();
+			}
+
+			try (PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
+				for (Aufstellung aufstellung : aufstellungen) {
+					pstmt.setString(1, vereinnr);
+					pstmt.setString(2, aufstellung.getMannschaft());
+					pstmt.setString(3, aufstellung.getRang());
+					pstmt.setString(4, aufstellung.getQttr());
+					pstmt.setString(5, aufstellung.getName());
+					pstmt.setString(6, aufstellung.getA());
+					pstmt.setString(7, aufstellung.getStatus());
+					pstmt.addBatch();
+				}
+
+				pstmt.executeBatch();
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 	}
 }

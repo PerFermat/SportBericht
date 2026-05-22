@@ -13,6 +13,11 @@
 	<link rel="stylesheet"
 		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{gesamtspielplanBean.vereinnr}"
 		type="text/css" />
+	<h:outputScript target="head">
+		if (window.history &amp;&amp; window.history.replaceState) {
+			window.history.replaceState(null, document.title, "#{request.contextPath}/");
+		}		
+	</h:outputScript>		
 	<h:outputStylesheet name="css/styles.css" />
 </h:head>
 
