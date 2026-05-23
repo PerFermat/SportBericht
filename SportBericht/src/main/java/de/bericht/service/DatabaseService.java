@@ -2876,24 +2876,27 @@ public class DatabaseService {
 		}
 	}
 
-	public void saveAufstellungen(String vereinnr, List<Aufstellung> aufstellungen) {
-		if (aufstellungen == null || aufstellungen.isEmpty()) {
+	public void saveAufstellungenFuerLiga(String vereinnr, String liga, List<Aufstellung> aufstellungen) {
+		if (vereinnr == null || vereinnr.isBlank() || liga == null || liga.isBlank()) {
 			return;
 		}
 
 		String insertSql = "INSERT INTO " + AUFSTELLUNG_TABLE
 				+ " (vereinnr, mannschaft, rang, qttr, name, a, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-		String deleteSql = "DELETE FROM " + AUFSTELLUNG_TABLE + " WHERE vereinnr = ?";
+		String deleteSql = "DELETE FROM " + AUFSTELLUNG_TABLE + " WHERE vereinnr = ? AND mannschaft = ?";
 
 		try (Connection conn = DriverManager.getConnection(
 				config.getDatabaseUrl() + "?useUnicode=true&characterEncoding=UTF-8", config.getDatabaseUser(),
 				config.getDatabasePasswort())) {
 
-			// Bestehende Daten löschen
 			try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
 				deleteStmt.setString(1, vereinnr);
+				deleteStmt.setString(2, liga);
 				deleteStmt.executeUpdate();
+			}
+
+			if (aufstellungen == null || aufstellungen.isEmpty()) {
+				return;
 			}
 
 			try (PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
@@ -2907,10 +2910,8 @@ public class DatabaseService {
 					pstmt.setString(7, aufstellung.getStatus());
 					pstmt.addBatch();
 				}
-
 				pstmt.executeBatch();
 			}
-
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

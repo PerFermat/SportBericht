@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -47,6 +48,7 @@ public class VerfuegbarBean implements Serializable {
 	private String spielTeam;
 	private String selectedSpieler;
 	private String ruecksprung;
+	private String halbserie;
 	private final List<VerfuegbarSpiel> spiele = new ArrayList<>();
 	private final List<String> spielerNamen = new ArrayList<>();
 	private final Map<String, String> verfuegbarkeitBySpiel = new HashMap<>();
@@ -73,6 +75,7 @@ public class VerfuegbarBean implements Serializable {
 
 		spielerFilterKey = request.getParameter("sp");
 		ruecksprung = request.getParameter("ruecksprung");
+		halbserie = request.getParameter("runde");
 		liga = normalize(request.getParameter("liga"));
 		spielTeam = normalize(request.getParameter("team"));
 		if (vereinnr == null || vereinnr.isBlank() || spielerFilterKey == null || spielerFilterKey.isBlank()) {
@@ -137,7 +140,9 @@ public class VerfuegbarBean implements Serializable {
 			spiel.setLiga(rowLiga);
 			spiel.setHeim(heim);
 			spiel.setGast(gast);
-			spiele.add(spiel);
+			if (passtZurHalbserie(spiel.getDatum())) {
+				spiele.add(spiel);
+			}
 		}
 
 		spiele.sort(Comparator.comparing((VerfuegbarSpiel s) -> parseDatumSafe(s.getDatum()))
@@ -596,6 +601,22 @@ public class VerfuegbarBean implements Serializable {
 
 	public void setRuecksprung(String ruecksprung) {
 		this.ruecksprung = ruecksprung;
+	}
+
+	private boolean passtZurHalbserie(String datum) {
+		if (halbserie == null) {
+			return true;
+		}
+
+		LocalDate d = parseDatumSafe(datum);
+		if (d.getYear() == 2999) {
+			return true;
+		}
+		boolean vorrunde = Month.JULY.getValue() <= d.getMonthValue();
+		if ("Rückrunde".equalsIgnoreCase(halbserie)) {
+			return !vorrunde;
+		}
+		return vorrunde;
 	}
 
 	public boolean isTennis() {

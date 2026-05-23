@@ -14,6 +14,11 @@
 		type="text/css" />
 	<h:outputStylesheet name="css/styles.css" />
 	<h:outputScript library="js" name="script.js" target="head" />		
+		<h:outputScript target="head">
+		if (window.history &amp;&amp; window.history.replaceState) {
+			window.history.replaceState(null, document.title, "#{request.contextPath}/");
+		}
+	</h:outputScript>
 </h:head>
 <h:body>
 	<div class="tabheader-area">
@@ -44,9 +49,8 @@
 			<div class="text-input">
 				<p:growl id="growl" showDetail="true" />
 				<p:panel header="Import aus PDF">
-					<p:panelGrid columns="2" layout="grid" styleClass="ui-fluid">
-						<p:outputLabel for="pdfUpload" value="PDF-Datei" />
-
+					<p:panelGrid columns="2" layout="grid" styleClass="ui-fluid" columnClasses="ui-g-3,ui-g-9">
+						<p:outputLabel for="pdfUpload" value="PDF-Datei" style="font-size:0.85rem;" />
 						<h:panelGroup id="pdf" layout="block"
 							style="display:flex; align-items:center; width:100%;">
 
@@ -61,12 +65,11 @@
 							</div>
 
 						</h:panelGroup>
-						<p:outputLabel for="dateiname" value="Ausgewählte Datei" />
-						<h:outputText id="dateiname"
+						<p:outputLabel for="dateiname" value="Ausgewählte Datei" style="font-size:0.85rem;" />						<h:outputText id="dateiname"
 							value="#{spielCodeParserBean.pdfDateiname}" />
 
-						<p:outputLabel for="mannschaft" value="Mannschaft" />
-						<p:autoComplete id="mannschaft"
+						<p:outputLabel for="mannschaft" value="Mannschaft" style="font-size:0.85rem;" />
+						<p:autoComplete id="mannschaft" style="width:100%;"
 							value="#{spielCodeParserBean.mannschaft}"
 							completeMethod="#{spielCodeParserBean.completeMannschaft}"
 							dropdown="true" forceSelection="false">
@@ -74,16 +77,14 @@
 							<p:ajax event="change" update="spielcodeTabelle" />
 						</p:autoComplete>
 
-						<p:outputLabel for="liga" value="Liga" />
-						<p:autoComplete id="liga" value="#{spielCodeParserBean.liga}"
-							completeMethod="#{spielCodeParserBean.completeLiga}"
+					<p:outputLabel for="liga" value="Liga" style="font-size:0.85rem;" />
+						<p:autoComplete id="liga" value="#{spielCodeParserBean.liga}" style="width:100%;"							completeMethod="#{spielCodeParserBean.completeLiga}"
 							dropdown="true" forceSelection="false">
 							<p:ajax event="itemSelect" update="spielcodeTabelle" />
 							<p:ajax event="change" update="spielcodeTabelle" />
 						</p:autoComplete>
 						<p:outputLabel for="replaceDateTime"
-							value="Datum/Uhrzeit bei vorhandenem Spiel ersetzen" />
-						<p:selectBooleanCheckbox id="replaceDateTime"
+							value="Datum/Uhrzeit bei vorhandenem Spiel ersetzen" style="font-size:0.85rem;" />						<p:selectBooleanCheckbox id="replaceDateTime"
 							value="#{spielCodeParserBean.datumUhrzeitErsetzen}" />
 					</p:panelGrid>
 					<p:commandButton value="Importieren"

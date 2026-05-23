@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"
+		charset="UTF-8" />
+	<base href="/" />
+	<title>Aufstellung importieren –
+		#{aufstellungImportBean.verein}</title>
+	<link rel="stylesheet"
+		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{aufstellungImportBean.vereinnr}"
+		type="text/css" />
+	<h:outputStylesheet name="css/styles.css" />
+	<h:outputScript target="head">
+		if (window.history &amp;&amp; window.history.replaceState) {
+			window.history.replaceState(null, document.title, "#{request.contextPath}/");
+		}
+	</h:outputScript>
+	<h:outputScript library="js" name="script.js" target="head" />
+</h:head>
+<h:body>
+	<div class="tabheader-area">
+		<h:outputLink value="#{aufstellungImportBean.vereinHomepage}"
+			target="_blank">
+			<img src="#{aufstellungImportBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
+		<h2>Aufstellung importieren – #{aufstellungImportBean.verein}</h2>
+		<h:form>
+			<p:commandButton value="Zurück" action="liga.xhtml" immediate="true"
+				rendered="#{aufstellungImportBean.tennis}">
+				<f:param name="vereinnr" value="#{aufstellungImportBean.vereinnr}" />
+			</p:commandButton>
+			<p:commandButton value="Zurück" action="spielplan.xhtml"
+				immediate="true" rendered="#{aufstellungImportBean.tischtennis}">
+				<f:param name="vereinnr" value="#{aufstellungImportBean.vereinnr}" />
+			</p:commandButton>
+		</h:form>
+	</div>
+
+	<h:form>
+		<div class="responsive-container">
+			<div class="text-input">
+				<p:growl id="growl" showDetail="true" />
+				<p:panel header="Import aus Click-TT URL">
+					<p:panelGrid columns="2" layout="grid" styleClass="ui-fluid"
+						columnClasses="ui-g-3,ui-g-9">
+						<p:outputLabel for="liga" value="Liga" style="font-size:0.85rem;" />
+						<p:selectOneMenu id="liga" value="#{aufstellungImportBean.liga}"
+							style="width:100%;">
+							<f:selectItem itemLabel="Bitte wählen" itemValue=""
+								noSelectionOption="true" />
+							<f:selectItems value="#{aufstellungImportBean.ligaOptionen}" />
+							<p:ajax event="change" update="aufstellungTabelle" />
+						</p:selectOneMenu>
+
+						<p:outputLabel for="url" value="URL" style="font-size:0.85rem;" />
+						<p:inputText id="url" value="#{aufstellungImportBean.url}"
+							style="width:100%;">
+							<p:ajax event="keyup" update="previewPanel" />
+							<p:ajax event="change" update="previewPanel" />
+						</p:inputText>
+					</p:panelGrid>
+
+					<p:commandButton value="Importieren"
+						actionListener="#{aufstellungImportBean.importieren}"
+						update="growl aufstellungTabelle" ajax="false"
+						style="margin-top:10px; margin-left:10px" />
+					<br />
+					<br />
+					<p:dataTable id="aufstellungTabelle"
+						value="#{aufstellungImportBean.gefilterteAufstellungen}"
+						var="eintrag" style="margin-top:16px"
+						emptyMessage="Keine Aufstellungen vorhanden.">
+						<p:column headerText="Mannschaft">
+							<h:outputText value="#{eintrag.mannschaft}" />
+						</p:column>
+						<p:column headerText="Rang">
+							<h:outputText value="#{eintrag.rang}" />
+						</p:column>
+						<p:column headerText="QTTR">
+							<h:outputText value="#{eintrag.qttr}" />
+						</p:column>
+						<p:column headerText="Name">
+							<h:outputText value="#{eintrag.name}" />
+						</p:column>
+						<p:column headerText="A">
+							<h:outputText value="#{eintrag.a}" />
+						</p:column>
+						<p:column headerText="Status">
+							<h:outputText value="#{eintrag.status}" />
+						</p:column>
+					</p:dataTable>
+				</p:panel>
+			</div>
+
+			<div class="error-table">
+				<p:outputPanel id="previewPanel" style="margin-top:12px;">
+					<h:panelGroup
+						rendered="#{not empty aufstellungImportBean.previewUrl}">
+						<iframe src="#{aufstellungImportBean.previewUrl}" width="100%"
+							height="700px" title="MyTischtennis Vorschau" />
+					</h:panelGroup>
+				</p:outputPanel>
+			</div>
+		</div>
+	</h:form>
+</h:body>
+</html>

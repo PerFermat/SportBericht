@@ -203,6 +203,12 @@
 					<f:param name="vereinnr" value="#{configBean.vereinnr}" />
 					<f:param name="p" value="#{configBean.passwort}" />
 				</p:commandButton>
+				
+				<p:commandButton value="Importieren Aufstellung" action="aufstellungImport.xhtml"
+					immediate="true" rendered="#{configBean.tischtennis}">
+					<f:param name="vereinnr" value="#{configBean.vereinnr}" />
+					<f:param name="p" value="#{configBean.passwort}" />
+				</p:commandButton>
 			</div>
 
 		</p:panel>
