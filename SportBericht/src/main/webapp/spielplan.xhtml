@@ -169,6 +169,12 @@
 								<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
 								<f:param name="ruecksprung" value="spielplan.xhtml" />
 							</p:menuitem>
+							<p:menuitem value="Verfügbarkeit"
+								action="verfuegbar.xhtml" icon="pi pi-thumbs-up" >
+								<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
+								<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
+								<f:param name="ruecksprung" value="spielplan.xhtml" />
+							</p:menuitem>
 						</p:menuButton>
 					</div>
 				</p:column>

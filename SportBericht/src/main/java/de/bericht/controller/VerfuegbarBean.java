@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -15,10 +14,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import de.bericht.service.AufstellungSpieler;
 import de.bericht.service.DatabaseService;
+import de.bericht.service.GesamtspielplanConfigRunde;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.LoginCookieDaten;
@@ -38,6 +41,8 @@ public class VerfuegbarBean implements Serializable {
 	private static final DateTimeFormatter DATUM_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 	private static final List<String> VERFUEGBARKEIT_OPTIONEN = List.of("Ja", "Ja (aber noch nicht sicher)",
 			"Nein (aber noch nicht sicher)", "Nein", "Ja (im Notfall)");
+	private static final Pattern ROMAN_SUFFIX_PATTERN = Pattern.compile("\\s+(X|IX|IV|V?I{0,3})$");
+	private static final Pattern LIGA_PREFIX_PATTERN = Pattern.compile("^([^\\s]+)(?:\\s+(\\d+))?.*");
 
 	private final DatabaseService databaseService = new DatabaseService();
 
@@ -78,6 +83,7 @@ public class VerfuegbarBean implements Serializable {
 		halbserie = request.getParameter("runde");
 		liga = normalize(request.getParameter("liga"));
 		spielTeam = normalize(request.getParameter("team"));
+		bestimmeParameterAusUniqueKey(normalize(request.getParameter("uuid")));
 		if (vereinnr == null || vereinnr.isBlank() || spielerFilterKey == null || spielerFilterKey.isBlank()) {
 			return;
 		}
@@ -152,6 +158,115 @@ public class VerfuegbarBean implements Serializable {
 		}
 	}
 
+	private void bestimmeParameterAusUniqueKey(String uniqueKey) {
+		if (istLeer(uniqueKey) || (!istLeer(liga) && !istLeer(spielTeam) && !istLeer(spielerFilterKey))) {
+			return;
+		}
+		Map<String, String> spiel = databaseService.ladeSpielplanRowByUniqueKey(vereinnr, uniqueKey);
+		if (spiel == null || spiel.isEmpty()) {
+			return;
+		}
+		String gefundeneLiga = normalize(spiel.get("liga"));
+		String heim = normalize(spiel.get("heim"));
+		String gast = normalize(spiel.get("gast"));
+		String team = bestimmeSpielTeam(heim, gast);
+		LocalDate datum = parseDatumSafe(spiel.get("datum"));
+		if (istLeer(liga)) {
+			liga = gefundeneLiga;
+		}
+		if (istLeer(spielTeam)) {
+			spielTeam = team;
+		}
+		if (istLeer(spielerFilterKey)) {
+			spielerFilterKey = baueSpielerFilterKey(gefundeneLiga, team);
+		}
+		if (istLeer(halbserie) && datum.getYear() != 2999) {
+			halbserie = bestimmeRundenNameZumDatum(datum);
+		}
+	}
+
+	private String bestimmeSpielTeam(String heim, String gast) {
+		boolean heimHattenhofen = enthaeltHattenhofen(heim);
+		boolean gastHattenhofen = enthaeltHattenhofen(gast);
+		if (heimHattenhofen && gastHattenhofen) {
+			return ThreadLocalRandom.current().nextBoolean() ? heim : gast;
+		}
+		if (heimHattenhofen) {
+			return heim;
+		}
+		if (gastHattenhofen) {
+			return gast;
+		}
+		return heim != null ? heim : gast;
+	}
+
+	private boolean enthaeltHattenhofen(String team) {
+		return team != null && team.contains("TSGV Hattenhofen");
+	}
+
+	private String baueSpielerFilterKey(String ligaWert, String team) {
+		String ligaAnfang = extrahiereLigaAnfang(ligaWert);
+		int mannschaftszahl = extrahiereMannschaftszahl(team);
+		if (istLeer(ligaAnfang)) {
+			return null;
+		}
+		return ligaAnfang + "-Mannschaft-" + mannschaftszahl;
+	}
+
+	private String extrahiereLigaAnfang(String ligaWert) {
+		if (istLeer(ligaWert)) {
+			return null;
+		}
+		Matcher matcher = LIGA_PREFIX_PATTERN.matcher(ligaWert.trim());
+		if (!matcher.matches()) {
+			return ligaWert.trim();
+		}
+		String ersterTeil = matcher.group(1);
+		String zahl = matcher.group(2);
+		return zahl == null ? ersterTeil : ersterTeil + " " + zahl;
+	}
+
+	private int extrahiereMannschaftszahl(String team) {
+		if (istLeer(team)) {
+			return 1;
+		}
+		Matcher matcher = ROMAN_SUFFIX_PATTERN.matcher(team.trim());
+		if (!matcher.find()) {
+			return 1;
+		}
+		return roemischNachArabisch(matcher.group(1));
+	}
+
+	private int roemischNachArabisch(String roemisch) {
+		return switch (roemisch.toUpperCase()) {
+		case "I" -> 1;
+		case "II" -> 2;
+		case "III" -> 3;
+		case "IV" -> 4;
+		case "V" -> 5;
+		case "VI" -> 6;
+		case "VII" -> 7;
+		case "VIII" -> 8;
+		case "IX" -> 9;
+		case "X" -> 10;
+		default -> 1;
+		};
+	}
+
+	private String bestimmeRundenNameZumDatum(LocalDate datum) {
+		for (GesamtspielplanConfigRunde runde : databaseService.ladeGesamtspielplanConfigRunden(vereinnr)) {
+			LocalDate von = runde.getDatumVon();
+			LocalDate bis = runde.getDatumBis();
+			if (von == null || bis == null) {
+				continue;
+			}
+			if (!datum.isBefore(von) && !datum.isAfter(bis)) {
+				return normalize(runde.getName());
+			}
+		}
+		return null;
+	}
+
 	private void ladeSpieler() {
 		spielerNamen.clear();
 		if (liga == null || liga.isBlank() || mannschaft == null || mannschaft.isBlank()) {
@@ -180,14 +295,11 @@ public class VerfuegbarBean implements Serializable {
 				.filter(name -> name != null && !name.isBlank()).distinct().collect(Collectors.toList()));
 
 		// selectedSpieler von "Vorname Nachname" auf "Nachname, Vorname" umstellen
+		// selectedSpieler prüfen
 		if (selectedSpieler != null && !selectedSpieler.isBlank()) {
 
 			String gefundenerName = spielerListe.stream().map(AufstellungSpieler::getName)
-					.filter(name -> name != null && name.contains(",")).filter(name -> {
-						String[] teile = name.split(",", 2);
-						String umformatiert = teile[1].trim() + " " + teile[0].trim();
-						return umformatiert.equals(selectedSpieler);
-					}).findFirst().orElse(null);
+					.filter(name -> name != null && name.equals(selectedSpieler)).findFirst().orElse(null);
 
 			selectedSpieler = gefundenerName != null ? gefundenerName : "";
 		}
@@ -608,15 +720,23 @@ public class VerfuegbarBean implements Serializable {
 			return true;
 		}
 
-		LocalDate d = parseDatumSafe(datum);
-		if (d.getYear() == 2999) {
+		LocalDate spielDatum = parseDatumSafe(datum);
+		if (spielDatum.getYear() == 2999) {
 			return true;
 		}
-		boolean vorrunde = Month.JULY.getValue() <= d.getMonthValue();
-		if ("Rückrunde".equalsIgnoreCase(halbserie)) {
-			return !vorrunde;
+		for (GesamtspielplanConfigRunde runde : databaseService.ladeGesamtspielplanConfigRunden(vereinnr)) {
+			if (!halbserie.equalsIgnoreCase(String.valueOf(runde.getName()))) {
+				continue;
+			}
+			LocalDate von = runde.getDatumVon();
+			LocalDate bis = runde.getDatumBis();
+			if (von == null || bis == null) {
+				return true;
+			}
+			return !spielDatum.isBefore(von) && !spielDatum.isAfter(bis);
+
 		}
-		return vorrunde;
+		return true;
 	}
 
 	public boolean isTennis() {

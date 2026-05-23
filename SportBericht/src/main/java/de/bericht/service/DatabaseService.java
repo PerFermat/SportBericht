@@ -2065,6 +2065,15 @@ public class DatabaseService {
 		return null;
 	}
 
+	public Map<String, String> ladeSpielplanRowByUniqueKey(String vereinnr, String uniqueKey) {
+		if (uniqueKey == null || uniqueKey.isBlank()) {
+			return Map.of();
+		}
+		String sql = "SELECT unique_key, datum, liga, heim, gast FROM spielplan_tabelle WHERE vereinnr = ? AND unique_key = ?";
+		List<Map<String, String>> rows = ladeStringRows(sql, vereinnr, uniqueKey);
+		return rows.isEmpty() ? Map.of() : rows.get(0);
+	}
+
 	public Map<String, Object> ladeBetreuerStatus(String uniqueKey) {
 		Map<String, Object> result = new HashMap<>();
 		String sql = "SELECT betreuer, bestaetigt FROM spielplan_betreuer WHERE unique_key = ?";
