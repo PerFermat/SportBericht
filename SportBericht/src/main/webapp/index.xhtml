@@ -53,8 +53,7 @@
 							update="@form:nameStatusIcon" />
 					</p:inputText>
 					<h:panelGroup id="nameStatusIcon" layout="block">
-						<h:panelGroup
-							rendered="#{not empty indexBean.selectedName and indexBean.nameFormatGueltig}">
+						<h:panelGroup rendered="#{not empty indexBean.selectedName}">
 							<h:panelGroup id="nameCheckIcon" layout="inline">
 								<i
 									class="pi #{indexBean.nameInAdressliste ? 'pi-check-circle' : 'pi-times-circle'}"
@@ -64,10 +63,11 @@
 
 							<p:tooltip for="nameCheckIcon" position="top" escape="false">
 								<div style="text-align: left;">
-									Gib nach Möglichkeit den vollständigen<br /> Namen aus der
-									Abteilungsliste an.<br />
-									<br /> Die Prüfung dient nur zur Unterstützung –<br /> auch mit
-									einem abweichenden Namen<br /> funktioniert alles weiterhin.
+									Gib nach Möglichkeit den vollständigen Namen aus der
+									Abteilungsliste an.<br /> <br /> Wird der Name erkannt,
+									werden zusätzliche Funktionen freigeschaltet.<br /> Die
+									Anmeldung funktioniert jedoch auch mit einem abweichenden
+									Namen.
 								</div>
 							</p:tooltip>
 						</h:panelGroup>

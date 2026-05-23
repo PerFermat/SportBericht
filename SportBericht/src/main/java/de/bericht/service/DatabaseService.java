@@ -2894,10 +2894,7 @@ public class DatabaseService {
 				+ " (vereinnr, mannschaft, rang, qttr, name, a, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
 		String deleteSql = "DELETE FROM " + AUFSTELLUNG_TABLE + " WHERE vereinnr = ? AND mannschaft = ?";
 
-		try (Connection conn = DriverManager.getConnection(
-				config.getDatabaseUrl() + "?useUnicode=true&characterEncoding=UTF-8", config.getDatabaseUser(),
-				config.getDatabasePasswort())) {
-
+		try (Connection conn = openConnection()) {
 			try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
 				deleteStmt.setString(1, vereinnr);
 				deleteStmt.setString(2, liga);
