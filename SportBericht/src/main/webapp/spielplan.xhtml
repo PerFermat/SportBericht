@@ -143,7 +143,7 @@
 							<f:param name="frei" value="Nein" />
 						</p:commandButton>
 						<p:menuButton value="Spielinfo"
-							rendered="#{empty spiel.ergebnis}" styleClass="myButtonLight">
+							rendered="#{empty spiel.ergebnis and spielplanBean.tischtennis}" styleClass="myButtonLight">
 
 							<p:menuitem value="Aufstellung" action="aufstellung.xhtml"
 								icon="pi pi-users">

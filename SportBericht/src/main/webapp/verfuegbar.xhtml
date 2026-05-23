@@ -192,11 +192,10 @@
 			</p>
 			<div class="top-spieler">
 				<p:selectOneMenu id="spieler"
-					value="#{verfuegbarBean.selectedSpieler}" style="width:100%;"
-					filter="true" filterMatchMode="contains">
+					value="#{verfuegbarBean.selectedSpieler}" style="width:100%;">
 
 					<f:selectItem itemLabel="Spieler auswählen" itemValue="#{null}"
-						noSelectionOption="true" />
+						noSelectionOption="false" />
 
 					<f:selectItems value="#{verfuegbarBean.spielerNamen}" var="spieler"
 						itemLabel="#{spieler}" itemValue="#{spieler}" />
