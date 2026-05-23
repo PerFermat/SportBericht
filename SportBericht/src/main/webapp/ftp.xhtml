@@ -17,8 +17,8 @@
 <h:body>
 	<div class="tabheader-area">
 		<h:outputLink value="#{ftpBean.vereinHomepage}" target="_blank">
-			<img src="#{ftpBean.bestimmenIcon}"
-				style="vertical-align: middle;" width="50" />
+			<img src="#{ftpBean.bestimmenIcon}" style="vertical-align: middle;"
+				width="50" />
 		</h:outputLink>
 		<h:form>
 			<p:commandButton type="button" value="Handbuch"
@@ -26,37 +26,56 @@
 		</h:form>
 		<h2>Datei-Upload – #{ftpBean.verein}</h2>
 		<h:form>
-			<p:commandButton
-				value="Zurück"
-				action="#{ftpBean.ruecksprung}"	immediate="true"
-				rendered="#{not empty ftpBean.ruecksprung}">
+			<p:commandButton value="Zurück" action="#{ftpBean.ruecksprung}"
+				immediate="true" rendered="#{not empty ftpBean.ruecksprung}">
 				<f:param name="vereinnr" value="#{ftpBean.vereinnr}" />
 			</p:commandButton>
 		</h:form>
 	</div>
+	<div class="responsive-container">
+		<div class="text-input">
+			<h:form id="ftpForm" enctype="multipart/form-data">
+				<p:messages id="messages" showDetail="true" closable="true" />
 
-	<h:form id="ftpForm" enctype="multipart/form-data"
-		style="max-width: 700px; margin: 20px auto;">
-		<p:messages id="messages" showDetail="true" closable="true" />
+				<p:panel header="Datei übertragen">
+					<h:panelGrid columns="2" style="width:100%; row-gap: 10px;"
+						columnClasses="ui-g-4,ui-g-8">
+						<h:outputLabel for="thema" value="Thema" />
+						<p:selectOneMenu id="thema" value="#{ftpBean.ausgewaehltesThema}"
+							style="width:100%;">
+							<f:selectItems value="#{ftpBean.themaOptionen}" />
+						</p:selectOneMenu>
 
-		<p:panel header="Datei übertragen">
-			<h:panelGrid columns="2" style="width:100%; row-gap: 10px;"
-				columnClasses="ui-g-4,ui-g-8">
-				<h:outputLabel for="thema" value="Thema" />
-				<p:selectOneMenu id="thema" value="#{ftpBean.ausgewaehltesThema}"
-					style="width:100%;">
-					<f:selectItems value="#{ftpBean.themaOptionen}" />
-				</p:selectOneMenu>
+						<h:outputLabel for="datei" value="Datei" />
+						<h:inputFile id="datei" value="#{ftpBean.uploadedDatei}" />
+					</h:panelGrid>
 
-				<h:outputLabel for="datei" value="Datei" />
-				<h:inputFile id="datei" value="#{ftpBean.uploadedDatei}" />
-			</h:panelGrid>
-
-			<div style="margin-top: 15px;">
-				<p:commandButton value="Hochladen" action="#{ftpBean.hochladen}"
-					update="ftpForm" />
-			</div>
-		</p:panel>
-	</h:form>
+					<div style="margin-top: 15px;">
+						<p:commandButton value="Hochladen" action="#{ftpBean.hochladen}"
+							update="ftpForm" />
+					</div>
+					<div class="text-input">
+						<div class="text-container">
+							<p:outputLabel id="ausgabeText" value="#{ftpBean.ausgabeText}"
+								escape="false" />
+						</div>
+					</div>
+				</p:panel>
+			</h:form>
+		</div>
+		<!-- Rechter Bereich: Fehleranzeige und Button "Rechtschreibung prüfen" -->
+		<div class="error-table">
+			<h:panelGroup id="terminPanel" >
+				<p:outputPanel id="iframePanel">
+					<h:panelGroup>
+						<iframe src="#{ftpBean.htmlSeite}" width="100%"
+							height="1300" frameborder="0">
+							<p>Ihr Browser unterstützt keine Iframes.</p>
+						</iframe>
+					</h:panelGroup>
+				</p:outputPanel>
+			</h:panelGroup>
+		</div>
+	</div>
 </h:body>
 </html>

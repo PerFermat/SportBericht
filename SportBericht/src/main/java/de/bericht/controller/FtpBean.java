@@ -12,6 +12,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 
+import de.bericht.service.HallenPdfParser;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.LoginCookieDaten;
@@ -31,30 +32,38 @@ public class FtpBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final int SFTP_CONNECT_TIMEOUT_MS = 15000;
 	private Boolean freigabe;
+	private String ausgabeText;
 
 	private enum UploadThema {
 		HALLENBELEGUNGN("HALLENBELEGUNGN", "Hallenbelegung neuer Monat", "Hallenbelegung", "Hallenbelegung.pdf",
-				"Hallenbelegungalt.pdf"),
+				"Hallenbelegungalt.pdf", true),
 		HALLENBELEGUNGE("HALLENBELEGUNGE", "Hallenbelegung ersetzen aktuellen Monat", "Hallenbelegung",
-				"Hallenbelegung.pdf", null),
-		KINDERFOTOS("KINDERFOTOS", "Einverständniserklärung Kinderfotos", "Foto", null, null);
+				"Hallenbelegung.pdf", null, true),
+		KINDERFOTOS("KINDERFOTOS", "Einverständniserklärung Kinderfotos", "Foto", null, null, false);
 
 		private final String key;
 		private final String label;
 		private final String verzeichnis;
 		private final String neuerDateiname;
 		private final String alterDateiname;
+		private final boolean halleParcer;
 
-		UploadThema(String key, String label, String verzeichnis, String neuerDateiname, String alterDateiname) {
+		UploadThema(String key, String label, String verzeichnis, String neuerDateiname, String alterDateiname,
+				boolean halleParcer) {
 			this.key = key;
 			this.label = label;
 			this.verzeichnis = verzeichnis;
 			this.neuerDateiname = neuerDateiname;
 			this.alterDateiname = alterDateiname;
+			this.halleParcer = halleParcer;
 		}
 
 		public static UploadThema fromKey(String key) {
 			return Arrays.stream(values()).filter(v -> v.key.equals(key)).findFirst().orElse(HALLENBELEGUNGN);
+		}
+
+		public boolean isHalleParcer() {
+			return halleParcer;
 		}
 	}
 
@@ -174,6 +183,19 @@ public class FtpBean implements Serializable {
 				throw e;
 			}
 
+			try {
+				if (thema.isHalleParcer()) {
+					HallenPdfParser pdfParcer = new HallenPdfParser(uploadedDatei.getInputStream());
+					ausgabeText = pdfParcer.getHtmlText();
+				} else {
+					ausgabeText = "";
+				}
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
 			uploadedDatei = null;
 			addMessage(FacesMessage.SEVERITY_INFO, "Upload erfolgreich",
 					"Datei wurde per SFTP übertragen: " + zielPfad);
@@ -187,6 +209,7 @@ public class FtpBean implements Serializable {
 				session.disconnect();
 			}
 		}
+
 	}
 
 	private boolean remoteExists(ChannelSftp sftp, String remotePath) {
@@ -270,6 +293,18 @@ public class FtpBean implements Serializable {
 
 	public String getVerein() {
 		return ConfigManager.getConfigValue(vereinnr, "spielplan.Verein");
+	}
+
+	public String getHtmlSeite() {
+		return ConfigManager.getConfigValue(vereinnr, "sftp.seite.anzeige");
+	}
+
+	public String getAusgabeText() {
+		return ausgabeText;
+	}
+
+	public void setAusgabeText(String ausgabeText) {
+		this.ausgabeText = ausgabeText;
 	}
 
 }

@@ -9,6 +9,11 @@
 		charset="UTF-8" />
 	<title>SportBericht Login</title>
 	<h:outputScript library="js" name="script.js" target="head" />
+	<h:outputScript target="head">
+		if (window.history &amp;&amp; window.history.replaceState) {
+			window.history.replaceState(null, document.title, "#{request.contextPath}/");
+		}
+	</h:outputScript>
 </h:head>
 <h:body
 	style="
