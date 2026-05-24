@@ -12,7 +12,9 @@ import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class ApiKIChatGPT {
+import de.bericht.provider.KiProvider;
+
+public class ApiKIChatGPT implements KiProvider {
 	private String responses = "";
 
 	// Modelle, die KNOWN-broken sind (Legacy)
@@ -266,10 +268,12 @@ public class ApiKIChatGPT {
 		return true;
 	}
 
+	@Override
 	public String getResponse() {
 		return responses;
 	}
 
+	@Override
 	public boolean isSuccessful() {
 		return !responses.startsWith("Fehler:") && !responses.startsWith("API-Fehler:");
 	}

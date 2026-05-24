@@ -128,15 +128,9 @@ public class NamensSpeicher {
 			String[] parts = normalizedInput.split("/");
 			NamePart name1 = splitName(parts.length > 0 ? parts[0] : "");
 			NamePart name2 = splitName(parts.length > 1 ? parts[1] : "");
-			System.out.println("VN" + name1.getVorname());
-			System.out.println("NN" + name1.getNachname());
-			System.out.println("VN" + name2.getVorname());
-			System.out.println("NN" + name2.getNachname());
 			return anonymizedFullName(name1, vereinsnr, namensSpeicher, verschluesseln) + " / "
 					+ anonymizedFullName(name2, vereinsnr, namensSpeicher, verschluesseln);
 		} else {
-			System.out.println("VN" + splitName(normalizedInput).getVorname());
-			System.out.println("NN" + splitName(normalizedInput).getNachname());
 
 			return anonymizedFullName(splitName(normalizedInput), vereinsnr, namensSpeicher, verschluesseln);
 		}

@@ -23,6 +23,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.bericht.provider.BilanzFactory;
 import de.bericht.provider.BilanzProvider;
+import de.bericht.provider.KiProvider;
+import de.bericht.provider.KiProviderFactory;
 import de.bericht.provider.SpielergebnisFactory;
 import de.bericht.provider.SpielergebnisProvider;
 import de.bericht.provider.SpielplanFactory;
@@ -35,7 +37,6 @@ import de.bericht.service.KiZusammenfassenText;
 import de.bericht.service.Mannschaft;
 import de.bericht.service.Spiel;
 import de.bericht.service.Tabelle;
-import de.bericht.util.ApiKIChatGPT;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.NamensSpeicher;
@@ -127,7 +128,9 @@ public class BerichtkiBean implements Serializable {
 		this.liga = params.get("liga");
 		this.uuid = params.get("uuid");
 
-		modelle = new OpenAIModelFetcher(ConfigManager.getChatGptPasswort(vereinnr));
+		modelle = new OpenAIModelFetcher(ConfigManager.getChatGptPasswort(vereinnr),
+				ConfigManager.getDeepSeekPasswort(vereinnr));
+
 		selectedModel = ConfigManager.getConfigValue(vereinnr, "bericht.ki.model");
 		if (!isHttpLink()) {
 			this.berichtMannschaft = freierText;
@@ -170,12 +173,7 @@ public class BerichtkiBean implements Serializable {
 	}
 
 	public List<String> getModelle() {
-		try {
-			return modelle.getModelNames();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
+		return modelle.getModelNames().stream().sorted().collect(Collectors.toList());
 	}
 
 	public List<String> getThinking() {
@@ -422,7 +420,7 @@ public class BerichtkiBean implements Serializable {
 														new JSONArray().put("Variante").put("Stilversion")
 																.put("Text")))))
 						.put("required", new JSONArray().put("Varianten"));
-				ApiKIChatGPT ki = new ApiKIChatGPT(vereinnr, frage, selectedModel, selectedThinking, temperatur,
+				KiProvider ki = KiProviderFactory.create(vereinnr, frage, selectedModel, selectedThinking, temperatur,
 						frequencyPenalty, presencePenalty, schema);
 
 				antworten = ki.getResponse();

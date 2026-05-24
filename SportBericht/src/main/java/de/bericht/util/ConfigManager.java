@@ -399,4 +399,17 @@ public class ConfigManager {
 		}
 	}
 
+	public static String getDeepSeekPasswort(String vereinnr) {
+		String encrypted = getConfigValue(vereinnr, "bericht.deepseek.api");
+		if (encrypted == null || encrypted.isBlank()) {
+			return getChatGptPasswort(vereinnr);
+		}
+		try {
+			String decrypted = decryptPasswort(vereinnr, encrypted);
+			return decrypted;
+		} catch (Exception e) {
+			return encrypted;
+		}
+	}
+
 }

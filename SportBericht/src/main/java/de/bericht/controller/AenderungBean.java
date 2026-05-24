@@ -19,9 +19,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.bericht.provider.KiProvider;
+import de.bericht.provider.KiProviderFactory;
 import de.bericht.service.DatabaseService;
 import de.bericht.service.KiAenderung;
-import de.bericht.util.ApiKIChatGPT;
 import de.bericht.util.BerichtData;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
@@ -44,7 +45,7 @@ public class AenderungBean implements Serializable {
 	private String ergebnisLink;
 	private String berichtMannschaft;
 	private String liga;
-	private String ligaSpiel;	
+	private String ligaSpiel;
 	private String vereinnr;
 	private String uuid;
 	private String berichtText;
@@ -67,7 +68,7 @@ public class AenderungBean implements Serializable {
 		this.ergebnis = params.get("ergebnis");
 		this.ergebnisLink = params.get("ergebnisLink");
 		this.liga = params.get("liga");
-		this.ligaSpiel = params.get("ligaSpiel");		
+		this.ligaSpiel = params.get("ligaSpiel");
 		this.uuid = params.get("uuid");
 		this.gruppeUrl = params.get("gruppeUrl");
 		if (uuid == null) {
@@ -571,7 +572,7 @@ public class AenderungBean implements Serializable {
 																.put("Erklaerung").put("Bericht")))))
 						.put("required", new JSONArray().put("Varianten"));
 
-				ApiKIChatGPT ki = new ApiKIChatGPT(vereinnr, frage,
+				KiProvider ki = KiProviderFactory.create(vereinnr, frage,
 						ConfigManager.getConfigValue(vereinnr, "bericht.kikorrektur.model"), "none", 0.5, 0.5, 0.5,
 						schema);
 

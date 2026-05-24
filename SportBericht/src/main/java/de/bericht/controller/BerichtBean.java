@@ -29,13 +29,14 @@ import org.jsoup.Jsoup;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.bericht.provider.KiProvider;
+import de.bericht.provider.KiProviderFactory;
 import de.bericht.provider.SpielergebnisFactory;
 import de.bericht.provider.SpielergebnisProvider;
 import de.bericht.service.DatabaseService;
 import de.bericht.service.EmailService;
 import de.bericht.service.LogEntry;
 import de.bericht.service.TelegrammService;
-import de.bericht.util.ApiKIChatGPT;
 import de.bericht.util.BerichtData;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
@@ -472,7 +473,7 @@ public class BerichtBean implements Serializable {
 															new JSONArray().put("Falsch").put("Begründung der Änderung")
 																	.put("Korrekturvorschlag")))))
 					.put("required", new JSONArray().put("Korrekturen"));
-			ApiKIChatGPT ki = new ApiKIChatGPT(vereinnr, frage.toString(),
+			KiProvider ki = KiProviderFactory.create(vereinnr, frage.toString(),
 					ConfigManager.getConfigValue(vereinnr, "bericht.kikorrektur.model"), "none", 0.0, 0.0, 0.0, schema);
 
 			kiRueckgabe = "<strong>Frage:</strong> <br> " + frage + "<br><br><strong>Antwort:</strong><br>"
