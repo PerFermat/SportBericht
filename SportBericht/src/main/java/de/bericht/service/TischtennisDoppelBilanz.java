@@ -1,5 +1,7 @@
 package de.bericht.service;
 
+import de.bericht.util.NamePart;
+
 public class TischtennisDoppelBilanz implements Comparable<TischtennisDoppelBilanz> {
 
 	private String mannschaft;
@@ -55,8 +57,8 @@ public class TischtennisDoppelBilanz implements Comparable<TischtennisDoppelBila
 		String[] nachnamen = new String[teile.length];
 
 		for (int i = 0; i < teile.length; i++) {
-			String[] nameTeile = teile[i].split(", ");
-			nachnamen[i] = nameTeile.length > 0 ? nameTeile[0] : teile[i];
+			NamePart np = new NamePart(teile[i]);
+			nachnamen[i] = np.getNachname();
 		}
 
 		return String.join("/", nachnamen);

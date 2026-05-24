@@ -396,6 +396,40 @@ public class DatabaseService {
 		return name;
 	}
 
+	public boolean existsAdresslisteNachname(String nachname) {
+		if (nachname == null || nachname.trim().isEmpty()) {
+			return false;
+		}
+		String sql = "SELECT 1 FROM adressliste WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) LIMIT 1";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, nachname);
+			ResultSet rs = pstmt.executeQuery();
+			boolean vorhanden = rs.next();
+			rs.close();
+			return vorhanden;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	public boolean existsVorname(String vorname) {
+		if (vorname == null || vorname.trim().isEmpty()) {
+			return false;
+		}
+		String sql = "SELECT 1 FROM vorname WHERE LOWER(TRIM(Name)) = LOWER(TRIM(?)) LIMIT 1";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setString(1, vorname);
+			ResultSet rs = pstmt.executeQuery();
+			boolean vorhanden = rs.next();
+			rs.close();
+			return vorhanden;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
 	public int anzahlFreigabe(String vereinnr, String ergebnisLink) {
 		String sql = "SELECT count(*) as Anzahl FROM log_tabelle WHERE vereinnr = ? and ergebnisLink = ? AND aktion = 'Freigegeben'";
 		return countLogEintraege(sql, vereinnr, ergebnisLink);

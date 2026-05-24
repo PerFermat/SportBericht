@@ -111,93 +111,52 @@ public class NamensSpeicher {
 	}
 
 	public String formatName(String vereinsnr, String input, NamensSpeicher namensSpeicher) {
-		if (input.contains(",")) {
-			return formatName1(vereinsnr, input, namensSpeicher, true);
-		}
-		return formatName2(vereinsnr, input, namensSpeicher, true);
+		return formatName(vereinsnr, input, namensSpeicher, true);
 	}
 
 	public String formatName(String vereinsnr, String input, NamensSpeicher namensSpeicher, boolean verschluesseln) {
-		if (input.contains(",")) {
-			return formatName1(vereinsnr, input, namensSpeicher, verschluesseln);
-		}
 		return formatName2(vereinsnr, input, namensSpeicher, verschluesseln);
 	}
 
 	public String formatName2(String vereinsnr, String input, NamensSpeicher namensSpeicher, boolean verschluesseln) {
 
-		if (input.contains("nicht anwesend") || input.contains("unbekannt") || input.contains("nachgenannt")
-				|| input.equals("/".trim())) {
+		String normalizedInput = normalizeWhitespace(input);
+		if (normalizedInput.contains("nicht anwesend") || normalizedInput.contains("unbekannt")
+				|| normalizedInput.contains("nachgenannt") || normalizedInput.equals("/")) {
 			return input;
-		} else if (input.contains("/")) {
-			String[] parts = input.split("/");
-			String[] name1 = parts[0].trim().split(" ");
-			String[] name2 = parts[1].trim().split(" ");
-			String vorname1 = "";
-			String vorname2 = "";
-			String nachname1 = "";
-			String nachname2 = "";
-
-			for (int i = 0; i < name1.length; i++) {
-				if (i == 0) {
-					vorname1 = namensSpeicher.speichereNamen(name1[i].trim(), true, vereinsnr, verschluesseln);
-				} else {
-					nachname1 = nachname1 + " "
-							+ namensSpeicher.speichereNamen(name1[i].trim(), false, vereinsnr, verschluesseln);
-				}
-			}
-
-			for (int i = 0; i < name2.length; i++) {
-				if (i == 0) {
-					vorname2 = namensSpeicher.speichereNamen(name2[i].trim(), true, vereinsnr, verschluesseln);
-				} else {
-					nachname2 = nachname2 + " "
-							+ namensSpeicher.speichereNamen(name2[i].trim(), false, vereinsnr, verschluesseln);
-				}
-			}
-
-			return vorname1.trim() + " " + nachname1.trim() + " / " + vorname2.trim() + " " + nachname2.trim();
+		} else if (normalizedInput.contains("/")) {
+			String[] parts = normalizedInput.split("/");
+			NamePart name1 = splitName(parts.length > 0 ? parts[0] : "");
+			NamePart name2 = splitName(parts.length > 1 ? parts[1] : "");
+			return anonymizedFullName(name1, vereinsnr, namensSpeicher, verschluesseln) + " / "
+					+ anonymizedFullName(name2, vereinsnr, namensSpeicher, verschluesseln);
 		} else {
-			String[] name1 = input.trim().split(" ");
-			String vorname = "";
-			String nachname = "";
-
-			for (int i = 0; i < name1.length; i++) {
-				if (i == 0) {
-					vorname = namensSpeicher.speichereNamen(name1[i].trim(), true, vereinsnr, verschluesseln);
-				} else {
-					nachname = nachname
-							+ namensSpeicher.speichereNamen(name1[i].trim(), false, vereinsnr, verschluesseln);
-				}
-			}
-
-			return vorname.trim() + " " + nachname.trim();
+			return anonymizedFullName(splitName(normalizedInput), vereinsnr, namensSpeicher, verschluesseln);
 		}
 	}
 
 	public String formatName1(String vereinnr, String input, NamensSpeicher namensSpeicher, boolean verschluesseln) {
+		return formatName2(vereinnr, input, namensSpeicher, verschluesseln);
+	}
 
-		if (input.contains("nicht anwesend")) {
-			return input;
-		} else if (!input.contains(",")) {
-			return input;
-		} else if (input.contains("/")) {
-			String[] parts = input.split("/");
-			String[] name1 = parts[0].trim().split(",");
-			String[] name2 = parts[1].trim().split(",");
-			String vorname1 = namensSpeicher.speichereNamen(name1[1].trim(), true, vereinnr, verschluesseln);
-			String nachname1 = namensSpeicher.speichereNamen(name1[0].trim(), false, vereinnr, verschluesseln);
-			String vorname2 = namensSpeicher.speichereNamen(name2[1].trim(), true, vereinnr, verschluesseln);
-			String nachname2 = namensSpeicher.speichereNamen(name2[0].trim(), false, vereinnr, verschluesseln);
-			return vorname1 + " " + nachname1 + " / " + vorname2 + " " + nachname2;
+	public static NamePart splitName(String name) {
+		return new NamePart(name);
+	}
 
-		} else {
-			String[] name = input.trim().split(",");
-			String vorname = namensSpeicher.speichereNamen(name[1].trim(), true, vereinnr, verschluesseln);
-			String nachname = namensSpeicher.speichereNamen(name[0].trim(), false, vereinnr, verschluesseln);
-			return vorname + " " + nachname;
+	private static String normalizeWhitespace(String input) {
+		if (input == null) {
+			return "";
 		}
+		return input.trim().replaceAll("\\s+", " ");
+	}
 
+	private String anonymizedFullName(NamePart parts, String vereinsnr, NamensSpeicher namensSpeicher,
+			boolean verschluesseln) {
+		String vorname = parts.getVorname().isEmpty() ? ""
+				: namensSpeicher.speichereNamen(parts.getVorname(), true, vereinsnr, verschluesseln);
+		String nachname = parts.getNachname().isEmpty() ? ""
+				: namensSpeicher.speichereNamen(parts.getNachname(), false, vereinsnr, verschluesseln);
+		return (vorname + " " + nachname).trim();
 	}
 
 	public void fuelleNamensspeicher(String vereinnr, String url, NamensSpeicher namensSpeicher) throws IOException {

@@ -4,6 +4,7 @@ import org.jsoup.nodes.Element;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import de.bericht.util.NamePart;
 import de.bericht.util.NamensSpeicher;
 import de.bericht.util.SpielDetail;
 
@@ -82,14 +83,6 @@ public class TennisDoppelErgebnis implements SpielDetail {
 		return gast1 + "/" + gast2;
 	}
 
-	public String getHeimPaarungMitVornamen() {
-		return getVorname(heim1) + "/" + getVorname(heim2);
-	}
-
-	public String getGastPaarungMitVornamen() {
-		return getVorname(gast1) + "/" + getVorname(gast2);
-	}
-
 	public String getHeimPaarungMitNachnamen() {
 		return getNachname(heim1) + "/" + getNachname(heim2);
 	}
@@ -98,22 +91,9 @@ public class TennisDoppelErgebnis implements SpielDetail {
 		return getNachname(gast1) + "/" + getNachname(gast2);
 	}
 
-	private String getVorname(String vollerName) {
-		if (vollerName == null || vollerName.trim().isEmpty()) {
-			return "";
-		}
-		String[] teile = TennisSpielerInfo.parse(vereinnr, vollerName, ns, verschluesseln).getName().split(" ");
-
-		return teile.length > 0 ? teile[0] : vollerName;
-
-	}
-
 	private String getNachname(String vollerName) {
-		if (vollerName == null || vollerName.trim().isEmpty()) {
-			return "";
-		}
-		String[] teile = TennisSpielerInfo.parse(vereinnr, vollerName, ns, verschluesseln).getName().split(" ");
-		return teile.length > 0 ? teile[1] : vollerName;
+		NamePart np = new NamePart(vollerName);
+		return np.getNachname();
 	}
 
 	public String getSatz1() {
