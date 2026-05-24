@@ -78,7 +78,7 @@
 						<f:param name="ergebnis" value="#{berichtBean.ergebnis}" />
 						<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
-						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />						
+						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
@@ -139,11 +139,11 @@
 					<div class="button-container">
 						<p:commandButton value="Rechtschreibung prüfen"
 							action="#{berichtBean.pruefeRechtschreibung}"
-							actionListener="#{berichtBean.speichern}"							
+							actionListener="#{berichtBean.speichern}"
 							update=":berichtForm, :logForm, :fehlerPanel, :errorForm" />
 						<p:commandButton value="Bericht mit KI verbessern"
 							action="#{berichtBean.verbessernKI}"
-							actionListener="#{berichtBean.speichern}"							
+							actionListener="#{berichtBean.speichern}"
 							update=":berichtForm, :logForm, :fehlerPanel, :errorForm" />
 						<p:commandButton value="Bericht mit KI ändern"
 							action="aenderung.xhtml"
@@ -155,7 +155,7 @@
 							<f:param name="ergebnis" value="#{berichtBean.ergebnis}" />
 							<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
 							<f:param name="liga" value="#{berichtBean.liga}" />
-							<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />													
+							<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />
 							<f:param name="uuid" value="#{berichtBean.uuid}" />
 							<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 						</p:commandButton>
@@ -194,13 +194,14 @@
 						update=":berichtForm, :logForm, :logPanel" />
 
 					<p:commandButton value="E-Mail senden"
-						actionListener="#{berichtBean.speichernUndPruefeEmailStatus}" process="@form"
+						actionListener="#{berichtBean.speichernUndPruefeEmailStatus}"
+						process="@form"
 						oncomplete="handleEmailDialog(#{berichtBean.email ? 'true' : 'false'})"
 						disabled="#{empty berichtBean.name}"
 						update=":berichtForm, :logForm, :growl" />
 					<p:commandButton value="Bild löschen"
 						action="#{berichtBean.bildLoeschen}"
-						actionListener="#{berichtBean.speichern}"						
+						actionListener="#{berichtBean.speichern}"
 						update=":berichtForm, :logForm, :logPanel"
 						disabled="#{empty berichtBean.bildUrl}" />
 					<p:commandButton value="Bild bearbeiten"
@@ -214,7 +215,7 @@
 						<f:param name="ergebnis" value="#{berichtBean.ergebnis}" />
 						<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
-						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />							
+						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
@@ -223,14 +224,14 @@
 						actionListener="#{berichtBean.speichernUndFreigabe}">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
-						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />							
+						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Freigeben" action="freieBerichte.xhtml"
 						rendered="#{berichtBean.anzFreigabe and not berichtBean.ergebnisLink.startsWith('http')}"
 						actionListener="#{berichtBean.speichernUndFreigabe}">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
-						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />							
+						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Zurück"
@@ -240,7 +241,7 @@
 
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
-						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />							
+						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Zurück" action="freieBerichte.xhtml"
@@ -373,8 +374,7 @@
 						value="#{berichtBean.spielplan ? 'Spielbericht ausblenden' : 'Spielbericht anzeigen'}"
 						action="#{berichtBean.spielplanAnzeige}"
 						actionListener="#{berichtBean.speichern}"
-						process="@this :berichtForm"
-						update=":errorForm,  :fehlerPanel" />
+						process="@this :berichtForm" update=":errorForm,  :fehlerPanel" />
 				</div>
 				<h:panelGroup id="fehlerPanelOK"
 					rendered="#{!berichtBean.spielplan}">
@@ -440,8 +440,7 @@
 				collapsed="true" widgetVar="logPanelWidget">
 				<div class="button-container">
 					<p:commandButton value="Alter Zustand widerherstellen"
-						action="historien.xhtml"
-						process="@this :berichtForm"
+						action="historien.xhtml" process="@this :berichtForm"
 						rendered="#{berichtBean.historienTimestamps}">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
 						<f:param name="heim" value="#{berichtBean.heim}" />
@@ -450,14 +449,13 @@
 						<f:param name="ergebnis" value="#{berichtBean.ergebnis}" />
 						<f:param name="ergebnisLink" value="#{berichtBean.ergebnisLink}" />
 						<f:param name="liga" value="#{berichtBean.liga}" />
-						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />						
+						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
 					</p:commandButton>
 					<p:commandButton value="Spielberichtsbogen neu lesen"
-						action="#{berichtBean.spielHtmlLesen}"
-						actionListener="#{berichtBean.speichern}"
-						process=":berichtForm" update=":berichtForm" />
+						action="#{berichtBean.spielHtmlLesen}" immediate="true"
+						process="@this" update=":berichtForm" />
 
 				</div>
 				<p>

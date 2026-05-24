@@ -417,7 +417,7 @@ public class DatabaseService {
 		if (vorname == null || vorname.trim().isEmpty()) {
 			return false;
 		}
-		String sql = "SELECT 1 FROM vorname WHERE LOWER(TRIM(Name)) = LOWER(TRIM(?)) LIMIT 1";
+		String sql = "SELECT 1 FROM Vorname WHERE LOWER(TRIM(Name)) = LOWER(TRIM(?)) LIMIT 1";
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, vorname);
 			ResultSet rs = pstmt.executeQuery();
@@ -1319,11 +1319,11 @@ public class DatabaseService {
 
 	public void kopierenLogData(String ergebnisLink, String altLink, String was) {
 
-		String sql = "INSERT INTO TischtennisBericht.log_tabelle ("
+		String sql = "INSERT INTO log_tabelle ("
 				+ "    ergebnisLink, timestamp, name, aktion, mailErfolgreich, vereinnr" + ") " + "SELECT " + "    ?, "
 				+ "    NOW(6) + INTERVAL (@i := @i + 1) MICROSECOND, " + "    name, " + "    aktion, "
-				+ "    mailErfolgreich, " + "    vereinnr " + "FROM TischtennisBericht.log_tabelle "
-				+ "JOIN (SELECT @i := 0) init " + "WHERE ergebnisLink = ? " + "  AND aktion LIKE ?";
+				+ "    mailErfolgreich, " + "    vereinnr " + "FROM log_tabelle " + "JOIN (SELECT @i := 0) init "
+				+ "WHERE ergebnisLink = ? " + "  AND aktion LIKE ?";
 
 		try (Connection conn = openConnection();
 
