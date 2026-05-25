@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import de.bericht.provider.KiProvider;
 
@@ -39,6 +40,26 @@ public class ApiKIDeepSeek implements KiProvider {
 		return base
 				+ "\n\nACHTUNG: Antworte ausschließlich als gültiges JSON ohne Zusatztext. Nutze exakt dieses Schema:\n"
 				+ jsonSchema.toString(2);
+	}
+
+	private String normalizeAssistantContent(String content) {
+		if (content == null) {
+			return "";
+		}
+		String normalized = content.trim();
+		normalized = normalized.replaceAll("```[a-zA-Z0-9]*", "").replace("```", "").trim();
+
+		if (normalized.startsWith("\"") && normalized.endsWith("\"")) {
+			try {
+				Object parsed = new JSONTokener(normalized).nextValue();
+				if (parsed instanceof String) {
+					normalized = ((String) parsed).trim();
+				}
+			} catch (Exception e) {
+				debug("Konnte doppelt kodierten Content nicht dekodieren: " + e.getMessage());
+			}
+		}
+		return normalized;
 	}
 
 	public ApiKIDeepSeek(String vereinnr, String frage, String selectedModel, double temperatur,
@@ -117,8 +138,13 @@ public class ApiKIDeepSeek implements KiProvider {
 			debug("Keine choices in der API-Antwort vorhanden.");
 			return;
 		}
-		response = choices.getJSONObject(0).getJSONObject("message").optString("content", "").trim();
+		String content = choices.getJSONObject(0).getJSONObject("message").optString("content", "");
+		response = normalizeAssistantContent(content);
 		debug("Antwort extrahiert. Zeichen=" + response.length());
+		if (!response.isBlank()) {
+			String preview = response.length() > 160 ? response.substring(0, 160) + "..." : response;
+			debug("Antwort-Preview: " + preview.replace("\n", " "));
+		}
 	}
 
 	@Override
