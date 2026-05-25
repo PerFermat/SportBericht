@@ -3,8 +3,11 @@ package de.bericht.controller;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
@@ -12,6 +15,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 
+import de.bericht.service.DatabaseService;
 import de.bericht.service.HallenPdfParser;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
@@ -33,6 +37,13 @@ public class FtpBean implements Serializable {
 	private static final int SFTP_CONNECT_TIMEOUT_MS = 15000;
 	private Boolean freigabe;
 	private String ausgabeText;
+	private static final DateTimeFormatter DATUM_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+	private static final Pattern MONATS_PATTERN = Pattern.compile(
+			"\\b(januar|februar|märz|maerz|april|mai|juni|juli|august|september|oktober|november|dezember)\\b",
+			Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+	private String kiAusgabeText;
+	private byte[] originalPdfBytes;
+	private final DatabaseService dbService = new DatabaseService();
 
 	private enum UploadThema {
 		HALLENBELEGUNGN("HALLENBELEGUNGN", "Hallenbelegung neuer Monat", "Hallenbelegung", "Hallenbelegung.pdf",
@@ -174,7 +185,8 @@ public class FtpBean implements Serializable {
 				bestehendeDateiGesichert = true;
 			}
 
-			try (InputStream inputStream = uploadedDatei.getInputStream()) {
+			byte[] uploadedPdf = uploadedDatei.getInputStream().readAllBytes();
+			try (InputStream inputStream = new java.io.ByteArrayInputStream(uploadedPdf)) {
 				sftp.put(inputStream, zielPfad, ChannelSftp.OVERWRITE);
 			} catch (IOException | SftpException e) {
 				if (bestehendeDateiGesichert && remoteExists(sftp, backupPfad) && !remoteExists(sftp, zielPfad)) {
@@ -185,10 +197,13 @@ public class FtpBean implements Serializable {
 
 			try {
 				if (thema.isHalleParcer()) {
-					HallenPdfParser pdfParcer = new HallenPdfParser(uploadedDatei.getInputStream());
+					HallenPdfParser pdfParcer = new HallenPdfParser(new java.io.ByteArrayInputStream(uploadedPdf));
 					ausgabeText = pdfParcer.getHtmlText();
+					originalPdfBytes = uploadedPdf;
 				} else {
 					ausgabeText = "";
+					kiAusgabeText = "";
+					originalPdfBytes = null;
 				}
 
 			} catch (IOException e) {
@@ -305,6 +320,18 @@ public class FtpBean implements Serializable {
 
 	public void setAusgabeText(String ausgabeText) {
 		this.ausgabeText = ausgabeText;
+	}
+
+	public String getKiAusgabeText() {
+		return kiAusgabeText;
+	}
+
+	public String getOriginalPdfUrl() {
+		if (originalPdfBytes == null || originalPdfBytes.length == 0) {
+			return "";
+		}
+		String base64 = Base64.getEncoder().encodeToString(originalPdfBytes);
+		return "data:application/pdf;base64," + base64;
 	}
 
 }

@@ -12,6 +12,21 @@
 		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{ftpBean.vereinnr}"
 		type="text/css" />
 	<h:outputStylesheet name="css/styles.css" />
+		<style>
+		.ki-output table {
+			width: 100%;
+			border-collapse: collapse;
+			margin-bottom: 14px;
+		}
+		.ki-output th, .ki-output td {
+			border: 1px solid #d0d7de;
+			padding: 8px;
+			vertical-align: top;
+		}
+		.ki-output th {
+			background: #f5f7fa;
+		}
+	</style>
 </h:head>
 
 <h:body>
@@ -54,12 +69,20 @@
 						<p:commandButton value="Hochladen" action="#{ftpBean.hochladen}"
 							update="ftpForm" />
 					</div>
-					<div class="text-input">
-						<div class="text-container">
-							<p:outputLabel id="ausgabeText" value="#{ftpBean.ausgabeText}"
-								escape="false" />
-						</div>
-					</div>
+		<div class="text-input">
+			<div class="text-container">
+				<p:tabView id="ausgabeTabs">
+					<p:tab title="Parser-Ausgabe">
+						<p:outputLabel id="ausgabeText" value="#{ftpBean.ausgabeText}" escape="false" />
+					</p:tab>
+					<p:tab title="Original PDF">
+						<iframe src="#{ftpBean.originalPdfUrl}" width="100%" height="800" frameborder="0">
+							<p>Ihr Browser unterstützt keine Iframes.</p>
+						</iframe>
+					</p:tab>
+				</p:tabView>
+			</div>
+		</div>
 				</p:panel>
 			</h:form>
 		</div>

@@ -11,6 +11,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 public class HallenPdfParser {
 
 	private final String htmlText;
+	private final String plainText;
 
 	/**
 	 * Konstruktor: Interpretiert direkt das PDF aus dem InputStream.
@@ -20,6 +21,7 @@ public class HallenPdfParser {
 		String pdfText = lesePdf(pdfInputStream);
 
 		this.htmlText = parseHallenTermine(pdfText);
+		this.plainText = pdfText;
 	}
 
 	/**
@@ -27,6 +29,10 @@ public class HallenPdfParser {
 	 */
 	public String getHtmlText() {
 		return htmlText;
+	}
+
+	public String getPlainText() {
+		return plainText;
 	}
 
 	/**
