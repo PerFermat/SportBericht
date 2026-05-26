@@ -72,6 +72,11 @@
 		<div class="text-input">
 			<div class="text-container">
 				<p:tabView id="ausgabeTabs">
+					<p:tab title="KI-Ausgabe">
+						<div class="ki-output">
+							<p:outputLabel id="kiAusgabeText" value="#{ftpBean.kiAusgabeText}" escape="false" />
+						</div>
+					</p:tab>
 					<p:tab title="Parser-Ausgabe">
 						<p:outputLabel id="ausgabeText" value="#{ftpBean.ausgabeText}" escape="false" />
 					</p:tab>
