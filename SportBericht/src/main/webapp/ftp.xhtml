@@ -29,6 +29,30 @@
 .ki-output th {
 	background: #f5f7fa;
 }
+#{
+ftpBean
+
+
+
+
+
+
+
+
+
+
+.parserAusgabeCss
+
+
+
+
+
+
+
+
+
+
+}
 </style>
 </h:head>
 
@@ -92,23 +116,28 @@
 									</div>
 									<p:inputTextarea value="#{ftpBean.emailFreitext}" rows="3"
 										style="width:100%; margin-bottom: 12px;"
-										placeholder="Freitext..." />									
+										placeholder="Freitext..." />
 									<ui:repeat value="#{ftpBean.parserTerminStatusListe}"
 										var="parserTermin">
-										<div
-											style="display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start;">
-											<p:selectOneMenu value="#{parserTermin.status}"
-												style="min-width:180px;">
-												<f:selectItems value="#{ftpBean.terminStatusOptionen}" />
-											</p:selectOneMenu>
-											<div>
-												<strong>#{parserTermin.datum}</strong><br />
-												<h:outputText value="#{parserTermin.text}" escape="false" />
+										<div class="termin-row"
+											style="display: flex; gap: 12px; margin-bottom: 10px; align-items: center;">
+
+
+											<!-- Rechte Seite: Text -->
+											<div style="flex: 1;">
+												<h:outputText value="#{parserTermin.htmlText}"
+													escape="false" />
 											</div>
+											<!-- Linke Seite: Dropdown -->
+											<div style="min-width: 200px;">
+												<p:selectOneMenu value="#{parserTermin.status}"
+													styleClass="status-select" style="width:100%;">
+													<f:selectItems value="#{ftpBean.terminStatusOptionen}" />
+												</p:selectOneMenu>
+											</div>
+
 										</div>
 									</ui:repeat>
-									<p:commandButton value="Neuer Tag" action="#{ftpBean.neuerTag}"
-										update="ftpForm" style="margin-bottom: 8px;" />
 									<ui:repeat value="#{ftpBean.manuelleTage}" var="tag">
 										<div style="display: flex; gap: 8px; margin-bottom: 8px;">
 											<p:inputText value="#{tag.tag}" placeholder="Tag"
@@ -117,6 +146,8 @@
 												style="width:75%;" />
 										</div>
 									</ui:repeat>
+									<p:commandButton value="Neuer Tag" action="#{ftpBean.neuerTag}"
+										update="ftpForm" style="margin-bottom: 8px;" />
 									<div class="ki-output" style="margin-top: 12px;">
 										<p:outputLabel value="#{ftpBean.kiAusgabeText}" escape="false" />
 									</div>

@@ -75,31 +75,7 @@ public class HallenPdfParser {
 				            line-height: 1.5;
 				        }
 
-				        .tag {
-				            margin-top: 25px;
-				            padding: 10px;
-				            border-radius: 8px;
-				        }
-
-				        .tischtennis {
-				            background-color: #e8f5e9;
-				            border-left: 6px solid #2e7d32;
-				        }
-
-				        .halle {
-				            background-color: #ffebee;
-				            border-left: 6px solid #c62828;
-				        }
-
-				        .titel {
-				            font-size: 18px;
-				            font-weight: bold;
-				            margin-bottom: 10px;
-				        }
-
-				        .inhalt {
-				            white-space: pre-line;
-				        }
+				      """ + ParserAusgabeFormatter.css() + """
 				    </style>
 				</head>
 				<body>
@@ -180,25 +156,8 @@ public class HallenPdfParser {
 		case "So" -> "Sonntag";
 		default -> "Unbekannter Tag";
 		};
-
-		html.append("<div class='tag ").append(cssClass).append("'>");
-
-		html.append("<div class='titel'>").append(tag).append(" ").append(titel).append("</div>");
-
-		html.append("<div class='inhalt'>").append(escapeHtml(blockText).replace("TT-", "<strong>TT-</strong>")
-				.replace("Tischtennis", "<strong>Tischtennis</strong>").replace("Halle", "<strong>Halle</strong>"))
-				.append("</div>");
-
-		html.append("</div>");
+		html.append(ParserAusgabeFormatter.formatBlock(tag + " " + titel, blockText, "halle".equals(cssClass)));
 		parserBloecke.add(new ParserBlock(tag, titel, blockText));
-	}
-
-	/**
-	 * HTML escapen.
-	 */
-	private String escapeHtml(String text) {
-
-		return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}
 
 	public static class ParserBlock implements Serializable {

@@ -29,11 +29,10 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 
-import de.bericht.provider.KiProvider;
-import de.bericht.provider.KiProviderFactory;
 import de.bericht.service.DatabaseService;
 import de.bericht.service.EmailService;
 import de.bericht.service.HallenPdfParser;
+import de.bericht.service.ParserAusgabeFormatter;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.LoginCookieDaten;
@@ -225,8 +224,9 @@ public class FtpBean implements Serializable {
 					ausgabeText = pdfParcer.getHtmlText();
 					kiAusgabeText = erstelleKiAnalyse(pdfParcer.getPlainText(), uploadedPdf);
 					terminEintraege = extrahiereTermine(ausgabeText);
-					parserTerminStatusListe = pdfParcer.getParserBloecke().stream().map(
-							block -> new TerminMitStatus(block.getTag() + " " + block.getWochentag(), block.getText()))
+					parserTerminStatusListe = pdfParcer.getParserBloecke().stream()
+							.map(block -> new TerminMitStatus(ParserAusgabeFormatter
+									.formatBlock(block.getTag() + " " + block.getWochentag(), block.getText(), true)))
 							.toList();
 					manuelleTage = new ArrayList<>();
 					emailFreitext = "";
@@ -355,14 +355,14 @@ public class FtpBean implements Serializable {
 		prompt = prompt.replace("<Heimspiele>", heimspieleText);
 		prompt = prompt.replace("<JSON>", bauePdfTabelle(pdfText));
 
-		System.out.println(prompt);
-		try {
-			KiProvider ki = KiProviderFactory.create(vereinnr, prompt,
-					ConfigManager.getConfigValue(vereinnr, "sftp.ki.model"), "high", 0.2, 0.0, 0.0, null);
-			return ki.getResponse();
-		} catch (IOException e) {
-			return "KI-Analyse konnte nicht erstellt werden: " + e.getMessage();
-		}
+		return escapeHtml(prompt);
+//		try {
+//			KiProvider ki = KiProviderFactory.create(vereinnr, prompt,
+//					ConfigManager.getConfigValue(vereinnr, "sftp.ki.model"), "high", 0.2, 0.0, 0.0, null);
+//			return ki.getResponse();
+//		} catch (IOException e) {
+//			return "KI-Analyse konnte nicht erstellt werden: " + e.getMessage();
+//		}
 	}
 
 	private String bauePdfTabelle(String pdfText) {
@@ -643,20 +643,22 @@ public class FtpBean implements Serializable {
 			return;
 		}
 		StringBuilder inhalt = new StringBuilder();
-		inhalt.append("Freitext:\\n").append(emailFreitext == null ? "" : emailFreitext.trim())
-				.append("\\n\\nParser-Termine:\\n");
+		inhalt.append("<html><head><meta name='viewport' content='width=device-width, initial-scale=1.0'/>")
+				.append("<style>body{font-family:Arial,sans-serif;font-size:14px;line-height:1.5}")
+				.append(ParserAusgabeFormatter.css())
+				.append(".hinweis{background:#fff4db;border:1px solid #f6d992;border-radius:8px;padding:8px;margin-bottom:8px}</style></head><body>")
+				.append("<h2>Terminabstimmung ").append(escapeHtml(getVerein())).append("</h2>")
+				.append("<div class='hinweis'><strong>Freitext:</strong><br/>")
+				.append(escapeHtml(emailFreitext == null ? "" : emailFreitext.trim()).replace("\n", "<br/>"))
+				.append("</div>");
+
 		for (TerminMitStatus p : parserTerminStatusListe) {
-			inhalt.append("- ").append(p.getStatus()).append(" | ").append(p.getDatum()).append(" | ")
-					.append(p.getText()).append("\\n");
+			inhalt.append("<div class='tag ").append(statusCss(p.getStatus())).append("'>");
+			inhalt.append("<div class='titel'>").append(" (").append(escapeHtml(p.getStatus())).append(")</div>")
+					.append("<div class='inhalt'>").append(p.getHtmlText()).append("</div></div>");
 		}
-		for (TerminEintrag e : terminEintraege) {
-			inhalt.append("- ").append(e.getStatus()).append(" | ").append(e.getDatum()).append(" | ")
-					.append(e.getText()).append("\\n");
-		}
-		for (ManuellerTagEintrag t : manuelleTage) {
-			inhalt.append("- ").append(t.getTag()).append(" | ").append(t.getText()).append("\\n");
-		}
-		inhalt.append("\\nKI-Ausgabe:\\n").append(kiAusgabeText == null ? "" : kiAusgabeText);
+
+		inhalt.append("</body></html>");
 		try {
 			new EmailService(vereinnr, empfaenger, null).sendEmail(vereinnr, "Terminabstimmung " + getVerein(),
 					inhalt.toString(), originalPdfBytes, "Hallenbelegung.pdf", true);
@@ -758,12 +760,10 @@ public class FtpBean implements Serializable {
 	public static class TerminMitStatus implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private String status = "Überprüfe";
-		private final String datum;
-		private final String text;
+		private final String htmlText;
 
-		public TerminMitStatus(String datum, String text) {
-			this.datum = datum;
-			this.text = text;
+		public TerminMitStatus(String htmlText) {
+			this.htmlText = htmlText;
 		}
 
 		public String getStatus() {
@@ -774,13 +774,27 @@ public class FtpBean implements Serializable {
 			this.status = status;
 		}
 
-		public String getDatum() {
-			return datum;
+		public String getHtmlText() {
+			return htmlText;
 		}
+	}
 
-		public String getText() {
-			return text;
+	private String statusCss(String status) {
+		if ("Entfällt".equalsIgnoreCase(status)) {
+			return "halle";
 		}
+		return "tischtennis";
+	}
+
+	private String escapeHtml(String value) {
+		if (value == null) {
+			return "";
+		}
+		return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+	}
+
+	public String getParserAusgabeCss() {
+		return ParserAusgabeFormatter.css();
 	}
 
 }
