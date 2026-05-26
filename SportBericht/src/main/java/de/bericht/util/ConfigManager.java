@@ -389,6 +389,10 @@ public class ConfigManager {
 		return getConfigValue(vereinnr, "sftp.user");
 	}
 
+	public static String getMailEmpfaengerTermine(String vereinnr) {
+		return getConfigValue(vereinnr, "mail.termin.empfaenger");
+	}
+
 	public static String getSftpPasswort(String vereinnr) {
 		String encrypted = getConfigValue(vereinnr, "sftp.passwort");
 		try {

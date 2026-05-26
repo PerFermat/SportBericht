@@ -342,8 +342,8 @@ public class FtpBean implements Serializable {
 
 		System.out.println(prompt);
 		try {
-			KiProvider ki = KiProviderFactory.create(vereinnr, prompt, "deepseek-v4-flash", "high", 0.2, 0.0, 0.0,
-					null);
+			KiProvider ki = KiProviderFactory.create(vereinnr, prompt,
+					ConfigManager.getConfigValue(vereinnr, "sftp.ki.model"), "high", 0.2, 0.0, 0.0, null);
 			return ki.getResponse();
 		} catch (IOException e) {
 			return "KI-Analyse konnte nicht erstellt werden: " + e.getMessage();
