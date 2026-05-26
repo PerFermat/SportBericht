@@ -2,6 +2,9 @@ package de.bericht.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,6 +15,7 @@ public class HallenPdfParser {
 
 	private final String htmlText;
 	private final String plainText;
+	private final List<ParserBlock> parserBloecke = new ArrayList<>();
 
 	/**
 	 * Konstruktor: Interpretiert direkt das PDF aus dem InputStream.
@@ -33,6 +37,10 @@ public class HallenPdfParser {
 
 	public String getPlainText() {
 		return plainText;
+	}
+
+	public List<ParserBlock> getParserBloecke() {
+		return parserBloecke;
 	}
 
 	/**
@@ -182,6 +190,7 @@ public class HallenPdfParser {
 				.append("</div>");
 
 		html.append("</div>");
+		parserBloecke.add(new ParserBlock(tag, titel, blockText));
 	}
 
 	/**
@@ -191,4 +200,30 @@ public class HallenPdfParser {
 
 		return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}
+
+	public static class ParserBlock implements Serializable {
+		private static final long serialVersionUID = 1L;
+		private final String tag;
+		private final String wochentag;
+		private final String text;
+
+		public ParserBlock(String tag, String wochentag, String text) {
+			this.tag = tag;
+			this.wochentag = wochentag;
+			this.text = text;
+		}
+
+		public String getTag() {
+			return tag;
+		}
+
+		public String getWochentag() {
+			return wochentag;
+		}
+
+		public String getText() {
+			return text;
+		}
+	}
+
 }

@@ -32,6 +32,7 @@ import com.jcraft.jsch.SftpException;
 import de.bericht.provider.KiProvider;
 import de.bericht.provider.KiProviderFactory;
 import de.bericht.service.DatabaseService;
+import de.bericht.service.EmailService;
 import de.bericht.service.HallenPdfParser;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
@@ -42,6 +43,7 @@ import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItem;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.Part;
 
@@ -59,7 +61,13 @@ public class FtpBean implements Serializable {
 			Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 	private String kiAusgabeText;
 	private byte[] originalPdfBytes;
+	private String emailFreitext;
+	private List<TerminEintrag> terminEintraege = new ArrayList<>();
+	private List<ManuellerTagEintrag> manuelleTage = new ArrayList<>();
+	private List<TerminMitStatus> parserTerminStatusListe = new ArrayList<>();
 	private final DatabaseService dbService = new DatabaseService();
+	private static final List<SelectItem> TERMIN_STATUS_OPTIONEN = List.of(new SelectItem("Termin eingetragen"),
+			new SelectItem("Nicht relevant"), new SelectItem("Überprüfe"));
 
 	private enum UploadThema {
 		HALLENBELEGUNGN("HALLENBELEGUNGN", "Hallenbelegung neuer Monat", "Hallenbelegung", "Hallenbelegung.pdf",
@@ -216,6 +224,13 @@ public class FtpBean implements Serializable {
 					HallenPdfParser pdfParcer = new HallenPdfParser(new java.io.ByteArrayInputStream(uploadedPdf));
 					ausgabeText = pdfParcer.getHtmlText();
 					kiAusgabeText = erstelleKiAnalyse(pdfParcer.getPlainText(), uploadedPdf);
+					terminEintraege = extrahiereTermine(ausgabeText);
+					parserTerminStatusListe = pdfParcer.getParserBloecke().stream().map(
+							block -> new TerminMitStatus(block.getTag() + " " + block.getWochentag(), block.getText()))
+							.toList();
+					manuelleTage = new ArrayList<>();
+					emailFreitext = "";
+
 					originalPdfBytes = uploadedPdf;
 				} else {
 					ausgabeText = "";
@@ -611,6 +626,161 @@ public class FtpBean implements Serializable {
 		}
 		String base64 = Base64.getEncoder().encodeToString(originalPdfBytes);
 		return "data:application/pdf;base64," + base64;
+	}
+
+	public void neuerTag() {
+		manuelleTage.add(new ManuellerTagEintrag());
+	}
+
+	public void sendeTerminMail() {
+		if (originalPdfBytes == null || originalPdfBytes.length == 0) {
+			addMessage(FacesMessage.SEVERITY_WARN, "Keine PDF verfügbar", "Bitte zuerst eine PDF hochladen.");
+			return;
+		}
+		String empfaenger = ConfigManager.getMailEmpfaengerTermine(vereinnr);
+		if (empfaenger == null || empfaenger.isBlank()) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Empfänger fehlt", "mail.termin.empfaenger ist nicht gepflegt.");
+			return;
+		}
+		StringBuilder inhalt = new StringBuilder();
+		inhalt.append("Freitext:\\n").append(emailFreitext == null ? "" : emailFreitext.trim())
+				.append("\\n\\nParser-Termine:\\n");
+		for (TerminMitStatus p : parserTerminStatusListe) {
+			inhalt.append("- ").append(p.getStatus()).append(" | ").append(p.getDatum()).append(" | ")
+					.append(p.getText()).append("\\n");
+		}
+		for (TerminEintrag e : terminEintraege) {
+			inhalt.append("- ").append(e.getStatus()).append(" | ").append(e.getDatum()).append(" | ")
+					.append(e.getText()).append("\\n");
+		}
+		for (ManuellerTagEintrag t : manuelleTage) {
+			inhalt.append("- ").append(t.getTag()).append(" | ").append(t.getText()).append("\\n");
+		}
+		inhalt.append("\\nKI-Ausgabe:\\n").append(kiAusgabeText == null ? "" : kiAusgabeText);
+		try {
+			new EmailService(vereinnr, empfaenger, null).sendEmail(vereinnr, "Terminabstimmung " + getVerein(),
+					inhalt.toString(), originalPdfBytes, "Hallenbelegung.pdf", true);
+			addMessage(FacesMessage.SEVERITY_INFO, "E-Mail versendet",
+					"Termine wurden an " + empfaenger + " gesendet.");
+		} catch (MessagingException ex) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "E-Mail fehlgeschlagen", ex.getMessage());
+		}
+	}
+
+	private List<TerminEintrag> extrahiereTermine(String html) {
+		List<TerminEintrag> r = new ArrayList<>();
+		if (html == null || html.isBlank()) {
+			return r;
+		}
+		String p = html.replaceAll("(?s)<[^>]*>", " ").replaceAll("\\s+", " ").trim();
+		Matcher m = Pattern.compile("\\b\\d{1,2}\\.\\d{1,2}\\.\\d{4}\\b").matcher(p);
+		while (m.find()) {
+			int e = Math.min(p.length(), m.end() + 80);
+			r.add(new TerminEintrag(m.group(), p.substring(m.start(), e).trim()));
+		}
+		return r;
+	}
+
+	public static class TerminEintrag implements Serializable {
+		private static final long serialVersionUID = 1L;
+		private String status = "Überprüfe";
+		private String datum;
+		private String text;
+
+		public TerminEintrag(String d, String t) {
+			datum = d;
+			text = t;
+		}
+
+		public String getStatus() {
+			return status;
+		}
+
+		public void setStatus(String status) {
+			this.status = status;
+		}
+
+		public String getDatum() {
+			return datum;
+		}
+
+		public String getText() {
+			return text;
+		}
+	}
+
+	public static class ManuellerTagEintrag implements Serializable {
+		private static final long serialVersionUID = 1L;
+		private String tag;
+		private String text;
+
+		public String getTag() {
+			return tag;
+		}
+
+		public void setTag(String tag) {
+			this.tag = tag;
+		}
+
+		public String getText() {
+			return text;
+		}
+
+		public void setText(String text) {
+			this.text = text;
+		}
+	}
+
+	public String getEmailFreitext() {
+		return emailFreitext;
+	}
+
+	public void setEmailFreitext(String emailFreitext) {
+		this.emailFreitext = emailFreitext;
+	}
+
+	public List<TerminEintrag> getTerminEintraege() {
+		return terminEintraege;
+	}
+
+	public List<SelectItem> getTerminStatusOptionen() {
+		return TERMIN_STATUS_OPTIONEN;
+	}
+
+	public List<ManuellerTagEintrag> getManuelleTage() {
+		return manuelleTage;
+	}
+
+	public List<TerminMitStatus> getParserTerminStatusListe() {
+		return parserTerminStatusListe;
+	}
+
+	public static class TerminMitStatus implements Serializable {
+		private static final long serialVersionUID = 1L;
+		private String status = "Überprüfe";
+		private final String datum;
+		private final String text;
+
+		public TerminMitStatus(String datum, String text) {
+			this.datum = datum;
+			this.text = text;
+		}
+
+		public String getStatus() {
+			return status;
+		}
+
+		public void setStatus(String status) {
+			this.status = status;
+		}
+
+		public String getDatum() {
+			return datum;
+		}
+
+		public String getText() {
+			return text;
+		}
 	}
 
 }
