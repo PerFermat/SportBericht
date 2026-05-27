@@ -15,7 +15,9 @@ public class HallenPdfParser {
 
 	private final String htmlText;
 	private final String plainText;
+	private List<String> ueberschrift = new ArrayList<>();
 	private final List<ParserBlock> parserBloecke = new ArrayList<>();
+	private final List<ParserBlock> parserAlle = new ArrayList<>();
 
 	/**
 	 * Konstruktor: Interpretiert direkt das PDF aus dem InputStream.
@@ -41,6 +43,10 @@ public class HallenPdfParser {
 
 	public List<ParserBlock> getParserBloecke() {
 		return parserBloecke;
+	}
+
+	public List<ParserBlock> getParserAlle() {
+		return parserAlle;
 	}
 
 	/**
@@ -96,7 +102,7 @@ public class HallenPdfParser {
 			if (matcher.matches()) {
 
 				// Vorherigen Block speichern
-				speichereBlock(html, aktuellerTag, aktuellerWochentag, aktuellerBlock.toString());
+				speichereBlock(html, aktuellerTag, aktuellerWochentag, aktuellerBlock.toString(), null);
 
 				aktuellerTag = matcher.group(1);
 				aktuellerWochentag = matcher.group(2);
@@ -111,7 +117,7 @@ public class HallenPdfParser {
 		}
 
 		// Letzten Block speichern
-		speichereBlock(html, aktuellerTag, aktuellerWochentag, aktuellerBlock.toString());
+		speichereBlock(html, aktuellerTag, aktuellerWochentag, aktuellerBlock.toString(), null);
 
 		html.append("""
 				</body>
@@ -124,26 +130,11 @@ public class HallenPdfParser {
 	/**
 	 * Block prüfen und ggf. als HTML hinzufügen.
 	 */
-	private void speichereBlock(StringBuilder html, String tag, String wochentag, String blockText) {
+	private void speichereBlock(StringBuilder html, String tag, String wochentag, String blockText,
+			List<Heimspiele> spieleDaheim) {
 
 		if (tag == null || wochentag == null) {
 			return;
-		}
-
-		String cssClass;
-		if (!(blockText.contains("TT-") || blockText.contains("Tischtennis"))) {
-			// Nur Montag und Freitag
-			if (!wochentag.equals("Mo") && !wochentag.equals("Fr")) {
-				return;
-			}
-
-			// Nur Einträge mit Halle
-			if (!blockText.contains("Halle")) {
-				return;
-			}
-			cssClass = "halle";
-		} else {
-			cssClass = "tischtennis";
 		}
 
 		String titel = switch (wochentag) {
@@ -156,8 +147,17 @@ public class HallenPdfParser {
 		case "So" -> "Sonntag";
 		default -> "Unbekannter Tag";
 		};
-		html.append(ParserAusgabeFormatter.formatBlock(tag + " " + titel, blockText, "halle".equals(cssClass)));
-		parserBloecke.add(new ParserBlock(tag, titel, blockText));
+		this.ueberschrift.add(tag + " " + titel);
+		parserAlle.add(new ParserBlock(tag, wochentag, titel, blockText));
+		if (!ParserAusgabeFormatter.sucheBegriff(blockText, wochentag)) {
+			return;
+		}
+		html.append(ParserAusgabeFormatter.formatBlock(tag + " " + titel, blockText, wochentag));
+		parserBloecke.add(new ParserBlock(tag, wochentag, titel, blockText));
+	}
+
+	public List<String> getUeberschrift() {
+		return ueberschrift;
 	}
 
 	public static class ParserBlock implements Serializable {
@@ -165,10 +165,12 @@ public class HallenPdfParser {
 		private final String tag;
 		private final String wochentag;
 		private final String text;
+		private final String titel;
 
-		public ParserBlock(String tag, String wochentag, String text) {
+		public ParserBlock(String tag, String wochentag, String titel, String text) {
 			this.tag = tag;
 			this.wochentag = wochentag;
+			this.titel = titel;
 			this.text = text;
 		}
 
@@ -178,6 +180,10 @@ public class HallenPdfParser {
 
 		public String getWochentag() {
 			return wochentag;
+		}
+
+		public String getTitel() {
+			return titel;
 		}
 
 		public String getText() {

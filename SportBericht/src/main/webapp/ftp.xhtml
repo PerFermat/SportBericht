@@ -33,23 +33,7 @@
 ftpBean
 
 
-
-
-
-
-
-
-
-
 .parserAusgabeCss
-
-
-
-
-
-
-
-
 
 
 }
@@ -125,7 +109,7 @@ ftpBean
 
 											<!-- Rechte Seite: Text -->
 											<div style="flex: 1;">
-												<h:outputText value="#{parserTermin.htmlText}"
+												<h:outputText value="#{parserTermin.htmlTextAnzeige}"
 													escape="false" />
 											</div>
 											<!-- Linke Seite: Dropdown -->
@@ -140,8 +124,10 @@ ftpBean
 									</ui:repeat>
 									<ui:repeat value="#{ftpBean.manuelleTage}" var="tag">
 										<div style="display: flex; gap: 8px; margin-bottom: 8px;">
-											<p:inputText value="#{tag.tag}" placeholder="Tag"
-												style="width:25%;" />
+											<p:selectOneMenu value="#{tag.tag}" style="width:25%;">
+												<f:selectItems value="#{ftpBean.ueberschrift}" var="u"
+													itemLabel="#{u}" itemValue="#{u}" />
+											</p:selectOneMenu>
 											<p:inputText value="#{tag.text}" placeholder="Freitext"
 												style="width:75%;" />
 										</div>

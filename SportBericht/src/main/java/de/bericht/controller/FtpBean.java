@@ -10,6 +10,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -32,7 +33,9 @@ import com.jcraft.jsch.SftpException;
 import de.bericht.service.DatabaseService;
 import de.bericht.service.EmailService;
 import de.bericht.service.HallenPdfParser;
+import de.bericht.service.Heimspiele;
 import de.bericht.service.ParserAusgabeFormatter;
+import de.bericht.service.TerminMitStatus;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.LoginCookieDaten;
@@ -63,10 +66,15 @@ public class FtpBean implements Serializable {
 	private String emailFreitext;
 	private List<TerminEintrag> terminEintraege = new ArrayList<>();
 	private List<ManuellerTagEintrag> manuelleTage = new ArrayList<>();
+	private List<Heimspiele> spieleDaheim = new ArrayList<>();
+	private List<String> heim;
 	private List<TerminMitStatus> parserTerminStatusListe = new ArrayList<>();
+	private List<String> ueberschrift = new ArrayList<>();
 	private final DatabaseService dbService = new DatabaseService();
-	private static final List<SelectItem> TERMIN_STATUS_OPTIONEN = List.of(new SelectItem("Termin eingetragen"),
-			new SelectItem("Nicht relevant"), new SelectItem("Überprüfe"));
+	private HallenPdfParser pdfParcer;
+	private static final List<SelectItem> TERMIN_STATUS_OPTIONEN = List.of(
+			new SelectItem("Trainingsausfall eingetragen"), new SelectItem("Termin eingetragen"),
+			new SelectItem("Nicht relevant"), new SelectItem("Überprüfe"), new SelectItem("Spieltag OK"));
 
 	private enum UploadThema {
 		HALLENBELEGUNGN("HALLENBELEGUNGN", "Hallenbelegung neuer Monat", "Hallenbelegung", "Hallenbelegung.pdf",
@@ -143,6 +151,7 @@ public class FtpBean implements Serializable {
 	}
 
 	public void hochladen() {
+		ueberschrift.clear();
 		if (!freigabe) {
 			addMessage(FacesMessage.SEVERITY_ERROR, "Fasches Passwort eingegeben",
 					"Bitte das Admin-Passwort verwenden");
@@ -220,24 +229,49 @@ public class FtpBean implements Serializable {
 
 			try {
 				if (thema.isHalleParcer()) {
-					HallenPdfParser pdfParcer = new HallenPdfParser(new java.io.ByteArrayInputStream(uploadedPdf));
+					pdfParcer = new HallenPdfParser(new java.io.ByteArrayInputStream(uploadedPdf));
+					ueberschrift = pdfParcer.getUeberschrift();
 					ausgabeText = pdfParcer.getHtmlText();
+					YearMonth pdfMonat = ermittlePdfMonat(uploadedPdf);
+					heim = ladeHeimspiele(pdfMonat);
 					kiAusgabeText = erstelleKiAnalyse(pdfParcer.getPlainText(), uploadedPdf);
 					terminEintraege = extrahiereTermine(ausgabeText);
-					parserTerminStatusListe = pdfParcer.getParserBloecke().stream()
-							.map(block -> new TerminMitStatus(ParserAusgabeFormatter
-									.formatBlock(block.getTag() + " " + block.getWochentag(), block.getText(), true)))
-							.toList();
+					parserTerminStatusListe = new ArrayList<>(pdfParcer.getParserBloecke().stream()
+							.map(block -> new TerminMitStatus(block.getTag(),
+									ParserAusgabeFormatter.formatBlock(
+											block.getTag() + " " + block.getTitel() + " [status] ", block.getText(),
+											block.getWochentag()),
+									block.getWochentag()))
+							.toList());
 					manuelleTage = new ArrayList<>();
 					emailFreitext = "";
 
 					originalPdfBytes = uploadedPdf;
+
+					for (int i = 0; i < 31; i++) {
+						String spiele = "";
+						Heimspiele heim = null;
+						for (Heimspiele b : spieleDaheim) {
+							if (i == b.getTag()) {
+								spiele = spiele + b.getLiga() + ": Heimspiel gegen " + " " + b.getGast() + " um "
+										+ b.getZeit() + " \n";
+								heim = b;
+							}
+
+						}
+
+						if (!spiele.isBlank()) {
+							TerminMitStatus termin = new TerminMitStatus(heim, spiele, pdfParcer.getParserAlle());
+							parserTerminStatusListe.add(termin);
+						}
+					}
 				} else {
+					heim.clear();
 					ausgabeText = "";
 					kiAusgabeText = "";
 					originalPdfBytes = null;
 				}
-
+				Collections.sort(parserTerminStatusListe);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -341,9 +375,6 @@ public class FtpBean implements Serializable {
 								<p>Falls etwas unklar war oder Daten fehlten: <em>explizit benennen</em>.</p>
 								""";
 
-		YearMonth pdfMonat = ermittlePdfMonat(uploadedPdf);
-		List<String> heim = ladeHeimspiele(pdfMonat);
-
 		String heimspieleText;
 
 		if (heim.isEmpty()) {
@@ -423,21 +454,6 @@ public class FtpBean implements Serializable {
 		return text.replace("|", "\\|").replace("\n", " ");
 	}
 
-	private String extrahierePdfSeitenweise(byte[] uploadedPdf) {
-		try (PDDocument document = PDDocument.load(uploadedPdf)) {
-			PDFTextStripper stripper = new PDFTextStripper();
-			List<String> seiten = new ArrayList<>();
-			for (int i = 1; i <= document.getNumberOfPages(); i++) {
-				stripper.setStartPage(i);
-				stripper.setEndPage(i);
-				seiten.add("--- Seite " + i + " ---\n" + stripper.getText(document));
-			}
-			return seiten.stream().collect(Collectors.joining("\n"));
-		} catch (IOException e) {
-			return "Seitenweiser Extrakt nicht möglich: " + e.getMessage();
-		}
-	}
-
 	private YearMonth ermittlePdfMonat(byte[] uploadedPdf) {
 		try (PDDocument document = PDDocument.load(uploadedPdf)) {
 			if (document.getNumberOfPages() <= 0) {
@@ -471,7 +487,8 @@ public class FtpBean implements Serializable {
 		if (jahrMatcher.find()) {
 			jahr = Integer.parseInt(jahrMatcher.group(1));
 		}
-		return YearMonth.of(jahr, monat);
+		return YearMonth.of(jahr, 3);
+//		return YearMonth.of(jahr, monat);
 	}
 
 	private Integer mapMonat(String monatRaw) {
@@ -500,11 +517,19 @@ public class FtpBean implements Serializable {
 			if (heim == null || heim.isBlank()) {
 				continue;
 			}
+			if (!heim.contains(ConfigManager.getSpielplanVerein(vereinnr))) {
+				continue;
+			}
+
 			if (pdfMonat != null && !liegtImMonat(row.getOrDefault("datum", ""), pdfMonat)) {
 				continue;
 			}
-			heimspiele.add(row.getOrDefault("datum", "") + " " + row.getOrDefault("zeit", "") + " | "
-					+ row.getOrDefault("liga", "") + " | " + heim + " - " + row.getOrDefault("gast", ""));
+			String datum = row.getOrDefault("datum", "");
+			String zeit = row.getOrDefault("zeit", "");
+			String liga = row.getOrDefault("liga", "");
+			String gast = row.getOrDefault("gast", "");
+			spieleDaheim.add(new Heimspiele(datum, zeit, liga, heim, gast));
+			heimspiele.add(datum + " " + zeit + " | " + liga + " | " + heim + " - " + gast);
 		}
 		return heimspiele;
 	}
@@ -645,19 +670,34 @@ public class FtpBean implements Serializable {
 		StringBuilder inhalt = new StringBuilder();
 		inhalt.append("<html><head><meta name='viewport' content='width=device-width, initial-scale=1.0'/>")
 				.append("<style>body{font-family:Arial,sans-serif;font-size:14px;line-height:1.5}")
-				.append(ParserAusgabeFormatter.css())
-				.append(".hinweis{background:#fff4db;border:1px solid #f6d992;border-radius:8px;padding:8px;margin-bottom:8px}</style></head><body>")
-				.append("<h2>Terminabstimmung ").append(escapeHtml(getVerein())).append("</h2>")
-				.append("<div class='hinweis'><strong>Freitext:</strong><br/>")
+				.append(ParserAusgabeFormatter.css()).append("</style></head><body>")
+				.append("Hallo,<br/><br/>"
+						+ "ich habe die neue Monats-PDF zur Hallennutzung geprüft und die relevanten Termine bereits in unseren Kalender eingetragen.<br/>"
+						+ "Unten findest du eine Zusammenfassung der Änderungen sowie die Ergebnisse der automatischen Auswertung zur Kontrolle.<br/><br/>"
+
+						+ "<strong>Farblegende:</strong><br/>"
+						+ "<span style='background-color:#e8f5e9;border-left:6px solid #2e7d32;padding:2px 6px;display:inline-block;'>Grün</span> = Tischtennis gefunden<br/>"
+						+ "<span style='background-color:#ffebee;border-left:6px solid #c62828;padding:2px 6px;display:inline-block;'>Rot</span> = Halle evtl. besetzt<br/>"
+						+ "<span style='background-color:#e3f2fd;border-left:6px solid #1565c0;padding:2px 6px;display:inline-block;'>Blau</span> = Heimspiel<br/>"
+						+ "<span style='background-color:#D1D1D1;border-left:6px solid #595959;padding:2px 6px;display:inline-block;'>Grau</span> = Manuell geprüft / eingetragen<br/><br/>")
+				.append("<h2>Allgemeine Bemerkungen</h2>").append("<div class='hinweis'>")
 				.append(escapeHtml(emailFreitext == null ? "" : emailFreitext.trim()).replace("\n", "<br/>"))
 				.append("</div>");
 
+		for (ManuellerTagEintrag p : manuelleTage) {
+			TerminMitStatus termin = new TerminMitStatus(p, pdfParcer.getParserAlle());
+			parserTerminStatusListe.add(termin);
+		}
+		Collections.sort(parserTerminStatusListe);
+		manuelleTage.clear();
+
+		inhalt.append("<h2>Hallenbelegung Trainingstage und Erwähnungen vom Tischtennis</h2>");
 		for (TerminMitStatus p : parserTerminStatusListe) {
-			inhalt.append("<div class='tag ").append(statusCss(p.getStatus())).append("'>");
-			inhalt.append("<div class='titel'>").append(" (").append(escapeHtml(p.getStatus())).append(")</div>")
-					.append("<div class='inhalt'>").append(p.getHtmlText()).append("</div></div>");
+			inhalt.append(p.getHtmlText(p.getStatus()));
 		}
 
+		inhalt.append("<h2>KI Auswertung der PDF-Daten</h2>");
+		inhalt.append(kiAusgabeText);
 		inhalt.append("</body></html>");
 		try {
 			new EmailService(vereinnr, empfaenger, null).sendEmail(vereinnr, "Terminabstimmung " + getVerein(),
@@ -757,35 +797,6 @@ public class FtpBean implements Serializable {
 		return parserTerminStatusListe;
 	}
 
-	public static class TerminMitStatus implements Serializable {
-		private static final long serialVersionUID = 1L;
-		private String status = "Überprüfe";
-		private final String htmlText;
-
-		public TerminMitStatus(String htmlText) {
-			this.htmlText = htmlText;
-		}
-
-		public String getStatus() {
-			return status;
-		}
-
-		public void setStatus(String status) {
-			this.status = status;
-		}
-
-		public String getHtmlText() {
-			return htmlText;
-		}
-	}
-
-	private String statusCss(String status) {
-		if ("Entfällt".equalsIgnoreCase(status)) {
-			return "halle";
-		}
-		return "tischtennis";
-	}
-
 	private String escapeHtml(String value) {
 		if (value == null) {
 			return "";
@@ -795,6 +806,22 @@ public class FtpBean implements Serializable {
 
 	public String getParserAusgabeCss() {
 		return ParserAusgabeFormatter.css();
+	}
+
+	public List<Heimspiele> getSpieleDaheim() {
+		return spieleDaheim;
+	}
+
+	public void setSpieleDaheim(List<Heimspiele> spieleDaheim) {
+		this.spieleDaheim = spieleDaheim;
+	}
+
+	public List<String> getUeberschrift() {
+		return ueberschrift;
+	}
+
+	public void setUeberschrift(List<String> ueberschrift) {
+		this.ueberschrift = ueberschrift;
 	}
 
 }
