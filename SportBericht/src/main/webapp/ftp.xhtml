@@ -30,8 +30,6 @@
 	background: #f5f7fa;
 }
 
-
-
 .ftp-split-scroll {
 	display: flex;
 	flex-direction: column;
@@ -43,23 +41,25 @@
 		flex-direction: row;
 		height: calc(100vh - 25px);
 	}
-
-	.ftp-split-scroll > .text-input,
-	.ftp-split-scroll > .error-table {
+	.ftp-split-scroll>.text-input, .ftp-split-scroll>.error-table {
 		flex: 1 1 0;
 		min-width: 0;
 		min-height: 0;
 		overflow-y: auto;
 	}
 }
-
-
-
-
 #{
 ftpBean
 
+
+
+
+
 .parserAusgabeCss
+
+
+
+
 
 
 }
@@ -96,27 +96,43 @@ ftpBean
 						<p:selectOneMenu id="thema" value="#{ftpBean.ausgewaehltesThema}"
 							style="width:100%;">
 							<f:selectItems value="#{ftpBean.themaOptionen}" />
+							<p:ajax process="@this" update="ftpForm" />
 						</p:selectOneMenu>
 
 						<h:outputLabel for="datei" value="Datei" />
-						<h:inputFile id="datei" value="#{ftpBean.uploadedDatei}" />
+						<p:fileUpload id="datei" mode="advanced" auto="true"
+							multiple="false" skinSimple="true" label="Datei auswählen"
+							listener="#{ftpBean.dateiAusgewaehlt}"
+							update="messages ausgabeTabs" />
+						<h:outputLabel for="dateiname" value="Ausgewählt " rendered="#{not empty ftpBean.ausgewaehlterDateiname}"  />
+							<h:outputText id="dateiname"
+								value="#{ftpBean.ausgewaehlterDateiname}"
+								rendered="#{not empty ftpBean.ausgewaehlterDateiname}" />
 					</h:panelGrid>
 
-					<div style="margin-top: 15px;">
+					<div
+						style="margin-top: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
+						<p:commandButton value="Analyse" action="#{ftpBean.analysierePdf}"
+							update="messages ausgabeTabs"
+							rendered="#{ftpBean.hallenThemaAusgewaehlt}" />
 						<p:commandButton value="Hochladen" action="#{ftpBean.hochladen}"
-							update="ftpForm" />
+							update="ftpForm"
+							rendered="#{not ftpBean.hallenThemaAusgewaehlt and ftpBean.adminFreigabe}" />
 					</div>
 					<div class="text-input">
 						<div class="text-container">
 							<p:tabView id="ausgabeTabs">
-								<p:tab title="E-Mail schreiben">
-									<div style="text-align: center; margin-bottom: 12px;">
+								<p:tab title="E-Mail schreiben"
+									rendered="#{ftpBean.hallenThemaAusgewaehlt}">
+									<div
+										style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px;">
 										<p:commandButton value="E-Mail senden"
 											action="#{ftpBean.sendeTerminMail}" update="ftpForm" />
-									</div>
-									<div style="text-align: center; margin-bottom: 12px;">
 										<p:commandButton value="KI-Analyse hinzufügen"
 											action="#{ftpBean.kiAnalyse}" update="ftpForm" />
+										<p:commandButton value="Hochladen"
+											action="#{ftpBean.hochladen}" update="ftpForm"
+											rendered="#{ftpBean.adminFreigabe}" />
 									</div>
 									<p:inputTextarea value="#{ftpBean.emailFreitext}" rows="3"
 										style="width:100%; margin-bottom: 12px;"

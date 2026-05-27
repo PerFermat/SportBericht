@@ -23,6 +23,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.file.UploadedFile;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
@@ -58,6 +60,8 @@ public class FtpBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final int SFTP_CONNECT_TIMEOUT_MS = 15000;
 	private Boolean freigabe;
+	private boolean adminFreigabe;
+	private boolean userFreigabe;
 	private String ausgabeText;
 	private static final DateTimeFormatter DATUM_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 	private static final Pattern MONATS_PATTERN = Pattern.compile(
@@ -116,6 +120,8 @@ public class FtpBean implements Serializable {
 	private String ruecksprung;
 	private String ausgewaehltesThema = UploadThema.HALLENBELEGUNGN.key;
 	private Part uploadedDatei;
+	private byte[] ausgewaehlteDateiBytes;
+	private String ausgewaehlterDateiname;
 
 	@PostConstruct
 	public void init() {
@@ -128,12 +134,14 @@ public class FtpBean implements Serializable {
 		ruecksprung = request.getParameter("ruecksprung");
 		passwort = request.getParameter("p");
 		lesenCookieParameter();
-		if (!(passwort == null) && passwort.equals(ConfigManager.getAdminPasswort(vereinnr))) {
-			this.freigabe = true;
-		} else {
-			addMessage(FacesMessage.SEVERITY_ERROR, "Fasches Passwort eingegeben",
-					"Bitte das Admin-Passwort verwenden");
-			this.freigabe = false;
+		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);
+		String userPasswort = ConfigManager.getUserPasswort(vereinnr);
+		adminFreigabe = passwort != null && passwort.equals(adminPasswort);
+		userFreigabe = passwort != null && passwort.equals(userPasswort);
+		this.freigabe = adminFreigabe || userFreigabe;
+		if (!freigabe) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Falsches Passwort eingegeben",
+					"Bitte User- oder Admin-Passwort verwenden");
 		}
 
 	}
@@ -152,14 +160,23 @@ public class FtpBean implements Serializable {
 		}
 	}
 
+	public boolean isHallenThemaAusgewaehlt() {
+		return UploadThema.fromKey(ausgewaehltesThema).isHalleParcer();
+	}
+
+	public boolean isAdminFreigabe() {
+		return adminFreigabe;
+	}
+
 	public void hochladen() {
 		ueberschrift.clear();
-		if (!freigabe) {
-			addMessage(FacesMessage.SEVERITY_ERROR, "Fasches Passwort eingegeben",
-					"Bitte das Admin-Passwort verwenden");
+		if (!adminFreigabe) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Keine Berechtigung",
+					"Upload per FTP ist nur mit Admin-Passwort möglich.");
+
 			return;
 		}
-		if (uploadedDatei == null || uploadedDatei.getSize() == 0) {
+		if (ausgewaehlteDateiBytes == null || ausgewaehlteDateiBytes.length == 0) {
 			addMessage(FacesMessage.SEVERITY_WARN, "Keine Datei ausgewählt", "Bitte zuerst eine Datei auswählen.");
 			return;
 		}
@@ -189,7 +206,7 @@ public class FtpBean implements Serializable {
 		}
 
 		UploadThema thema = UploadThema.fromKey(ausgewaehltesThema);
-		String originalDateiname = sanitizeDateiname(uploadedDatei.getSubmittedFileName());
+		String originalDateiname = sanitizeDateiname(ausgewaehlterDateiname);
 		String zielDateiname = thema.neuerDateiname != null ? thema.neuerDateiname : originalDateiname;
 		String zielPfad = buildRemotePath(
 				ConfigManager.getConfigValue(vereinnr, "sftp.verzeichnis.pdf") + thema.verzeichnis, zielDateiname);
@@ -219,7 +236,7 @@ public class FtpBean implements Serializable {
 				bestehendeDateiGesichert = true;
 			}
 
-			byte[] uploadedPdf = uploadedDatei.getInputStream().readAllBytes();
+			byte[] uploadedPdf = ausgewaehlteDateiBytes;
 			try (InputStream inputStream = new java.io.ByteArrayInputStream(uploadedPdf)) {
 				sftp.put(inputStream, zielPfad, ChannelSftp.OVERWRITE);
 			} catch (IOException | SftpException e) {
@@ -279,7 +296,6 @@ public class FtpBean implements Serializable {
 				e.printStackTrace();
 			}
 
-			uploadedDatei = null;
 			addMessage(FacesMessage.SEVERITY_INFO, "Upload erfolgreich",
 					"Datei wurde per SFTP übertragen: " + zielPfad);
 		} catch (JSchException | SftpException | IOException e) {
@@ -293,6 +309,80 @@ public class FtpBean implements Serializable {
 			}
 		}
 
+	}
+
+	public void analysierePdf() {
+		if (!freigabe) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Keine Berechtigung",
+					"Analyse ist nur mit User- oder Admin-Passwort möglich.");
+			return;
+		}
+		if (ausgewaehlteDateiBytes == null || ausgewaehlteDateiBytes.length == 0) {
+			addMessage(FacesMessage.SEVERITY_WARN, "Keine Datei ausgewählt", "Bitte zuerst eine Datei auswählen.");
+			return;
+		}
+		UploadThema thema = UploadThema.fromKey(ausgewaehltesThema);
+		if (!thema.isHalleParcer()) {
+			addMessage(FacesMessage.SEVERITY_WARN, "Analyse nicht verfügbar",
+					"Analyse ist nur für Hallen-PDF vorgesehen.");
+			return;
+		}
+
+		try {
+			byte[] uploadedPdf = ausgewaehlteDateiBytes;
+			pdfParcer = new HallenPdfParser(new java.io.ByteArrayInputStream(uploadedPdf));
+			ueberschrift = pdfParcer.getUeberschrift();
+			ausgabeText = pdfParcer.getHtmlText();
+			YearMonth pdfMonat = ermittlePdfMonat(uploadedPdf);
+			heim = ladeHeimspiele(pdfMonat);
+
+			terminEintraege = extrahiereTermine(ausgabeText);
+			parserTerminStatusListe = new ArrayList<>(pdfParcer.getParserBloecke().stream()
+					.map(block -> new TerminMitStatus(block.getTag(),
+							ParserAusgabeFormatter.formatBlock(block.getTag() + " " + block.getTitel() + " [status] ",
+									block.getText(), block.getWochentag()),
+							block.getWochentag()))
+					.toList());
+			manuelleTage = new ArrayList<>();
+			emailFreitext = "";
+
+			originalPdfBytes = uploadedPdf;
+
+			for (int i = 0; i < 31; i++) {
+				String spiele = "";
+				Heimspiele heim = null;
+				for (Heimspiele b : spieleDaheim) {
+					if (i == b.getTag()) {
+						spiele = spiele + b.getLiga() + ": Heimspiel gegen " + " " + b.getGast() + " um " + b.getZeit()
+								+ " \n";
+						heim = b;
+					}
+
+				}
+
+				if (!spiele.isBlank()) {
+					TerminMitStatus termin = new TerminMitStatus(heim, spiele, pdfParcer.getParserAlle());
+					parserTerminStatusListe.add(termin);
+				}
+			}
+			Collections.sort(parserTerminStatusListe);
+			addMessage(FacesMessage.SEVERITY_INFO, "Analyse erfolgreich", "PDF wurde analysiert.");
+		} catch (IOException e) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Analyse fehlgeschlagen", e.getMessage());
+		}
+	}
+
+	public void dateiAusgewaehlt(FileUploadEvent event) {
+		UploadedFile file = event.getFile();
+		if (file == null || file.getContent() == null || file.getContent().length == 0) {
+			addMessage(FacesMessage.SEVERITY_WARN, "Keine Datei ausgewählt", "Bitte zuerst eine Datei auswählen.");
+			return;
+		}
+		ausgewaehlteDateiBytes = file.getContent();
+		ausgewaehlterDateiname = file.getFileName();
+		uploadedDatei = null;
+		addMessage(FacesMessage.SEVERITY_INFO, "Datei übernommen",
+				"Datei wurde lokal gespeichert: " + sanitizeDateiname(ausgewaehlterDateiname));
 	}
 
 	public void kiAnalyse() {
@@ -830,6 +920,14 @@ public class FtpBean implements Serializable {
 
 	public void setUeberschrift(List<String> ueberschrift) {
 		this.ueberschrift = ueberschrift;
+	}
+
+	public String getAusgewaehlterDateiname() {
+		return ausgewaehlterDateiname;
+	}
+
+	public void setAusgewaehlterDateiname(String ausgewaehlterDateiname) {
+		this.ausgewaehlterDateiname = ausgewaehlterDateiname;
 	}
 
 }
