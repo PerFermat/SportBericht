@@ -29,9 +29,35 @@
 .ki-output th {
 	background: #f5f7fa;
 }
+
+
+
+.ftp-split-scroll {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}
+
+@media ( min-width : 920px) {
+	.ftp-split-scroll {
+		flex-direction: row;
+		height: calc(100vh - 25px);
+	}
+
+	.ftp-split-scroll > .text-input,
+	.ftp-split-scroll > .error-table {
+		flex: 1 1 0;
+		min-width: 0;
+		min-height: 0;
+		overflow-y: auto;
+	}
+}
+
+
+
+
 #{
 ftpBean
-
 
 .parserAusgabeCss
 
@@ -58,7 +84,7 @@ ftpBean
 			</p:commandButton>
 		</h:form>
 	</div>
-	<div class="responsive-container">
+	<div class="responsive-container ftp-split-scroll">
 		<div class="text-input">
 			<h:form id="ftpForm" enctype="multipart/form-data">
 				<p:messages id="messages" showDetail="true" closable="true" />
@@ -83,20 +109,14 @@ ftpBean
 					<div class="text-input">
 						<div class="text-container">
 							<p:tabView id="ausgabeTabs">
-								<p:tab title="KI-Ausgabe">
-									<div class="ki-output">
-										<p:outputLabel id="kiAusgabeText"
-											value="#{ftpBean.kiAusgabeText}" escape="false" />
-									</div>
-								</p:tab>
-								<p:tab title="Parser-Ausgabe">
-									<p:outputLabel id="ausgabeText" value="#{ftpBean.ausgabeText}"
-										escape="false" />
-								</p:tab>
 								<p:tab title="E-Mail schreiben">
 									<div style="text-align: center; margin-bottom: 12px;">
 										<p:commandButton value="E-Mail senden"
 											action="#{ftpBean.sendeTerminMail}" update="ftpForm" />
+									</div>
+									<div style="text-align: center; margin-bottom: 12px;">
+										<p:commandButton value="KI-Analyse hinzufügen"
+											action="#{ftpBean.kiAnalyse}" update="ftpForm" />
 									</div>
 									<p:inputTextarea value="#{ftpBean.emailFreitext}" rows="3"
 										style="width:100%; margin-bottom: 12px;"

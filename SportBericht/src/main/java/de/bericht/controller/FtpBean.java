@@ -30,6 +30,8 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 
+import de.bericht.provider.KiProvider;
+import de.bericht.provider.KiProviderFactory;
 import de.bericht.service.DatabaseService;
 import de.bericht.service.EmailService;
 import de.bericht.service.HallenPdfParser;
@@ -234,7 +236,7 @@ public class FtpBean implements Serializable {
 					ausgabeText = pdfParcer.getHtmlText();
 					YearMonth pdfMonat = ermittlePdfMonat(uploadedPdf);
 					heim = ladeHeimspiele(pdfMonat);
-					kiAusgabeText = erstelleKiAnalyse(pdfParcer.getPlainText(), uploadedPdf);
+
 					terminEintraege = extrahiereTermine(ausgabeText);
 					parserTerminStatusListe = new ArrayList<>(pdfParcer.getParserBloecke().stream()
 							.map(block -> new TerminMitStatus(block.getTag(),
@@ -293,7 +295,15 @@ public class FtpBean implements Serializable {
 
 	}
 
+	public void kiAnalyse() {
+		kiAusgabeText = erstelleKiAnalyse(pdfParcer.getPlainText(), originalPdfBytes);
+	}
+
 	private String erstelleKiAnalyse(String pdfText, byte[] uploadedPdf) {
+
+		if (ConfigManager.getConfigValue(vereinnr, "sftp.ki.model").isBlank()) {
+			return "";
+		}
 		String prompt = """
 								Situation: Tischtennis (TT) trainiert montags und freitags von 18:00 bis 22:00 Uhr in der Halle.
 								Zusätzlich gibt es manchmal Ligaspiele (Heimspiele) an anderen oder gleichen Tagen.
@@ -333,7 +343,7 @@ public class FtpBean implements Serializable {
 								---
 
 								**Ausgabeformat:**
-								Erstelle eine gut lesbare HTML-Antwort mit folgenden Strukturen.
+								Erstelle eine gut lesbare HTML-Antwort mit folgenden Strukturen. Das html-Dokument darf nur die Formatierungen innerhalb des <body> Teils enthalten.
 								Verwende <h2>, <h3>, <p>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <ul>, <li>.
 
 								<h2>Analyse der Hallenbelegungen für Tischtennis</h2>
@@ -386,14 +396,13 @@ public class FtpBean implements Serializable {
 		prompt = prompt.replace("<Heimspiele>", heimspieleText);
 		prompt = prompt.replace("<JSON>", bauePdfTabelle(pdfText));
 
-		return escapeHtml(prompt);
-//		try {
-//			KiProvider ki = KiProviderFactory.create(vereinnr, prompt,
-//					ConfigManager.getConfigValue(vereinnr, "sftp.ki.model"), "high", 0.2, 0.0, 0.0, null);
-//			return ki.getResponse();
-//		} catch (IOException e) {
-//			return "KI-Analyse konnte nicht erstellt werden: " + e.getMessage();
-//		}
+		try {
+			KiProvider ki = KiProviderFactory.create(vereinnr, prompt,
+					ConfigManager.getConfigValue(vereinnr, "sftp.ki.model"), "high", 0.2, 0.0, 0.0, null);
+			return ki.getResponse();
+		} catch (IOException e) {
+			return "KI-Analyse konnte nicht erstellt werden: " + e.getMessage();
+		}
 	}
 
 	private String bauePdfTabelle(String pdfText) {
@@ -487,8 +496,7 @@ public class FtpBean implements Serializable {
 		if (jahrMatcher.find()) {
 			jahr = Integer.parseInt(jahrMatcher.group(1));
 		}
-		return YearMonth.of(jahr, 3);
-//		return YearMonth.of(jahr, monat);
+		return YearMonth.of(jahr, monat);
 	}
 
 	private Integer mapMonat(String monatRaw) {
@@ -668,10 +676,10 @@ public class FtpBean implements Serializable {
 			return;
 		}
 		StringBuilder inhalt = new StringBuilder();
-		inhalt.append("<html><head><meta name='viewport' content='width=device-width, initial-scale=1.0'/>")
-				.append("<style>body{font-family:Arial,sans-serif;font-size:14px;line-height:1.5}")
-				.append(ParserAusgabeFormatter.css()).append("</style></head><body>")
-				.append("Hallo,<br/><br/>"
+		inhalt.append("<html><head><meta name='viewport' content='width=device-width, initial-scale=1.0'/>").append(
+				"<style>body{font-family:Arial,sans-serif;font-size:14px;line-height:1.5;margin:0;padding:0}.mail-wrapper{max-width:600px;margin:0 auto;padding:0 12px}.mail-block{text-align:left}")
+				.append(ParserAusgabeFormatter.css()).append("</style></head><body><div class='mail-wrapper'>")
+				.append("<div class='mail-block'>Hallo,<br/><br/>"
 						+ "ich habe die neue Monats-PDF zur Hallennutzung geprüft und die relevanten Termine bereits in unseren Kalender eingetragen.<br/>"
 						+ "Unten findest du eine Zusammenfassung der Änderungen sowie die Ergebnisse der automatischen Auswertung zur Kontrolle.<br/><br/>"
 
@@ -682,7 +690,7 @@ public class FtpBean implements Serializable {
 						+ "<span style='background-color:#D1D1D1;border-left:6px solid #595959;padding:2px 6px;display:inline-block;'>Grau</span> = Manuell geprüft / eingetragen<br/><br/>")
 				.append("<h2>Allgemeine Bemerkungen</h2>").append("<div class='hinweis'>")
 				.append(escapeHtml(emailFreitext == null ? "" : emailFreitext.trim()).replace("\n", "<br/>"))
-				.append("</div>");
+				.append("</div></div>");
 
 		for (ManuellerTagEintrag p : manuelleTage) {
 			TerminMitStatus termin = new TerminMitStatus(p, pdfParcer.getParserAlle());
@@ -691,14 +699,14 @@ public class FtpBean implements Serializable {
 		Collections.sort(parserTerminStatusListe);
 		manuelleTage.clear();
 
-		inhalt.append("<h2>Hallenbelegung Trainingstage und Erwähnungen vom Tischtennis</h2>");
+		inhalt.append("<div class='mail-block'><h2>Hallenbelegung Trainingstage und Erwähnungen vom Tischtennis</h2>");
 		for (TerminMitStatus p : parserTerminStatusListe) {
 			inhalt.append(p.getHtmlText(p.getStatus()));
 		}
 
-		inhalt.append("<h2>KI Auswertung der PDF-Daten</h2>");
+		inhalt.append("</div><div class='mail-block'><h2>KI Auswertung der PDF-Daten</h2>");
 		inhalt.append(kiAusgabeText);
-		inhalt.append("</body></html>");
+		inhalt.append("</div></div></body></html>");
 		try {
 			new EmailService(vereinnr, empfaenger, null).sendEmail(vereinnr, "Terminabstimmung " + getVerein(),
 					inhalt.toString(), originalPdfBytes, "Hallenbelegung.pdf", true);
