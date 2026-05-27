@@ -100,10 +100,10 @@ ftpBean
 						</p:selectOneMenu>
 
 						<h:outputLabel for="datei" value="Datei" />
-						<p:fileUpload id="datei" mode="advanced" auto="true"
+						<p:fileUpload id="datei" mode="simple" auto="true"
 							multiple="false" skinSimple="true" label="Datei auswählen"
 							listener="#{ftpBean.dateiAusgewaehlt}"
-							update="messages ausgabeTabs" />
+							update="messages ausgabeTabs ftpForm" />
 						<h:outputLabel for="dateiname" value="Ausgewählt " rendered="#{not empty ftpBean.ausgewaehlterDateiname}"  />
 							<h:outputText id="dateiname"
 								value="#{ftpBean.ausgewaehlterDateiname}"

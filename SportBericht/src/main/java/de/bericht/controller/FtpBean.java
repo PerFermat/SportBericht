@@ -79,8 +79,9 @@ public class FtpBean implements Serializable {
 	private final DatabaseService dbService = new DatabaseService();
 	private HallenPdfParser pdfParcer;
 	private static final List<SelectItem> TERMIN_STATUS_OPTIONEN = List.of(
-			new SelectItem("Trainingsausfall eingetragen"), new SelectItem("Termin eingetragen"),
-			new SelectItem("Nicht relevant"), new SelectItem("Überprüfe"), new SelectItem("Spieltag OK"));
+			new SelectItem("Trainingsausfall eingetragen"), new SelectItem("Training eingetragen"),
+			new SelectItem("Termin eingetragen"), new SelectItem("Nicht relevant"), new SelectItem("Überprüfe"),
+			new SelectItem("Spieltag OK"), new SelectItem("Spieltag kritisch"), new SelectItem("ignorieren"));
 
 	private enum UploadThema {
 		HALLENBELEGUNGN("HALLENBELEGUNGN", "Hallenbelegung neuer Monat", "Hallenbelegung", "Hallenbelegung.pdf",
@@ -381,8 +382,7 @@ public class FtpBean implements Serializable {
 		ausgewaehlteDateiBytes = file.getContent();
 		ausgewaehlterDateiname = file.getFileName();
 		uploadedDatei = null;
-		addMessage(FacesMessage.SEVERITY_INFO, "Datei übernommen",
-				"Datei wurde lokal gespeichert: " + sanitizeDateiname(ausgewaehlterDateiname));
+		originalPdfBytes = ausgewaehlteDateiBytes;
 	}
 
 	public void kiAnalyse() {
@@ -791,7 +791,9 @@ public class FtpBean implements Serializable {
 
 		inhalt.append("<div class='mail-block'><h2>Hallenbelegung Trainingstage und Erwähnungen vom Tischtennis</h2>");
 		for (TerminMitStatus p : parserTerminStatusListe) {
-			inhalt.append(p.getHtmlText(p.getStatus()));
+			if (!p.getStatus().equals("ignorieren")) {
+				inhalt.append(p.getHtmlText(p.getStatus()));
+			}
 		}
 
 		inhalt.append("</div><div class='mail-block'><h2>KI Auswertung der PDF-Daten</h2>");
