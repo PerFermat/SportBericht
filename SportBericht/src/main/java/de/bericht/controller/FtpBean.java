@@ -335,6 +335,7 @@ public class FtpBean implements Serializable {
 			ueberschrift = pdfParcer.getUeberschrift();
 			ausgabeText = pdfParcer.getHtmlText();
 			YearMonth pdfMonat = ermittlePdfMonat(uploadedPdf);
+			System.out.println(pdfMonat.toString());
 			heim = ladeHeimspiele(pdfMonat);
 
 			terminEintraege = extrahiereTermine(ausgabeText);
@@ -358,11 +359,16 @@ public class FtpBean implements Serializable {
 								+ " \n";
 						heim = b;
 					}
-
 				}
 
 				if (!spiele.isBlank()) {
 					TerminMitStatus termin = new TerminMitStatus(heim, spiele, pdfParcer.getParserAlle());
+					for (int j = 0; j < parserTerminStatusListe.size(); j++) {
+						TerminMitStatus b = parserTerminStatusListe.get(j);
+						if (b.getTag() == termin.getTag()) {
+							parserTerminStatusListe.remove(j);
+						}
+					}
 					parserTerminStatusListe.add(termin);
 				}
 			}
@@ -608,6 +614,7 @@ public class FtpBean implements Serializable {
 	}
 
 	private List<String> ladeHeimspiele(YearMonth pdfMonat) {
+		spieleDaheim.clear();
 		List<Map<String, String>> rows = dbService.ladeVerfuegbarkeitSpiele(vereinnr);
 		List<String> heimspiele = new ArrayList<>();
 		for (Map<String, String> row : rows) {

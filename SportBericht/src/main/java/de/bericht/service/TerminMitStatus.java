@@ -150,4 +150,12 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 		// optional: wenn gleicher Tag, nach Wochentag sortieren
 		return this.wochentag.compareTo(other.wochentag);
 	}
+
+	public int getTag() {
+		return tag;
+	}
+
+	public void setTag(int tag) {
+		this.tag = tag;
+	}
 }
