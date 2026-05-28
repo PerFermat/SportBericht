@@ -8,17 +8,21 @@
 <h:head>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0"
 		charset="UTF-8" />
+
 	<title>Versendete Mails</title>
+
 	<link rel="stylesheet"
 		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{versendeteMailsBean.vereinnr}"
 		type="text/css" />
+
 	<h:outputStylesheet name="css/styles.css" />
+
 	<style>
 .mail-layout {
 	display: grid;
 	grid-template-columns: minmax(320px, 38%) 1fr;
 	gap: 1rem;
-	height: calc(100vh - 170px);
+	height: calc(100vh - 75px);
 }
 
 .mail-liste, .mail-detail {
@@ -36,6 +40,7 @@
 	margin-bottom: .35rem;
 	text-decoration: none;
 	color: inherit;
+	transition: background .15s ease;
 }
 
 .mail-eintrag-link:hover {
@@ -81,6 +86,23 @@
 	justify-content: flex-end;
 }
 
+.mail-row {
+	display: flex;
+	align-items: flex-start;
+	gap: .4rem;
+	margin-bottom: .35rem;
+}
+
+.mail-row .ui-button {
+	flex-shrink: 0;
+	margin-top: .15rem;
+}
+
+.mail-row .mail-eintrag-link {
+	flex: 1;
+	margin-bottom: 0;
+}
+
 @media ( max-width : 900px) {
 	.mail-layout {
 		display: block;
@@ -101,119 +123,182 @@
 </h:head>
 
 <h:body>
+
 	<h:form id="msgForm">
 		<p:growl id="msgs" showDetail="true" life="3000" />
 	</h:form>
 
 	<div class="tabheader-area">
-		<h:outputLink value="#{versendeteMailsBean.vereinHomepage}"
-			target="_blank">
-			<img src="#{versendeteMailsBean.bestimmenIcon}"
-				style="vertical-align: middle;" width="50" />
+
+		<h:outputLink value="#{versendeteMailsBean.vereinHomepage}" target="_blank">
+			<img src="#{versendeteMailsBean.bestimmenIcon}" style="vertical-align: middle;"
+				width="50" />
 		</h:outputLink>
 		<h:form>
 			<p:commandButton type="button" value="Handbuch"
 				onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
 		</h:form>
-		<h2>Versendete Mails – #{versendeteMails.verein}</h2>
+		<h2>Versendete Mails – #{versendeteMailsBean.verein}</h2>
 		<h:form>
-			<p:commandButton value="Zurück"
-				action="#{versendeteMailsBean.ruecksprung}" immediate="true"
-				rendered="#{not empty versendeteMailsBean.ruecksprung}">
+			<p:commandButton value="Zurück" action="#{versendeteMailsBean.ruecksprung}"
+				immediate="true" rendered="#{not empty versendeteMailsBean.ruecksprung}">
 				<f:param name="vereinnr" value="#{versendeteMailsBean.vereinnr}" />
 			</p:commandButton>
 		</h:form>
+
 	</div>
 
 	<h:form id="mailForm">
-		<div
-			class="mail-layout #{versendeteMailsBean.mobileDetailAnsicht ? 'mobile-detail' : 'mobile-list'}">
-			<div class="mail-liste">
+
+		<p:outputPanel id="mailLayout"
+			styleClass="mail-layout #{versendeteMailsBean.mobileDetailAnsicht ? 'mobile-detail' : 'mobile-list'}">
+
+			<!-- LISTE -->
+			<p:outputPanel id="mailListe" styleClass="mail-liste">
+
 				<div style="margin-bottom: .75rem;">
+
 					<p:inputText id="suche" value="#{versendeteMailsBean.suchbegriff}"
 						placeholder="Suche in Betreff, Text, Empfänger, CC, BCC"
 						style="width:100%;">
+
 						<p:ajax event="keyup" delay="250"
 							listener="#{versendeteMailsBean.onSucheAendern}"
-							update="mailForm" />
+							update=":mailForm:mailListe :mailForm:mailDetail" />
+
 					</p:inputText>
+
 				</div>
-				<ui:repeat value="#{versendeteMailsBean.gruppen}" var="gruppe">
-					<p:panel header="#{gruppe.titel}" style="margin-bottom:.5rem;">
+
+				<ui:repeat value="#{versendeteMailsBean.gruppen}" var="gruppe"
+					varStatus="status">
+
+					<p:panel id="gruppePanel_#{status.index}" header="#{gruppe.titel}"
+						style="margin-bottom:.5rem;">
+
+						<p:ajax event="toggle"
+							listener="#{versendeteMailsBean.onToggle(gruppe)}" update="@none" />
+
 						<ui:repeat value="#{gruppe.mails}" var="mail">
+
 							<div class="mail-row">
+
 								<p:commandButton icon="pi pi-trash" title="Mail löschen"
 									actionListener="#{versendeteMailsBean.loescheAusgewaehlteMail(mail)}"
-									update="mailForm :msgForm"
+									update=":mailForm:mailListe :mailForm:mailDetail :msgForm"
 									styleClass="mail-delete ui-button-danger ui-button-flat" />
 
-
 								<p:commandLink
+									onclick="
+										$('.mail-eintrag-link').removeClass('aktiv');
+										$(this).addClass('aktiv');
+									"
 									actionListener="#{versendeteMailsBean.mailAuswaehlen(mail)}"
-									update="mailForm msgForm"
-									styleClass="mail-eintrag-link #{versendeteMailsBean.ausgewaehlteMail ne null and versendeteMailsBean.ausgewaehlteMail.id eq mail.id ? 'aktiv' : ''}">
+									update=":mailForm:mailLayout :msgForm"
+									styleClass="mail-eintrag-link">
+
 									<div>#{mail.betreff}</div>
-									<div class="mail-meta">#{versendeteMailsBean.formatZeitstempel(mail)}</div>
+
+									<div class="mail-meta">
+										#{versendeteMailsBean.formatZeitstempel(mail)}</div>
+
 								</p:commandLink>
+
 							</div>
+
 						</ui:repeat>
+
 					</p:panel>
+
 				</ui:repeat>
+
 				<ui:fragment rendered="#{empty versendeteMailsBean.gruppen}">
 					<p>Keine Treffer für die Suche.</p>
 				</ui:fragment>
-			</div>
 
-			<div class="mail-detail">
+			</p:outputPanel>
+
+			<!-- DETAIL -->
+			<p:outputPanel id="mailDetail" styleClass="mail-detail">
+
 				<div class="mail-topbar">
+
 					<p:commandButton icon="pi pi-bars" title="Zur Liste"
-						actionListener="#{versendeteMailsBean.zurListe}" update="mailForm"
+						actionListener="#{versendeteMailsBean.zurListe}"
+						update=":mailForm:mailLayout"
 						styleClass="ui-button-secondary ui-button-flat" />
+
 				</div>
+
+				<p:commandButton icon="pi pi-trash" title="Mail löschen"
+					actionListener="#{versendeteMailsBean.loescheAusgewaehlteMail}"
+					update=":mailForm:mailListe :mailForm:mailDetail :msgForm"
+					styleClass="mail-delete ui-button-danger ui-button-flat" />
 
 				<ui:fragment
 					rendered="#{versendeteMailsBean.ausgewaehlteMail ne null}">
+
 					<div class="mail-detail-wrapper">
+
 						<div class="mail-detail-content">
+
 							<div>
 								<strong>An:</strong>
 								#{versendeteMailsBean.ausgewaehlteMail.empfaenger}
 							</div>
+
 							<div>
 								<strong>CC:</strong> #{empty
 								versendeteMailsBean.ausgewaehlteMail.empfaengerCc ? '-' :
 								versendeteMailsBean.ausgewaehlteMail.empfaengerCc}
 							</div>
+
 							<div>
 								<strong>BCC:</strong> #{empty
 								versendeteMailsBean.ausgewaehlteMail.empfaengerBcc ? '-' :
 								versendeteMailsBean.ausgewaehlteMail.empfaengerBcc}
 							</div>
+
 							<div>
 								<strong>Anhang:</strong> #{empty
 								versendeteMailsBean.ausgewaehlteMail.attachmentName ? '-' :
 								versendeteMailsBean.ausgewaehlteMail.attachmentName}
 							</div>
-							<div class="mail-betreff">#{versendeteMailsBean.ausgewaehlteMail.betreff}</div>
+
+							<div class="mail-betreff">
+								#{versendeteMailsBean.ausgewaehlteMail.betreff}</div>
+
 							<div class="mail-html">
+
 								<h:outputText
 									value="#{versendeteMailsBean.ausgewaehlteMail.text}"
 									escape="false" />
+
 							</div>
+
 						</div>
+
 						<p:commandButton icon="pi pi-trash" title="Mail löschen"
 							actionListener="#{versendeteMailsBean.loescheAusgewaehlteMail}"
-							update="mailForm msgForm"
+							update=":mailForm:mailListe :mailForm:mailDetail :msgForm"
 							styleClass="mail-delete ui-button-danger ui-button-flat" />
+
 					</div>
+
 				</ui:fragment>
 
 				<ui:fragment
 					rendered="#{versendeteMailsBean.ausgewaehlteMail eq null}">
+
 					<p>Keine versendeten Mails oder keine Treffer vorhanden.</p>
+
 				</ui:fragment>
-			</div>
-		</div>
+
+			</p:outputPanel>
+
+		</p:outputPanel>
+
 	</h:form>
+
 </h:body>
 </html>
