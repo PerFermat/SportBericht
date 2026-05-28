@@ -1,6 +1,7 @@
 package de.bericht.controller;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -22,6 +23,7 @@ import de.bericht.service.DatabaseService;
 import de.bericht.util.BerichtData;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
+import de.bericht.util.LoginCookieDaten;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
@@ -54,8 +56,14 @@ public class BilderBean implements Serializable {
 		if (vereinnr == null) {
 			vereinnr = request.getParameter("vereinnr");
 		}
+		lesenCookieParameter();
 		if (vereinnr == null) {
-			vereinnr = "13014";
+			try {
+				FacesContext.getCurrentInstance().getExternalContext().redirect("fehlenderVerein.xhtml");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return;
 		}
 
 		bilder = dbService.listeBilder(vereinnr);
@@ -64,6 +72,13 @@ public class BilderBean implements Serializable {
 		}
 		sortiereBilder();
 		gruppiereBilder();
+	}
+
+	private void lesenCookieParameter() {
+		LoginCookieDaten logging = new LoginCookieDaten();
+		if (vereinnr == null || vereinnr.isBlank()) {
+			vereinnr = logging.getVereinnr();
+		}
 	}
 
 	private void sortiereBilder() {

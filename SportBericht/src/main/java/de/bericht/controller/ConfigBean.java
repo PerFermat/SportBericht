@@ -79,6 +79,8 @@ public class ConfigBean implements Serializable {
 		if (vereinnr == null) {
 			vereinnr = request.getParameter("vereinnr");
 		}
+		passwort = request.getParameter("p");
+		lesenCookieParameter();
 		if (vereinnr == null) {
 			try {
 				FacesContext.getCurrentInstance().getExternalContext().redirect("fehlenderVerein.xhtml");
@@ -87,8 +89,6 @@ public class ConfigBean implements Serializable {
 			}
 			return;
 		}
-		passwort = request.getParameter("p");
-		lesenCookieParameter();
 
 		String adminPasswort = ConfigManager.getAdminPasswort(vereinnr);
 		if (adminPasswort.equals(passwort)) {

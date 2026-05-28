@@ -21,10 +21,6 @@ public class OpenAIModelFetcher {
 	private final String openAiApiKey;
 	private final String deepSeekApiKey;
 
-	public OpenAIModelFetcher(String openAiApiKey) {
-		this(openAiApiKey, null);
-	}
-
 	public OpenAIModelFetcher(String openAiApiKey, String deepSeekApiKey) {
 		this.openAiApiKey = openAiApiKey;
 		this.deepSeekApiKey = deepSeekApiKey;
@@ -37,8 +33,12 @@ public class OpenAIModelFetcher {
 
 	private void loadModelNames() throws IOException {
 		Set<String> allModels = new LinkedHashSet<>();
-		allModels.addAll(fetchModels(OPENAI_API_URL, openAiApiKey));
-		allModels.addAll(fetchModels(DEEPSEEK_API_URL, deepSeekApiKey));
+		if (!(openAiApiKey == null || openAiApiKey.isBlank() || openAiApiKey.isEmpty())) {
+			allModels.addAll(fetchModels(OPENAI_API_URL, openAiApiKey));
+		}
+		if (!(deepSeekApiKey == null || deepSeekApiKey.isBlank() || deepSeekApiKey.isEmpty())) {
+			allModels.addAll(fetchModels(DEEPSEEK_API_URL, deepSeekApiKey));
+		}
 		modelNames.clear();
 		modelNames.addAll(allModels);
 	}
