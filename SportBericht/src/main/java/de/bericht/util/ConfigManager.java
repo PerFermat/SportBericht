@@ -62,34 +62,41 @@ public class ConfigManager {
 	}
 
 	public static String getConfigValue(String vereinnr, String eintrag) {
-		// Versuche, die Map für die Vereinsnummer zu holen
-		ConcurrentHashMap<String, String> eintraege = cache.getIfPresent(vereinnr);
 
-		if (eintraege != null && eintraege.containsKey(eintrag)) {
-			return eintraege.get(eintrag);
+		if (vereinnr == null || eintrag == null) {
+			return null;
 		}
 
-		// Noch nicht im Cache -> aus DB laden
+		ConcurrentHashMap<String, String> map = cache.asMap().computeIfAbsent(vereinnr, v -> loadConfigForVerein(v));
+
+		return map.get(eintrag);
+	}
+
+	private static ConcurrentHashMap<String, String> loadConfigForVerein(String vereinnr) {
+
 		DatabaseService dbService = new DatabaseService(vereinnr);
 
-		// Map ggf. neu anlegen (thread-sicher)
-		if (eintraege == null) {
-			eintraege = new ConcurrentHashMap<>();
-			ConcurrentHashMap<String, String> existing = cache.asMap().putIfAbsent(vereinnr, eintraege);
-			if (existing != null) {
-				eintraege = existing;
-			}
-			List<ConfigEintrag> alleConfig = dbService.ladeConfigEintraege(vereinnr);
-			for (ConfigEintrag configEintrag : alleConfig) {
-				eintraege.put(configEintrag.getEintrag(), configEintrag.getWert());
-			}
-			return eintraege.get(eintrag);
-		} else {
+		ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>();
 
-			String wert = dbService.leseConfig(vereinnr, eintrag);
-			eintraege.put(eintrag, wert);
-			return wert;
+		List<ConfigEintrag> alleConfig = dbService.ladeConfigEintraege(vereinnr);
+
+		if (alleConfig != null) {
+			for (ConfigEintrag ce : alleConfig) {
+
+				if (ce == null) {
+					continue;
+				}
+
+				String key = ce.getEintrag();
+				String value = ce.getWert();
+
+				if (key != null && value != null) {
+					map.put(key, value);
+				}
+			}
 		}
+
+		return map;
 	}
 
 	public static String getWordpressValue(String vereinnr, String wo, String was) {
@@ -224,6 +231,26 @@ public class ConfigManager {
 
 	public static String getChatGptPasswort(String vereinnr) {
 		String encrypted = getConfigValue(vereinnr, "bericht.ki.passwort");
+		try {
+			String decrypted = decryptPasswort(vereinnr, encrypted);
+			return decrypted;
+		} catch (Exception e) {
+			return encrypted;
+		}
+	}
+
+	public static String getClaudeApi(String vereinnr) {
+		String encrypted = getConfigValue(vereinnr, "bericht.claudeai.api");
+		try {
+			String decrypted = decryptPasswort(vereinnr, encrypted);
+			return decrypted;
+		} catch (Exception e) {
+			return encrypted;
+		}
+	}
+
+	public static String getGeminiApiKey(String vereinnr) {
+		String encrypted = getConfigValue(vereinnr, "bericht.gemini.api");
 		try {
 			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;

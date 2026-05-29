@@ -128,8 +128,7 @@ public class BerichtkiBean implements Serializable {
 		this.liga = params.get("liga");
 		this.uuid = params.get("uuid");
 
-		modelle = new OpenAIModelFetcher(ConfigManager.getChatGptPasswort(vereinnr),
-				ConfigManager.getDeepSeekPasswort(vereinnr));
+		modelle = new OpenAIModelFetcher(vereinnr);
 
 		selectedModel = ConfigManager.getConfigValue(vereinnr, "bericht.ki.model");
 		if (!isHttpLink()) {

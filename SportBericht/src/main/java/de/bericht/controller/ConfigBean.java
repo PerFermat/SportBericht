@@ -186,7 +186,7 @@ public class ConfigBean implements Serializable {
 			return Collections.emptyList();
 		}
 		try {
-			OpenAIModelFetcher fetcher = new OpenAIModelFetcher(apiKey, ConfigManager.getDeepSeekPasswort(vereinnr));
+			OpenAIModelFetcher fetcher = new OpenAIModelFetcher(vereinnr);
 
 			chatGptModelle = fetcher.getModelNames().stream().sorted().collect(Collectors.toList());
 		} catch (Exception e) {
