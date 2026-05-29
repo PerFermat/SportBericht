@@ -816,6 +816,16 @@ public class FtpBean implements Serializable {
 		}
 	}
 
+	public void neuerTagHinzufuegen() {
+
+		for (ManuellerTagEintrag p : manuelleTage) {
+			TerminMitStatus termin = new TerminMitStatus(p, pdfParcer.getParserAlle());
+			parserTerminStatusListe.add(termin);
+		}
+		Collections.sort(parserTerminStatusListe);
+		manuelleTage.clear();
+	}
+
 	private List<TerminEintrag> extrahiereTermine(String html) {
 		List<TerminEintrag> r = new ArrayList<>();
 		if (html == null || html.isBlank()) {

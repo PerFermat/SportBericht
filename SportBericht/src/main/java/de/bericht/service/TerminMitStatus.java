@@ -42,8 +42,8 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 		default -> "Unbekannter Tag";
 		};
 
-		htmlText = ParserAusgabeFormatter.formatBlock(manEintrag.getTag(), manEintrag.getText() + "\n\n" + text,
-				"manuell");
+		htmlText = ParserAusgabeFormatter.formatBlock(manEintrag.getTag() + " [status]",
+				manEintrag.getText() + "\n\n" + text, "manuell");
 		this.wochentag = "manuell";
 	}
 

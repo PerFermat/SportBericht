@@ -55,7 +55,11 @@ ftpBean
 
 
 
+
+
 .parserAusgabeCss
+
+
 
 
 
@@ -104,10 +108,11 @@ ftpBean
 							multiple="false" skinSimple="true" label="Datei auswählen"
 							listener="#{ftpBean.dateiAusgewaehlt}"
 							update="messages ausgabeTabs ftpForm" />
-						<h:outputLabel for="dateiname" value="Ausgewählt " rendered="#{not empty ftpBean.ausgewaehlterDateiname}"  />
-							<h:outputText id="dateiname"
-								value="#{ftpBean.ausgewaehlterDateiname}"
-								rendered="#{not empty ftpBean.ausgewaehlterDateiname}" />
+						<h:outputLabel for="dateiname" value="Ausgewählt "
+							rendered="#{not empty ftpBean.ausgewaehlterDateiname}" />
+						<h:outputText id="dateiname"
+							value="#{ftpBean.ausgewaehlterDateiname}"
+							rendered="#{not empty ftpBean.ausgewaehlterDateiname}" />
 					</h:panelGrid>
 
 					<div
@@ -166,6 +171,9 @@ ftpBean
 											</p:selectOneMenu>
 											<p:inputText value="#{tag.text}" placeholder="Freitext"
 												style="width:75%;" />
+											<p:commandButton value="Hinzufügen"
+												action="#{ftpBean.neuerTagHinzufuegen}" update="ftpForm"
+												style="margin-bottom: 8px;" />
 										</div>
 									</ui:repeat>
 									<p:commandButton value="Neuer Tag" action="#{ftpBean.neuerTag}"

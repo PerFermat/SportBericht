@@ -7,13 +7,14 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import de.bericht.service.SpielCodeParser;
 import de.bericht.util.SpielCode;
 
 class SpielCodeParserPdfImportTest {
-	// @Disabled("temporär deaktiviert")
+	@Disabled("temporär deaktiviert")
 	@Test
 	void parseFromPdf_shouldPrintParsedValuesFromGivenFile() throws Exception {
 		String pdfDateiPfad = "/home/michael/Nextcloud/Tischtennis/Spielcodes/Saison 25-26/E BL-Erwachsene1-Spiel-Code.pdf";
