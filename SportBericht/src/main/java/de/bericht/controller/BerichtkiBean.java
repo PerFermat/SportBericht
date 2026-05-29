@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -432,6 +433,7 @@ public class BerichtkiBean implements Serializable {
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Aufruf ChatGPT "));
 		} catch (Exception e) {
+			antworten = fehlerRohtext("Fehler beim Aufruf ChatGPT", antworten, e);
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Aufruf ChatGPT " + e.getMessage()));
 		}
@@ -915,48 +917,130 @@ public class BerichtkiBean implements Serializable {
 
 	public List<Spielbericht> parsenSpielberichte(String rawJson) {
 
-		// 1) Trim + Code-Fences entfernen
-		String cleaned = rawJson.trim().replaceAll("```[a-zA-Z0-9]*", "").replaceAll("```", "").trim();
-
-		// 2) JSON-Struktur extrahieren
-		cleaned = extractJson(cleaned);
-		if (cleaned == null || cleaned.isEmpty()) {
-			return fallback(rawJson);
-		}
-
+		String originalJson = rawJson == null ? "" : rawJson;
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+		mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
 
-		try {
-			List<Spielbericht> result = new ArrayList<>();
-
-			// Wurzel ist jetzt immer ein Objekt mit "Varianten"
-			JsonNode rootNode = mapper.readTree(cleaned);
-			JsonNode variantenNode = rootNode.get("Varianten");
-
-			if (variantenNode != null && variantenNode.isArray()) {
-				for (JsonNode node : variantenNode) {
-					Spielbericht bericht = mapper.treeToValue(node, Spielbericht.class);
-					result.add(bericht);
-				}
-			} else {
-				// Fallback: evtl. Einzelobjekt statt Array
-				Spielbericht einzel = mapper.treeToValue(rootNode, Spielbericht.class);
-				result.add(einzel);
+		Exception letzterFehler = null;
+		for (String kandidat : erstelleParseKandidaten(originalJson, mapper)) {
+			String cleaned = extractJson(kandidat);
+			if (cleaned == null || cleaned.isEmpty()) {
+				continue;
 			}
 
-			// Reihenfolge invertieren
-			Collections.reverse(result);
-			return result;
+			try {
+				List<Spielbericht> result = parseSpielberichte(cleaned, mapper);
+				if (!enthaeltBerichtstext(result)) {
+					throw new IOException("Die KI-Ausgabe enthält keinen verwertbaren Berichtstext.");
+				}
+				Collections.reverse(result);
+				return result;
+			} catch (Exception e) {
+				letzterFehler = e;
+			}
+		}
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			return fallback(rawJson);
+		return fallback(originalJson, letzterFehler);
+	}
+
+	private List<String> erstelleParseKandidaten(String rawJson, ObjectMapper mapper) {
+		Set<String> bereitsVersucht = new HashSet<>();
+		List<String> kandidaten = new ArrayList<>();
+		addParseKandidat(kandidaten, bereitsVersucht, rawJson);
+
+		String ohneCodeFence = rawJson.trim().replaceAll("```[a-zA-Z0-9]*", "").replaceAll("```", "").trim();
+		addParseKandidat(kandidaten, bereitsVersucht, ohneCodeFence);
+
+		for (String kandidat : new ArrayList<>(kandidaten)) {
+			String ohneHochkomma = entferneUmschliessendeHochkommas(kandidat);
+			addParseKandidat(kandidaten, bereitsVersucht, ohneHochkomma);
+
+			String dekodiert = dekodiereJsonString(kandidat, mapper);
+			addParseKandidat(kandidaten, bereitsVersucht, dekodiert);
+			addParseKandidat(kandidaten, bereitsVersucht, dekodiereJsonString(ohneHochkomma, mapper));
+		}
+
+		return kandidaten;
+	}
+
+	private void addParseKandidat(List<String> kandidaten, Set<String> bereitsVersucht, String kandidat) {
+		if (kandidat == null) {
+			return;
+		}
+		String cleaned = kandidat.trim();
+		if (!cleaned.isEmpty() && bereitsVersucht.add(cleaned)) {
+			kandidaten.add(cleaned);
 		}
 	}
 
+	private String entferneUmschliessendeHochkommas(String input) {
+		if (input == null || input.length() < 2) {
+			return input;
+		}
+
+		String trimmed = input.trim();
+		char first = trimmed.charAt(0);
+		char last = trimmed.charAt(trimmed.length() - 1);
+		if ((first == '\'' && last == '\'') || (first == '"' && last == '"')) {
+			return trimmed.substring(1, trimmed.length() - 1).trim();
+		}
+		return input;
+	}
+
+	private String dekodiereJsonString(String input, ObjectMapper mapper) {
+		if (input == null || input.length() < 2) {
+			return input;
+		}
+
+		try {
+			JsonNode node = mapper.readTree(input);
+			if (node != null && node.isTextual()) {
+				return node.asText();
+			}
+		} catch (Exception e) {
+			// Der Kandidat ist kein JSON-String-Literal. Der normale JSON-Parser versucht
+			// ihn danach weiter.
+		}
+		return input;
+	}
+
+	private List<Spielbericht> parseSpielberichte(String cleaned, ObjectMapper mapper) throws IOException {
+		List<Spielbericht> result = new ArrayList<>();
+		JsonNode rootNode = mapper.readTree(cleaned);
+
+		if (rootNode != null && rootNode.isTextual()) {
+			rootNode = mapper.readTree(rootNode.asText());
+		}
+
+		JsonNode variantenNode = rootNode.get("Varianten");
+		if (variantenNode != null && variantenNode.isArray()) {
+			for (JsonNode node : variantenNode) {
+				Spielbericht bericht = mapper.treeToValue(node, Spielbericht.class);
+				result.add(bericht);
+			}
+		} else {
+			Spielbericht einzel = mapper.treeToValue(rootNode, Spielbericht.class);
+			result.add(einzel);
+		}
+
+		return result;
+	}
+
+	private boolean enthaeltBerichtstext(List<Spielbericht> berichte) {
+		if (berichte == null || berichte.isEmpty()) {
+			return false;
+		}
+		return berichte.stream()
+				.anyMatch(bericht -> bericht != null && bericht.getText() != null && !bericht.getText().isBlank());
+	}
+
 	private String extractJson(String input) {
+		if (input == null) {
+			return null;
+		}
+
 		int startObj = input.indexOf('{');
 		int startArr = input.indexOf('[');
 
@@ -973,17 +1057,69 @@ public class BerichtkiBean implements Serializable {
 			return null; // Kein JSON
 		}
 
+		char open = input.charAt(start);
+		char close = open == '{' ? '}' : ']';
+		int depth = 0;
+		boolean inString = false;
+		char stringChar = 0;
+		boolean escaped = false;
+
+		for (int i = start; i < input.length(); i++) {
+			char c = input.charAt(i);
+
+			if (inString) {
+				if (escaped) {
+					escaped = false;
+				} else if (c == '\\') {
+					escaped = true;
+				} else if (c == stringChar) {
+					inString = false;
+				}
+				continue;
+			}
+
+			if (c == '"' || c == '\'') {
+				inString = true;
+				stringChar = c;
+			} else if (c == open) {
+				depth++;
+			} else if (c == close) {
+				depth--;
+				if (depth == 0) {
+					return input.substring(start, i + 1).trim();
+				}
+			}
+		}
+
 		return input.substring(start).trim();
 	}
 
-	private List<Spielbericht> fallback(String originalJson) {
+	private List<Spielbericht> fallback(String originalJson, Exception parseFehler) {
 		List<Spielbericht> result = new ArrayList<>();
 		Spielbericht fallback = new Spielbericht();
-		fallback.setText(originalJson);
-		fallback.setVariante("");
+		fallback.setText(
+				fehlerRohtext("KI-Ausgabe konnte nicht als Spielbericht geparst werden", originalJson, parseFehler));
+		fallback.setVariante("Rohdaten-Fallback");
 		fallback.setStilversion("");
 		result.add(fallback);
 		return result;
+	}
+
+	private String fehlerRohtext(String titel, String rohdaten, Exception fehler) {
+		StringBuilder text = new StringBuilder(titel == null ? "Fehler" : titel);
+		if (fehler != null) {
+			text.append("\n\nFehlermeldung:\n").append(fehler.getClass().getSimpleName());
+			if (fehler.getMessage() != null && !fehler.getMessage().isBlank()) {
+				text.append(": ").append(fehler.getMessage());
+			}
+		}
+		text.append("\n\nRohdaten:\n");
+		if (rohdaten == null || rohdaten.isBlank()) {
+			text.append("(keine Rohdaten vorhanden)");
+		} else {
+			text.append(rohdaten);
+		}
+		return text.toString();
 	}
 
 	public void spielplanAnzeige() throws IOException {
