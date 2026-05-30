@@ -397,89 +397,10 @@ public class FtpBean implements Serializable {
 
 	private String erstelleKiAnalyse(String pdfText, byte[] uploadedPdf) {
 
-		if (ConfigManager.getConfigValue(vereinnr, "sftp.ki.model").isBlank()) {
+		if (ConfigManager.getConfigValue(vereinnr, "ki.model.hallenbelegung").isBlank()) {
 			return "";
 		}
-		String prompt = """
-								Situation: Tischtennis (TT) trainiert montags und freitags von 18:00 bis 22:00 Uhr in der Halle.
-								Zusätzlich gibt es manchmal Ligaspiele (Heimspiele) an anderen oder gleichen Tagen.
-
-								Aufgaben:
-
-				1) **Analyse der Hallenbelegungen / Schließungen (nur an Trainingstagen: Montag & Freitag)**
-				   Prüfe folgende JSON-Daten auf Termine, an denen KEIN Tischtennistraining stattfinden kann.
-				   Trainingstage in denen das Training stattfinden kann sollen nicht erwähnt werden
-				   Bedingungen:
-				   - WICHTIG UNBEDINGT BEACHTEN: Der Wochentag muss "Mo" oder "Fr" sein.
-				   - Der Text muss **eine Nutzung oder Sperrung der Halle** hindeuten, unabhängig von der Uhrzeit.
-				     Dazu gehören:
-				     * explizite Schließung: "Halle geschlossen", "Halle / MZR geschlossen"
-				     * Belegung durch Dritte: "Halle belegt", "Halle: ... Aufbau ab ...", "Halle: ... Ganztags"
-				     * Jeder Satz, der mit "Halle" enthällt und eine Aktivität nennt, gilt als Hallenbelegung.
-				   - Wichtig: Auch wenn die Halle "ganztags" belegt ist, zählt das als **kein Training möglich** (auch abends).
-				   - Gib alle solche Termine aus – auch wenn der Text keine Uhrzeit explizit nennt.
-
-								2) **Extraktion aller Termine, die Tischtennis erwähnen**
-								   Suche in der JSON nach Erwähnungen von "Tischtennis" ODER der Abkürzung "TT"
-								   Nur wenn "TT" oder "Tischtennis" im Text vorkommt, wird der Termin aufgenommen.
-								   Falls nichts dergleichen im Text steht (z. B. nur andere Sportarten), nicht aufnehmen.
-
-								3) **Prüfung der Heimspiele**
-								   Für jedes angegebene Heimspiel: Prüfe, ob die Halle am betreffenden Datum und zur Spielzeit laut JSON frei ist.
-								   - Falls die Halle an dem Tag belegt oder geschlossen ist → Hallenstatus "belegt / nicht frei".
-								   - Falls die Halle frei ist (keine Erwähnung einer Belegung/Schließung im JSON) → "frei".
-								   - Falls das Heimspiel an einem Trainingstag (Mo/Fr) außerhalb der Trainingszeit (18–22 Uhr) liegt, ist das okay, solange die Halle frei ist.
-
-								JSON-Daten (Hallenbelegungen / Schließungen):
-								<JSON>
-
-								Heimspiele (zusätzlich zu prüfen):
-								<Heimspiele>
-
-								---
-
-								**Ausgabeformat:**
-								Erstelle eine gut lesbare HTML-Antwort mit folgenden Strukturen. Das html-Dokument darf nur die Formatierungen innerhalb des <body> Teils enthalten.
-								Verwende <h2>, <h3>, <p>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <ul>, <li>.
-
-								<h2>Analyse der Hallenbelegungen für Tischtennis</h2>
-
-								<h3>1) Kein Training möglich (nur Montag & Freitag, Halle nicht frei)</h3>
-								<table border="1">
-								  <thead>
-								    <tr><th>Datum</th><th>Wochentag</th><th>Grund</th><th>Quelle (Textauszug)</th></tr>
-								  </thead>
-								  <tbody>
-								    <!-- Befüllen mit Terminen aus Aufgabe 1 -->
-								  </tbody>
-								</table>
-
-								<h3>2) Tischtennis erwähnt (inkl. Abkürzung "TT")</h3>
-								<table border="1">
-								  <thead>
-								    <tr><th>Datum</th><th>Wochentag</th><th>Uhrzeit (falls vorhanden, sonst "-")</th><th>Textauszug</th></tr>
-								  </thead>
-								  <tbody>
-								    <!-- Befüllen mit Terminen aus Aufgabe 2 -->
-								  </tbody>
-								</table>
-
-								<h3>3) Heimspiele – Hallenstatusprüfung</h3>
-								<table border="1">
-								  <thead>
-								    <tr><th>Heimspiel</th><th>Hallenstatus</th><th>Begründung</th></tr>
-								  </thead>
-								  <tbody>
-								    <!-- Befüllen mit Ergebnissen aus Aufgabe 3 -->
-								  </tbody>
-								</table>
-
-								<h3>4) Kurze Zusammenfassung</h3>
-								<p>Anzahl Trainingstage ohne mögliches Training: X</p>
-								<p>Anzahl Tischtennis-Erwähnungen: Y</p>
-								<p>Heimspiele: Z geprüft, davon W mit Hallenkonflikt.</p>
-								<p>Falls etwas unklar war oder Daten fehlten: <em>explizit benennen</em>.</p>
-								""";
+		String prompt = ConfigManager.getConfigValue(vereinnr, "ki.prompt.hallenbelegung");
 
 		String heimspieleText;
 
@@ -494,7 +415,7 @@ public class FtpBean implements Serializable {
 
 		try {
 			KiProvider ki = KiProviderFactory.create(vereinnr, prompt,
-					ConfigManager.getConfigValue(vereinnr, "sftp.ki.model"), "high", 0.2, 0.0, 0.0, null);
+					ConfigManager.getConfigValue(vereinnr, "ki.model.hallenbelegung"), "high", 0.2, 0.0, 0.0, null);
 			return ki.getResponse();
 		} catch (IOException e) {
 			return "KI-Analyse konnte nicht erstellt werden: " + e.getMessage();
