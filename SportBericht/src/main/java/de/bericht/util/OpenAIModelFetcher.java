@@ -58,7 +58,7 @@ public class OpenAIModelFetcher {
 		}
 
 		if (isSet(geminiApiKey)) {
-			allModels.addAll(fetchGeminiModels(geminiApiKey));
+			allModels.addAll(fetchGeminiModels(vereinnr, geminiApiKey));
 		}
 		modelNames.clear();
 		modelNames.addAll(allModels);
@@ -92,7 +92,6 @@ public class OpenAIModelFetcher {
 		return names;
 	}
 
-	/** Für die Anthropic Claude API (x-api-key + anthropic-version Header) */
 	private List<String> fetchClaudeModels(String api) throws IOException {
 		List<String> names = new ArrayList<>();
 
@@ -101,29 +100,34 @@ public class OpenAIModelFetcher {
 				.header("anthropic-version", ANTHROPIC_VERSION).get().build();
 
 		try (Response response = client.newCall(request).execute()) {
-			if (!response.isSuccessful()) {
+
+			if (!response.isSuccessful() || response.body() == null) {
 				return names;
 			}
 
 			JSONObject json = new JSONObject(response.body().string());
 			JSONArray models = json.optJSONArray("data");
+
 			if (models == null) {
 				return names;
 			}
 
 			for (int i = 0; i < models.length(); i++) {
+
 				JSONObject model = models.getJSONObject(i);
-				// Anthropic liefert u.a. "id", "display_name", "created_at"
+
 				String id = model.optString("id", null);
-				if (id != null && !id.isBlank()) {
-					names.add(id);
+
+				if (id != null && !id.isBlank() && isTextCapableModel(id)) {
+					names.add("claude:" + id);
 				}
 			}
 		}
+
 		return names;
 	}
 
-	private List<String> fetchGeminiModels(String apiKey) throws IOException {
+	private List<String> fetchGeminiModels(String vereinnr, String apiKey) throws IOException {
 		List<String> names = new ArrayList<>();
 
 		OkHttpClient client = new OkHttpClient();
@@ -153,13 +157,80 @@ public class OpenAIModelFetcher {
 					fullName = fullName.replace("models/", "");
 				}
 
-				if (!fullName.isBlank()) {
+				// 👉 HIER: Filter anwenden
+				if (!fullName.isBlank() && isFreeTierModel(vereinnr, fullName) && isTextCapableModel(fullName)) {
 					names.add(fullName);
 				}
 			}
 		}
 
 		return names;
+	}
+
+	private boolean isTextCapableModel(String modelName) {
+
+		String lower = modelName.toLowerCase();
+
+		// =========================
+		// ❌ HARTE AUSSCHLÜSSE
+		// =========================
+
+		if (lower.contains("image") || lower.contains("imagen") || lower.contains("vision") || lower.contains("audio")
+				|| lower.contains("speech") || lower.contains("tts") || lower.contains("embedding")
+				|| lower.contains("rerank") || lower.contains("retrieval") || lower.contains("tool")) {
+			return false;
+		}
+
+		// =========================
+		// ✅ SONST ALLES TEXTFÄHIG
+		// =========================
+
+		return true;
+	}
+
+	private boolean isFreeTierModel(String vereinnr, String name) {
+
+		String premium = ConfigManager.getConfigValue(vereinnr, "ki.gemini.premium");
+
+		if (premium.equals("Ja")) {
+			return true;
+		}
+
+		String lower = name.toLowerCase();
+
+		// ❌ Harte Ausschlüsse (teuer / high-end)
+		if (lower.contains("pro") || lower.contains("ultra")) {
+			return false;
+		}
+
+		// ❌ bekannte problematische Varianten
+		if (lower.contains("vision-pro")) {
+			return false;
+		}
+
+		// ❌ bekannte problematische Varianten
+		if (lower.contains("image")) {
+			return false;
+		}
+
+		// ✅ bevorzugte kostenlose Modelle
+		if (lower.contains("flash")) {
+			return true;
+		}
+
+		if (lower.contains("lite")) {
+			return true;
+		}
+
+		if (lower.contains("embedding")) {
+			return true;
+		}
+
+		if (lower.contains("preview")) {
+			return true;
+		}
+
+		return true;
 	}
 
 	private static boolean isSet(String key) {
