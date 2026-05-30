@@ -211,7 +211,7 @@ public class SpielplanService implements SpielplanProvider {
 			if (spielDruck) {
 				String datum = spiel.getDatum();
 				long tage = tageBisDatum(datum, heute);
-				long configTage = Long.parseLong(ConfigManager.getConfigValue(vereinnr, "spielplan.vorschau.tage"));
+				long configTage = Long.parseLong(ConfigManager.getConfigValue(vereinnr, "tage.vorschau.spielplan"));
 
 				if (tage <= configTage || tage <= tageLetzterSatz + 1 || i < 2 || aktDatum.equals(datum)) {
 					if (!aktDatum.equals(datum)) {

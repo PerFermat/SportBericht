@@ -120,9 +120,9 @@ public class ZusammenGesamtBean implements Serializable {
 
 	public List<Spiel> getSpieleFreigegeben() {
 		long spielplanRueckschauTage = Long
-				.parseLong(ConfigManager.getConfigValue(vereinnr, "spielplan.rueckschau.tage"));
+				.parseLong(ConfigManager.getConfigValue(vereinnr, "tage.rueckschau.spielplan"));
 		long freierBerichtRueckschauTage = Long
-				.parseLong(ConfigManager.getConfigValue(vereinnr, "freierBericht.rueckschau.tage"));
+				.parseLong(ConfigManager.getConfigValue(vereinnr, "tage.rueckschau.freierbericht"));
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 		LocalDate heute = LocalDate.now();

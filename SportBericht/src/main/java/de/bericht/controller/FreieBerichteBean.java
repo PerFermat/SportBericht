@@ -63,7 +63,7 @@ public class FreieBerichteBean implements Serializable {
 	}
 
 	public List<Spiel> getSpiele() {
-		long configTage = Long.parseLong(ConfigManager.getConfigValue(vereinnr, "freierBericht.rueckschau.tage"));
+		long configTage = Long.parseLong(ConfigManager.getConfigValue(vereinnr, "tage.rueckschau.freierbericht"));
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 		LocalDate heute = LocalDate.now();
 		LocalDate vorTagen = heute.minusDays(configTage);

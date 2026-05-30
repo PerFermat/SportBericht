@@ -30,7 +30,7 @@ public class TelegrammService {
 		if (botToken == null || botToken.isEmpty()) {
 			return -1;
 		}
-		String chat_Id = ConfigManager.getConfigValue(vereinnr, "telegram.chat_id");
+		String chat_Id = ConfigManager.getConfigValue(vereinnr, "messenger.telegram.chatid");
 		if (chat_Id == null || chat_Id.isEmpty()) {
 			return -1;
 		}
@@ -55,7 +55,7 @@ public class TelegrammService {
 	// Holt die letzte chat_id aus getUpdates
 	public static String getLatestChatId(String vereinnr, String botToken) throws Exception {
 
-		String chat_Id = ConfigManager.getConfigValue(vereinnr, "telegram.chat_id");
+		String chat_Id = ConfigManager.getConfigValue(vereinnr, "messenger.telegram.chatid");
 		if (chat_Id != null && chat_Id.length() > 0 && !"N".equals(chat_Id)) {
 			return chat_Id;
 		}
@@ -80,7 +80,7 @@ public class TelegrammService {
 
 			DatabaseService dbService = new DatabaseService(vereinnr);
 			chat_Id = chat.get("id").toString();
-			dbService.insertOrUpdateConfigEintrag(vereinnr, "telegram.chat_id", chat_Id);
+			dbService.insertOrUpdateConfigEintrag(vereinnr, "messenger.telegram.chatid", chat_Id);
 
 			return chat_Id;
 		}

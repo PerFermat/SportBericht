@@ -170,7 +170,7 @@ public class ConfigManager {
 	}
 
 	public String getTelegrammToken(String vereinnr) {
-		String encrypted = getConfigValue(vereinnr, "telegramm.token");
+		String encrypted = getConfigValue(vereinnr, "messenger.telegram.api");
 		try {
 			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;
@@ -336,7 +336,7 @@ public class ConfigManager {
 
 	public static String erstellenPrompt(String vereinnr, String mannschaft, String anzahlWoerte, String vorkommnisse,
 			String spielbericht, String stilrichtung, int anzahlBerichte) {
-		String prompt = getConfigValue(vereinnr, "bericht.ki.prompt");
+		String prompt = getConfigValue(vereinnr, "ki.prompt.spielbericht");
 
 		Map<String, String> placeholders = Map.of("[anzahlWoerte]", anzahlWoerte, "[vorkommnisse]",
 				" " + vorkommnisse + " ", "[spielbericht]", " " + spielbericht + " ", "[mannschaft]", mannschaft + " ",
@@ -351,7 +351,7 @@ public class ConfigManager {
 
 	public static String erstellenPromptohneSpielbericht(String vereinnr, String turnier, String anzahlWoerte,
 			String vorkommnisse, String spielbericht, String stilrichtung, int anzahlBerichte) {
-		String prompt = getConfigValue(vereinnr, "bericht.ki.ohneSpielbericht");
+		String prompt = getConfigValue(vereinnr, "ki.prompt.ohnespielbericht");
 
 		Map<String, String> placeholders = Map.of("[anzahlWoerte]", anzahlWoerte, "[vorkommnisse]",
 				" " + vorkommnisse + " ", "[spielbericht]", " " + spielbericht + " ", "[stilrichtung]", stilrichtung,

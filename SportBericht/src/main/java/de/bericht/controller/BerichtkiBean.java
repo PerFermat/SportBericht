@@ -131,7 +131,7 @@ public class BerichtkiBean implements Serializable {
 
 		modelle = new OpenAIModelFetcher(vereinnr);
 
-		selectedModel = ConfigManager.getConfigValue(vereinnr, "bericht.ki.model");
+		selectedModel = ConfigManager.getConfigValue(vereinnr, "ki.model.spielbericht");
 		if (!isHttpLink()) {
 			this.berichtMannschaft = freierText;
 		} else if (heim.contains(ConfigManager.getConfigValue(vereinnr, "spielplan.Verein"))) {
@@ -790,7 +790,7 @@ public class BerichtkiBean implements Serializable {
 	}
 
 	public List<String> getBerichte() {
-		int configTage = Integer.parseInt(ConfigManager.getConfigValue(vereinnr, "freierBericht.rueckschau.tage"));
+		int configTage = Integer.parseInt(ConfigManager.getConfigValue(vereinnr, "tage.rueckschau.freierbericht"));
 		return dbService.listeUeberschriften(vereinnr, configTage);
 	}
 
@@ -819,7 +819,7 @@ public class BerichtkiBean implements Serializable {
 
 	public String getFreiPrompt() {
 		if (freiPrompt == null || "".equals(freiPrompt)) {
-			freiPrompt = ConfigManager.getConfigValue(vereinnr, "bericht.ki.freierPrompt");
+			freiPrompt = ConfigManager.getConfigValue(vereinnr, "ki.prompt.freierbericht");
 		}
 		return freiPrompt;
 	}
@@ -827,7 +827,7 @@ public class BerichtkiBean implements Serializable {
 	public String getZusammenfassenPrompt() {
 
 		if (zusammenfassenPrompt == null || "".equals(zusammenfassenPrompt)) {
-			zusammenfassenPrompt = ConfigManager.getConfigValue(vereinnr, "bericht.ki.zusammenfassen");
+			zusammenfassenPrompt = ConfigManager.getConfigValue(vereinnr, "ki.prompt.zusammenfassen");
 		}
 		return zusammenfassenPrompt;
 	}

@@ -573,8 +573,7 @@ public class AenderungBean implements Serializable {
 						.put("required", new JSONArray().put("Varianten"));
 
 				KiProvider ki = KiProviderFactory.create(vereinnr, frage,
-						ConfigManager.getConfigValue(vereinnr, "bericht.kikorrektur.model"), "none", 0.5, 0.5, 0.5,
-						schema);
+						ConfigManager.getConfigValue(vereinnr, "ki.model.korrektur"), "none", 0.5, 0.5, 0.5, schema);
 
 				antwort = ki.getResponse();
 				dbService.saveLogData(vereinnr, ergebnisLink, "KI", "KI-Bericht geändert", "", frage);

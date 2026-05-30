@@ -134,7 +134,7 @@ public class SpielplanBean implements Serializable {
 	}
 
 	public List<Spiel> getSpiele() {
-		long configTage = Long.parseLong(ConfigManager.getConfigValue(vereinnr, "spielplan.rueckschau.tage"));
+		long configTage = Long.parseLong(ConfigManager.getConfigValue(vereinnr, "tage.rueckschau.spielplan"));
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 		LocalDate heute = LocalDate.now();

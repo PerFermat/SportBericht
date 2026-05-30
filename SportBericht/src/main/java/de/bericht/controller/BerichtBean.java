@@ -443,7 +443,7 @@ public class BerichtBean implements Serializable {
 			text = ueberschrift + "\n\n" + berichtText;
 		}
 		StringBuilder frage = new StringBuilder();
-		frage.append(ConfigManager.getConfigValue(vereinnr, "bericht.kikorrektur.prompt"));
+		frage.append(ConfigManager.getConfigValue(vereinnr, "ki.prompt.korrektur"));
 		if (!kiSaetze.isEmpty()) {
 			frage.append(
 					" Der vorliegende Zeitungsbericht wurde bereits geprüft. Gib daher nur noch wirkliche Fehler aus und extem schlechte Formulierungen. ");
@@ -474,7 +474,7 @@ public class BerichtBean implements Serializable {
 																	.put("Korrekturvorschlag")))))
 					.put("required", new JSONArray().put("Korrekturen"));
 			KiProvider ki = KiProviderFactory.create(vereinnr, frage.toString(),
-					ConfigManager.getConfigValue(vereinnr, "bericht.kikorrektur.model"), "none", 0.0, 0.0, 0.0, schema);
+					ConfigManager.getConfigValue(vereinnr, "ki.model.korrektur"), "none", 0.0, 0.0, 0.0, schema);
 
 			kiRueckgabe = "<strong>Frage:</strong> <br> " + frage + "<br><br><strong>Antwort:</strong><br>"
 					+ ki.getResponse();

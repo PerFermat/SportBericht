@@ -194,7 +194,7 @@ public class SpielplanServiceClick implements SpielplanProvider {
 			}
 			if (spielDruck) {
 				long tage = tageBisDatum(spiel.getDatum(), heute);
-				long configTage = Long.parseLong(ConfigManager.getConfigValue(vereinnr, "spielplan.vorschau.tage"));
+				long configTage = Long.parseLong(ConfigManager.getConfigValue(vereinnr, "tage.vorschau.spielplan"));
 				if (tage <= configTage || tage <= tageLetzterSatz + 1 || i < 2 || aktDatum.equals(spiel.getDatum())) {
 					if (!aktDatum.equals(spiel.getDatum())) {
 						sb.append("<br><strong>" + wochentag(spiel.getDatum()) + ", " + spiel.getDatum()
