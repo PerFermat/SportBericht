@@ -230,7 +230,7 @@ public class ConfigManager {
 	}
 
 	public static String getChatGptPasswort(String vereinnr) {
-		String encrypted = getConfigValue(vereinnr, "bericht.ki.passwort");
+		String encrypted = getConfigValue(vereinnr, "ki.chatcpt.api");
 		try {
 			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;
@@ -240,7 +240,7 @@ public class ConfigManager {
 	}
 
 	public static String getClaudeApi(String vereinnr) {
-		String encrypted = getConfigValue(vereinnr, "bericht.claudeai.api");
+		String encrypted = getConfigValue(vereinnr, "ki.claudeai.api");
 		try {
 			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;
@@ -250,7 +250,7 @@ public class ConfigManager {
 	}
 
 	public static String getGeminiApiKey(String vereinnr) {
-		String encrypted = getConfigValue(vereinnr, "bericht.gemini.api");
+		String encrypted = getConfigValue(vereinnr, "ki.gemini.api");
 		try {
 			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;
@@ -431,7 +431,7 @@ public class ConfigManager {
 	}
 
 	public static String getDeepSeekPasswort(String vereinnr) {
-		String encrypted = getConfigValue(vereinnr, "bericht.deepseek.api");
+		String encrypted = getConfigValue(vereinnr, "ki.deepseek.api");
 		if (encrypted == null || encrypted.isBlank()) {
 			return getChatGptPasswort(vereinnr);
 		}
