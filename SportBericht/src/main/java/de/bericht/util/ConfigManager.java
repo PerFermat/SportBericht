@@ -230,7 +230,7 @@ public class ConfigManager {
 	}
 
 	public static String getChatGptPasswort(String vereinnr) {
-		String encrypted = getConfigValue(vereinnr, "ki.chatcpt.api");
+		String encrypted = getConfigValue(vereinnr, "ki.chatgpt.api");
 		try {
 			String decrypted = decryptPasswort(vereinnr, encrypted);
 			return decrypted;

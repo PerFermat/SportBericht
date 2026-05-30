@@ -175,6 +175,14 @@ public class OpenAIModelFetcher {
 		// ❌ HARTE AUSSCHLÜSSE
 		// =========================
 
+		if (lower.contains("antigravity")) {
+			return false;
+		}
+
+		if (lower.toLowerCase().matches(".*(^|[-_])aqa([-_]|$).*")) {
+			return false;
+		}
+
 		if (lower.contains("image") || lower.contains("imagen") || lower.contains("vision") || lower.contains("audio")
 				|| lower.contains("speech") || lower.contains("tts") || lower.contains("embedding")
 				|| lower.contains("rerank") || lower.contains("retrieval") || lower.contains("tool")) {
