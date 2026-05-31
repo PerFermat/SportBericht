@@ -54,7 +54,7 @@ public class SchoolHolidayApiClient {
 
 		// 1. DB versuchen
 		List<SchoolHoliday> fromDb = databaseService
-				.ladeSchulferienBW(ConfigManager.getConfigValue(vereinnr, "sftp.ferien.bundenlaender"), year);
+				.ladeSchulferienBW(ConfigManager.getConfigValue(vereinnr, "sftp.ferien.bundeslaender"), year);
 
 		if (fromDb != null && !fromDb.isEmpty()) {
 			return expand(fromDb);
@@ -66,7 +66,7 @@ public class SchoolHolidayApiClient {
 		// 3. in DB speichern
 		for (SchoolHoliday h : fromApi) {
 			databaseService.speichereSchulferien(h,
-					ConfigManager.getConfigValue(vereinnr, "sftp.ferien.bundenlaender"));
+					ConfigManager.getConfigValue(vereinnr, "sftp.ferien.bundeslaender"));
 		}
 
 		return expand(fromApi);
@@ -76,7 +76,7 @@ public class SchoolHolidayApiClient {
 
 	private List<SchoolHoliday> loadFromApi(int year) {
 		try {
-			String url = String.format(API_URL, ConfigManager.getConfigValue(vereinnr, "sftp.ferien.bundenlaender"),
+			String url = String.format(API_URL, ConfigManager.getConfigValue(vereinnr, "sftp.ferien.bundeslaender"),
 					year, year);
 			System.out.println(url);
 
