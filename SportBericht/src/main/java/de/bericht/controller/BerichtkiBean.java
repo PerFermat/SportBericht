@@ -962,7 +962,76 @@ public class BerichtkiBean implements Serializable {
 			addParseKandidat(kandidaten, bereitsVersucht, dekodiereJsonString(ohneHochkomma, mapper));
 		}
 
+		for (String kandidat : new ArrayList<>(kandidaten)) {
+			addParseKandidat(kandidaten, bereitsVersucht, repariereNichtEscapteAnfuehrungszeichen(kandidat));
+		}
+
 		return kandidaten;
+	}
+
+	private String repariereNichtEscapteAnfuehrungszeichen(String input) {
+		if (input == null || input.indexOf('"') < 0) {
+			return input;
+		}
+
+		StringBuilder repaired = new StringBuilder(input.length() + 16);
+		boolean inString = false;
+		boolean escaped = false;
+
+		for (int i = 0; i < input.length(); i++) {
+			char c = input.charAt(i);
+
+			if (!inString) {
+				repaired.append(c);
+				if (c == '"') {
+					inString = true;
+				}
+				continue;
+			}
+
+			if (escaped) {
+				repaired.append(c);
+				escaped = false;
+				continue;
+			}
+
+			if (c == '\\') {
+				repaired.append(c);
+				escaped = true;
+				continue;
+			}
+
+			if (c == '"') {
+				char naechstesRelevantesZeichen = findeNaechstesNichtLeerzeichen(input, i + 1);
+				if (istValiderStringAbschluss(naechstesRelevantesZeichen)) {
+					repaired.append(c);
+					inString = false;
+				} else {
+					repaired.append("\"");
+				}
+				continue;
+			}
+
+			repaired.append(c);
+		}
+
+		return repaired.toString();
+	}
+
+	private char findeNaechstesNichtLeerzeichen(String input, int start) {
+		for (int i = start; i < input.length(); i++) {
+			char c = input.charAt(i);
+			if (!Character.isWhitespace(c)) {
+				return c;
+			}
+		}
+		return '\0';
+	}
+
+	private boolean istValiderStringAbschluss(char naechstesRelevantesZeichen) {
+		return naechstesRelevantesZeichen == ',' || naechstesRelevantesZeichen == '}'
+				|| naechstesRelevantesZeichen == ']' || naechstesRelevantesZeichen == ':'
+				|| naechstesRelevantesZeichen == '\0';
 	}
 
 	private void addParseKandidat(List<String> kandidaten, Set<String> bereitsVersucht, String kandidat) {

@@ -9,6 +9,7 @@ import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import de.bericht.util.enums.KiSystem;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -42,26 +43,32 @@ public class OpenAIModelFetcher {
 		Set<String> allModels = new LinkedHashSet<>();
 
 		if (isSet(openAiApiKey)) {
-			// OpenAI: Auth via "Authorization: Bearer …", Antwort: { data: [{id: "..."}] }
-			allModels.addAll(fetchModelsBearer(OPENAI_API_URL, openAiApiKey));
+			allModels.addAll(prefixModels(fetchModelsBearer(OPENAI_API_URL, openAiApiKey), KiSystem.CHATGPT));
 		}
 
 		if (isSet(deepSeekApiKey)) {
-			// DeepSeek: gleiche Struktur wie OpenAI
-			allModels.addAll(fetchModelsBearer(DEEPSEEK_API_URL, deepSeekApiKey));
+			allModels.addAll(prefixModels(fetchModelsBearer(DEEPSEEK_API_URL, deepSeekApiKey), KiSystem.DEEPSEEK));
 		}
 
 		if (isSet(claudeApiKey)) {
-			// Anthropic: Auth via "x-api-key", zusätzlich "anthropic-version" Header
-			// Antwort: { data: [{id: "claude-...", ...}] }
-			allModels.addAll(fetchClaudeModels(claudeApiKey));
+			allModels.addAll(prefixModels(fetchClaudeModels(claudeApiKey), KiSystem.CLAUDE));
 		}
 
 		if (isSet(geminiApiKey)) {
-			allModels.addAll(fetchGeminiModels(vereinnr, geminiApiKey));
+			allModels.addAll(prefixModels(fetchGeminiModels(vereinnr, geminiApiKey), KiSystem.GEMINI));
 		}
 		modelNames.clear();
 		modelNames.addAll(allModels);
+	}
+
+	private List<String> prefixModels(List<String> models, KiSystem system) {
+		List<String> result = new ArrayList<>();
+
+		for (String model : models) {
+			result.add(system.formatModel(model));
+		}
+
+		return result;
 	}
 
 	/** Für OpenAI-kompatible APIs (Authorization: Bearer …) */

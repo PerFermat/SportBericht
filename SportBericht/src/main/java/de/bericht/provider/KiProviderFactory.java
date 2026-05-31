@@ -8,6 +8,7 @@ import de.bericht.util.ApiKIChatGPT;
 import de.bericht.util.ApiKIClaude;
 import de.bericht.util.ApiKIDeepSeek;
 import de.bericht.util.ApiKIGemini;
+import de.bericht.util.enums.KiSystem;
 
 public class KiProviderFactory {
 
@@ -17,24 +18,27 @@ public class KiProviderFactory {
 	public static KiProvider create(String vereinnr, String frage, String model, String thinking, double temperatur,
 			double frequencyPenalty, double presencePenalty, JSONObject jsonSchema) throws IOException {
 
-		String normalizedModel = model == null ? "" : model.trim().toLowerCase();
+		KiSystem system = KiSystem.fromModel(model);
+		String pureModel = KiSystem.extractPureModel(model);
 
-		if (normalizedModel.startsWith("deepseek")) {
-			return new ApiKIDeepSeek(vereinnr, frage, model, temperatur, frequencyPenalty, presencePenalty, jsonSchema);
-		}
+		switch (system) {
 
-		if (normalizedModel.startsWith("claude")) {
-			return new ApiKIClaude(vereinnr, frage, model, thinking, temperatur, frequencyPenalty, presencePenalty,
+		case DEEPSEEK:
+			return new ApiKIDeepSeek(vereinnr, frage, pureModel, temperatur, frequencyPenalty, presencePenalty,
+					jsonSchema);
+
+		case CLAUDE:
+			return new ApiKIClaude(vereinnr, frage, pureModel, thinking, temperatur, frequencyPenalty, presencePenalty,
+					jsonSchema);
+
+		case GEMINI:
+			return new ApiKIGemini(vereinnr, frage, pureModel, thinking, temperatur, frequencyPenalty, presencePenalty,
+					jsonSchema);
+
+		case CHATGPT:
+		default:
+			return new ApiKIChatGPT(vereinnr, frage, pureModel, thinking, temperatur, frequencyPenalty, presencePenalty,
 					jsonSchema);
 		}
-
-		if (normalizedModel.startsWith("gemini")) {
-			return new ApiKIGemini(vereinnr, frage, model, thinking, temperatur, frequencyPenalty, presencePenalty,
-					jsonSchema);
-		}
-
-		// Default: OpenAI / ChatGPT
-		return new ApiKIChatGPT(vereinnr, frage, model, thinking, temperatur, frequencyPenalty, presencePenalty,
-				jsonSchema);
 	}
 }
