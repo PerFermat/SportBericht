@@ -1,10 +1,15 @@
 package de.bericht.service;
 
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 import de.bericht.controller.FtpBean.ManuellerTagEintrag;
 import de.bericht.service.HallenPdfParser.ParserBlock;
+import de.bericht.util.SchoolHolidayApiClient;
+import de.jollyday.HolidayManager;
+import de.jollyday.ManagerParameters;
 
 public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus> {
 	private static final long serialVersionUID = 1L;
@@ -12,6 +17,7 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 	private final String htmlText;
 	private String wochentag;
 	private int tag;
+	private static final HolidayManager HOLIDAY_MANAGER = HolidayManager.getInstance(ManagerParameters.create("de"));
 
 	public TerminMitStatus(String tag, String htmlText, String wochentag) {
 		this.htmlText = htmlText;
@@ -19,7 +25,8 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 		this.tag = numTag(tag);
 	}
 
-	public TerminMitStatus(ManuellerTagEintrag manEintrag, List<ParserBlock> terminEintraege) {
+	public TerminMitStatus(String vereinnr, YearMonth pdfMonat, ManuellerTagEintrag manEintrag,
+			List<ParserBlock> terminEintraege) {
 		tag = 99;
 		String text = null;
 		String wochentag = null;
@@ -42,9 +49,26 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 		default -> "Unbekannter Tag";
 		};
 
+		LocalDate datum = LocalDate.of(pdfMonat.getYear(), pdfMonat.getMonth(), tag);
+		String feiertag = erstelleFeiertagTermin(datum);
+		if (feiertag != null) {
+			manEintrag.setText(feiertag + "\n\n" + manEintrag.getText());
+		}
+
+		SchoolHolidayApiClient api = new SchoolHolidayApiClient(vereinnr);
+		SchoolHoliday ferien = api.getHolidayIfPresent(datum);
+		if (ferien != null) {
+			manEintrag.setText("Ferien: " + ferien.getName() + "\n\n" + manEintrag.getText());
+		}
+
 		htmlText = ParserAusgabeFormatter.formatBlock(manEintrag.getTag() + " [status]",
 				manEintrag.getText() + "\n\n" + text, "manuell");
 		this.wochentag = "manuell";
+	}
+
+	private String erstelleFeiertagTermin(LocalDate datum) {
+		return HOLIDAY_MANAGER.getHolidays(datum.getYear(), "bw").stream().filter(h -> h.getDate().equals(datum))
+				.map(h -> "Feiertag: " + h.getDescription()).findFirst().orElse(null);
 	}
 
 	public TerminMitStatus(Heimspiele heim, String spiele, List<ParserBlock> terminEintraege) {

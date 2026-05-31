@@ -13,12 +13,16 @@ public final class ParserAusgabeFormatter {
 	private static final List<SuchbegriffFarbe> SUCHBEGRIFFE_FARBEN = List.of(
 			new SuchbegriffFarbe("Halle", "Mo,Fr", "halle",
 					".halle{background-color:#ffebee;border-left:6px solid #c62828}"),
+			new SuchbegriffFarbe("Feiertag", "Mo,Fr", "feiertag",
+					".feiertag{background-color:#fff8e1;border-left:6px solid #ff8f00}"),
 			new SuchbegriffFarbe("Tischtennis", "Mo,Di,Mi,Do,Fr,Sa,So", "tischtennis",
 					".tischtennis{background-color:#e8f5e9;border-left:6px solid #2e7d32}"),
 			new SuchbegriffFarbe("TT-", "Mo,Di,Mi,Do,Fr,Sa,So", "tischtennis",
 					".tischtennis{background-color:#e8f5e9;border-left:6px solid #2e7d32}"),
 			new SuchbegriffFarbe("Heimspiel", "heimspiel", "heimspiel",
 					".heimspiel{background-color:#e3f2fd;border-left:6px solid #1565c0}"),
+			new SuchbegriffFarbe("Ferien", "Mo,Fr", "ferien",
+					".ferien{background-color:#fff8e1;border-left:6px solid #ff8f00}"),
 			new SuchbegriffFarbe("Manuell", "manuell", "manuell",
 					".manuell{background-color:#D1D1D1;border-left:6px solid #595959}"));
 

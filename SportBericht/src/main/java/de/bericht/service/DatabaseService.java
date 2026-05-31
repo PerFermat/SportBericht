@@ -2956,4 +2956,60 @@ public class DatabaseService {
 			e.printStackTrace();
 		}
 	}
+
+	public List<SchoolHoliday> ladeSchulferienBW(String bundesland, int jahr) {
+
+		String sql = "SELECT start_date, end_date, name " + "FROM school_holidays " + "WHERE region_code = ? "
+				+ "AND start_date <= ? " + "AND end_date >= ?";
+
+		List<SchoolHoliday> list = new ArrayList<>();
+
+		LocalDate startOfYear = LocalDate.of(jahr, 1, 1);
+		LocalDate endOfYear = LocalDate.of(jahr, 12, 31);
+
+		try (Connection conn = openConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+			ps.setString(1, bundesland);
+			ps.setDate(2, java.sql.Date.valueOf(endOfYear));
+			ps.setDate(3, java.sql.Date.valueOf(startOfYear));
+
+			ResultSet rs = ps.executeQuery();
+
+			while (rs.next()) {
+				SchoolHoliday h = new SchoolHoliday();
+				h.setStart(rs.getDate("start_date").toLocalDate());
+				h.setEnd(rs.getDate("end_date").toLocalDate());
+				h.setName(rs.getString("name"));
+				list.add(h);
+			}
+
+			rs.close();
+
+		} catch (SQLException e) {
+			throw new IllegalStateException("Schulferien konnten nicht geladen werden.", e);
+		}
+
+		return list;
+	}
+
+	public void speichereSchulferien(SchoolHoliday h, String region) {
+
+		String sql = "INSERT INTO school_holidays " + "(country_code, region_code, name, start_date, end_date, source) "
+				+ "VALUES (?, ?, ?, ?, ?, ?)";
+
+		try (Connection conn = openConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+			ps.setString(1, "DE");
+			ps.setString(2, region);
+			ps.setString(3, h.getName());
+			ps.setDate(4, java.sql.Date.valueOf(h.getStart()));
+			ps.setDate(5, java.sql.Date.valueOf(h.getEnd()));
+			ps.setString(6, "IMPORT");
+
+			ps.executeUpdate();
+
+		} catch (SQLException e) {
+			throw new IllegalStateException("Schulferien konnten nicht gespeichert werden.", e);
+		}
+	}
 }

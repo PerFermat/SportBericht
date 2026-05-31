@@ -3,6 +3,8 @@ package de.bericht.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -11,6 +13,10 @@ import java.util.regex.Pattern;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
+import de.bericht.util.SchoolHolidayApiClient;
+import de.jollyday.HolidayManager;
+import de.jollyday.ManagerParameters;
+
 public class HallenPdfParser {
 
 	private final String htmlText;
@@ -18,15 +24,20 @@ public class HallenPdfParser {
 	private List<String> ueberschrift = new ArrayList<>();
 	private final List<ParserBlock> parserBloecke = new ArrayList<>();
 	private final List<ParserBlock> parserAlle = new ArrayList<>();
+	private YearMonth pdfMonat;
+
+	private static final HolidayManager HOLIDAY_MANAGER = HolidayManager.getInstance(ManagerParameters.create("de"));
 
 	/**
 	 * Konstruktor: Interpretiert direkt das PDF aus dem InputStream.
 	 */
-	public HallenPdfParser(InputStream pdfInputStream) throws IOException {
+	public HallenPdfParser(String vereinnr, InputStream pdfInputStream, YearMonth pdfMonat) throws IOException {
+		System.out.println("H1" + pdfMonat);
+		this.pdfMonat = pdfMonat;
 
 		String pdfText = lesePdf(pdfInputStream);
 
-		this.htmlText = parseHallenTermine(pdfText);
+		this.htmlText = parseHallenTermine(vereinnr, pdfText);
 		this.plainText = pdfText;
 	}
 
@@ -65,7 +76,7 @@ public class HallenPdfParser {
 	/**
 	 * PDF-Inhalt interpretieren und HTML erzeugen.
 	 */
-	private String parseHallenTermine(String text) {
+	private String parseHallenTermine(String vereinnr, String text) {
 
 		String[] zeilen = text.split("\\R");
 
@@ -102,7 +113,7 @@ public class HallenPdfParser {
 			if (matcher.matches()) {
 
 				// Vorherigen Block speichern
-				speichereBlock(html, aktuellerTag, aktuellerWochentag, aktuellerBlock.toString(), null);
+				speichereBlock(vereinnr, html, aktuellerTag, aktuellerWochentag, aktuellerBlock.toString(), null);
 
 				aktuellerTag = matcher.group(1);
 				aktuellerWochentag = matcher.group(2);
@@ -117,7 +128,7 @@ public class HallenPdfParser {
 		}
 
 		// Letzten Block speichern
-		speichereBlock(html, aktuellerTag, aktuellerWochentag, aktuellerBlock.toString(), null);
+		speichereBlock(vereinnr, html, aktuellerTag, aktuellerWochentag, aktuellerBlock.toString(), null);
 
 		html.append("""
 				</body>
@@ -130,7 +141,7 @@ public class HallenPdfParser {
 	/**
 	 * Block prüfen und ggf. als HTML hinzufügen.
 	 */
-	private void speichereBlock(StringBuilder html, String tag, String wochentag, String blockText,
+	private void speichereBlock(String vereinnr, StringBuilder html, String tag, String wochentag, String blockText,
 			List<Heimspiele> spieleDaheim) {
 
 		if (tag == null || wochentag == null) {
@@ -149,6 +160,19 @@ public class HallenPdfParser {
 		};
 		this.ueberschrift.add(tag + " " + titel);
 		parserAlle.add(new ParserBlock(tag, wochentag, titel, blockText));
+
+		LocalDate datum = LocalDate.of(pdfMonat.getYear(), pdfMonat.getMonth(), numTag(tag));
+		String feiertag = erstelleFeiertagTermin(datum);
+		if (feiertag != null) {
+			blockText = feiertag + "\n\n" + blockText;
+		}
+
+		SchoolHolidayApiClient api = new SchoolHolidayApiClient(vereinnr);
+		SchoolHoliday ferien = api.getHolidayIfPresent(datum);
+		if (ferien != null) {
+			blockText = "Ferien: " + ferien.getName() + "\n\n" + blockText;
+		}
+
 		if (!ParserAusgabeFormatter.sucheBegriff(blockText, wochentag)) {
 			return;
 		}
@@ -156,8 +180,34 @@ public class HallenPdfParser {
 		parserBloecke.add(new ParserBlock(tag, wochentag, titel, blockText));
 	}
 
+	private int numTag(String tag) {
+		if (tag == null) {
+			return 0;
+		}
+
+		// Punkt entfernen und trimmen
+		tag = tag.replace(".", "").trim();
+
+		// führende Nullen entfernen (optional, aber sinnvoll)
+		try {
+
+			return Integer.parseInt(tag);
+		} catch (NumberFormatException e) {
+			return 99; // falls doch mal kein Zahlformat
+		}
+	}
+
+	private String erstelleFeiertagTermin(LocalDate datum) {
+		return HOLIDAY_MANAGER.getHolidays(datum.getYear(), "bw").stream().filter(h -> h.getDate().equals(datum))
+				.map(h -> "Feiertag: " + h.getDescription()).findFirst().orElse(null);
+	}
+
 	public List<String> getUeberschrift() {
 		return ueberschrift;
+	}
+
+	public YearMonth getPdfMonat() {
+		return pdfMonat;
 	}
 
 	public static class ParserBlock implements Serializable {

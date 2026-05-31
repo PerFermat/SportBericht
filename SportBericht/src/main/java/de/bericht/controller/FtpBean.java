@@ -80,8 +80,9 @@ public class FtpBean implements Serializable {
 	private HallenPdfParser pdfParcer;
 	private static final List<SelectItem> TERMIN_STATUS_OPTIONEN = List.of(
 			new SelectItem("Trainingsausfall eingetragen"), new SelectItem("Training eingetragen"),
-			new SelectItem("Termin eingetragen"), new SelectItem("Nicht relevant"), new SelectItem("Überprüfe"),
-			new SelectItem("Spieltag OK"), new SelectItem("Spieltag kritisch"), new SelectItem("ignorieren"));
+			new SelectItem("Training normal"), new SelectItem("Termin eingetragen"), new SelectItem("Nicht relevant"),
+			new SelectItem("Überprüfe"), new SelectItem("Spieltag OK"), new SelectItem("Spieltag kritisch"),
+			new SelectItem("ignorieren"));
 
 	private enum UploadThema {
 		HALLENBELEGUNGN("HALLENBELEGUNGN", "Hallenbelegung neuer Monat", "Hallenbelegung", "Hallenbelegung.pdf",
@@ -249,10 +250,10 @@ public class FtpBean implements Serializable {
 
 			try {
 				if (thema.isHalleParcer()) {
-					pdfParcer = new HallenPdfParser(new java.io.ByteArrayInputStream(uploadedPdf));
+					YearMonth pdfMonat = ermittlePdfMonat(uploadedPdf);
+					pdfParcer = new HallenPdfParser(vereinnr, new java.io.ByteArrayInputStream(uploadedPdf), pdfMonat);
 					ueberschrift = pdfParcer.getUeberschrift();
 					ausgabeText = pdfParcer.getHtmlText();
-					YearMonth pdfMonat = ermittlePdfMonat(uploadedPdf);
 					heim = ladeHeimspiele(pdfMonat);
 
 					terminEintraege = extrahiereTermine(ausgabeText);
@@ -331,11 +332,16 @@ public class FtpBean implements Serializable {
 
 		try {
 			byte[] uploadedPdf = ausgewaehlteDateiBytes;
-			pdfParcer = new HallenPdfParser(new java.io.ByteArrayInputStream(uploadedPdf));
+			YearMonth pdfMonat = ermittlePdfMonat(uploadedPdf);
+			if (pdfMonat == null) {
+				addMessage(FacesMessage.SEVERITY_WARN, "Analyse nicht möglich",
+						"Analyse ist nur für Hallen-PDF vorgesehen.");
+				return;
+			}
+
+			pdfParcer = new HallenPdfParser(vereinnr, new java.io.ByteArrayInputStream(uploadedPdf), pdfMonat);
 			ueberschrift = pdfParcer.getUeberschrift();
 			ausgabeText = pdfParcer.getHtmlText();
-			YearMonth pdfMonat = ermittlePdfMonat(uploadedPdf);
-			System.out.println(pdfMonat.toString());
 			heim = ladeHeimspiele(pdfMonat);
 
 			terminEintraege = extrahiereTermine(ausgabeText);
@@ -480,7 +486,7 @@ public class FtpBean implements Serializable {
 		return text.replace("|", "\\|").replace("\n", " ");
 	}
 
-	private YearMonth ermittlePdfMonat(byte[] uploadedPdf) {
+	public YearMonth ermittlePdfMonat(byte[] uploadedPdf) {
 		try (PDDocument document = PDDocument.load(uploadedPdf)) {
 			if (document.getNumberOfPages() <= 0) {
 				return null;
@@ -513,6 +519,7 @@ public class FtpBean implements Serializable {
 		if (jahrMatcher.find()) {
 			jahr = Integer.parseInt(jahrMatcher.group(1));
 		}
+
 		return YearMonth.of(jahr, monat);
 	}
 
@@ -705,13 +712,15 @@ public class FtpBean implements Serializable {
 						+ "<span style='background-color:#e8f5e9;border-left:6px solid #2e7d32;padding:2px 6px;display:inline-block;'>Grün</span> = Tischtennis gefunden<br/>"
 						+ "<span style='background-color:#ffebee;border-left:6px solid #c62828;padding:2px 6px;display:inline-block;'>Rot</span> = Halle evtl. besetzt<br/>"
 						+ "<span style='background-color:#e3f2fd;border-left:6px solid #1565c0;padding:2px 6px;display:inline-block;'>Blau</span> = Heimspiel<br/>"
+						+ "<span style='background-color:#fff8e1;border-left:6px solid #ff8f00;padding:2px 6px;display:inline-block;'>Gelb</span> = Feiertag in Baden-Württemberg<br/>"
 						+ "<span style='background-color:#D1D1D1;border-left:6px solid #595959;padding:2px 6px;display:inline-block;'>Grau</span> = Manuell geprüft / eingetragen<br/><br/>")
 				.append("<h2>Allgemeine Bemerkungen</h2>").append("<div class='hinweis'>")
 				.append(escapeHtml(emailFreitext == null ? "" : emailFreitext.trim()).replace("\n", "<br/>"))
 				.append("</div></div>");
 
 		for (ManuellerTagEintrag p : manuelleTage) {
-			TerminMitStatus termin = new TerminMitStatus(p, pdfParcer.getParserAlle());
+			TerminMitStatus termin = new TerminMitStatus(vereinnr, ermittlePdfMonat(originalPdfBytes), p,
+					pdfParcer.getParserAlle());
 			parserTerminStatusListe.add(termin);
 		}
 		Collections.sort(parserTerminStatusListe);
@@ -740,7 +749,8 @@ public class FtpBean implements Serializable {
 	public void neuerTagHinzufuegen() {
 
 		for (ManuellerTagEintrag p : manuelleTage) {
-			TerminMitStatus termin = new TerminMitStatus(p, pdfParcer.getParserAlle());
+			TerminMitStatus termin = new TerminMitStatus(vereinnr, ermittlePdfMonat(originalPdfBytes), p,
+					pdfParcer.getParserAlle());
 			parserTerminStatusListe.add(termin);
 		}
 		Collections.sort(parserTerminStatusListe);
