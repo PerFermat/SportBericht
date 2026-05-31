@@ -77,8 +77,6 @@ public class ApiKIDeepSeek implements KiProvider {
 
 		String apiKey = ConfigManager.getDeepSeekPasswort(vereinnr);
 
-		debug("Aufruf gestartet. Verein=" + vereinnr + ", Modell=" + selectedModel + ", Key=" + maskApiKey(apiKey));
-
 		if (apiKey == null || apiKey.isBlank()) {
 			response = "Fehler: Kein DeepSeek API-Key gesetzt.";
 			return;
@@ -113,14 +111,11 @@ public class ApiKIDeepSeek implements KiProvider {
 
 		payload.put("messages", messages);
 
-		debug("Sende Request. Prompt-Länge=" + finalPrompt.length() + ", Schema=" + (jsonSchema != null));
-
 		try (OutputStream os = connection.getOutputStream()) {
 			os.write(payload.toString().getBytes(StandardCharsets.UTF_8));
 		}
 
 		int statusCode = connection.getResponseCode();
-		debug("HTTP-Status=" + statusCode);
 
 		if (statusCode != 200) {
 			StringBuilder error = new StringBuilder();
@@ -135,7 +130,6 @@ public class ApiKIDeepSeek implements KiProvider {
 			}
 
 			response = "Fehler: HTTP " + statusCode + " " + error;
-			debug("Fehlerantwort: " + response);
 			return;
 		}
 
@@ -152,8 +146,6 @@ public class ApiKIDeepSeek implements KiProvider {
 		}
 
 		String rawResponse = responseBuilder.toString();
-
-		debug("Rohantwort-Länge=" + rawResponse.length());
 
 		JSONObject jsonResponse;
 		try {
@@ -179,8 +171,6 @@ public class ApiKIDeepSeek implements KiProvider {
 		String content = choices.getJSONObject(0).getJSONObject("message").optString("content", "");
 
 		response = normalizeAssistantContent(content);
-
-		debug("Antwort-Länge=" + response.length());
 
 		if (!response.isBlank()) {
 			String preview = response.length() > 160 ? response.substring(0, 160) + "..." : response;

@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import java.util.Set;
 
 import org.json.JSONArray;
@@ -32,8 +31,6 @@ public class ApiKIClaude implements KiProvider {
 
 		long startTime = System.currentTimeMillis();
 
-		System.out.println("==== Claude API CALL START ====");
-
 		String apiKey = ConfigManager.getClaudeApi(vereinnr);
 
 		if (apiKey == null || apiKey.isEmpty()) {
@@ -41,11 +38,6 @@ public class ApiKIClaude implements KiProvider {
 			responses = "Fehler: Kein Claude API-Key gesetzt.";
 			return;
 		}
-
-		System.out.println("API-Key (gekürzt): " + apiKey.substring(0, Math.min(10, apiKey.length())) + "...");
-		System.out.println("Model: " + selectedModel);
-		System.out.println("Thinking: " + thinking);
-		System.out.println("Temperatur: " + temperatur);
 
 		int thinkingBudget = 0;
 		boolean supportsThinking = supportsThinking(selectedModel);
@@ -100,9 +92,6 @@ public class ApiKIClaude implements KiProvider {
 
 		payload.put("messages", messages);
 
-		System.out.println("---- REQUEST PAYLOAD ----");
-		System.out.println(payload.toString(2));
-
 		// Senden
 		try (OutputStream os = connection.getOutputStream()) {
 			byte[] input = payload.toString().getBytes(StandardCharsets.UTF_8);
@@ -116,13 +105,6 @@ public class ApiKIClaude implements KiProvider {
 		}
 
 		int statusCode = connection.getResponseCode();
-		System.out.println("HTTP Status: " + statusCode);
-
-		// Header loggen
-		System.out.println("---- RESPONSE HEADERS ----");
-		for (Map.Entry<String, java.util.List<String>> entry : connection.getHeaderFields().entrySet()) {
-			System.out.println(entry.getKey() + ": " + entry.getValue());
-		}
 
 		InputStream stream;
 
@@ -148,9 +130,6 @@ public class ApiKIClaude implements KiProvider {
 		}
 
 		String rawResponse = responseBuilder.toString();
-
-		System.out.println("---- RAW RESPONSE ----");
-		System.out.println(rawResponse);
 
 		if (statusCode != 200) {
 			responses = "Fehler: HTTP " + statusCode + "\n" + rawResponse;

@@ -169,7 +169,7 @@ public class AufstellungImportBean implements Serializable {
 	}
 
 	public String getVereinHomepage() {
-		return ConfigManager.getConfigValue(vereinnr, "spielplan.VereinHomepage");
+		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
 	}
 
 	public String getBestimmenIcon() {

@@ -38,12 +38,8 @@ public class ApiKIGemini implements KiProvider {
 		// -----------------------------
 		String model = (selectedModel == null || selectedModel.isBlank()) ? "gemini-1.5-flash" : selectedModel;
 
-		System.out.println("[Gemini] Modell: " + model);
-
 		String urlString = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key="
 				+ apiKey;
-
-		System.out.println("[Gemini] URL: " + urlString);
 
 		URL url = new URL(urlString);
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -54,8 +50,6 @@ public class ApiKIGemini implements KiProvider {
 		connection.setConnectTimeout(30000);
 		connection.setReadTimeout(60000);
 
-		System.out.println("[Gemini] HTTP Connection erstellt");
-
 		// -----------------------------
 		// Prompt
 		// -----------------------------
@@ -65,8 +59,6 @@ public class ApiKIGemini implements KiProvider {
 
 		if (jsonSchema != null) {
 			finalPrompt += "\n\nACHTUNG: Antworte ausschließlich als gültiges JSON.\n" + jsonSchema.toString(2);
-
-			System.out.println("[Gemini] JSON Schema hinzugefügt");
 		}
 
 		// -----------------------------
@@ -86,9 +78,6 @@ public class ApiKIGemini implements KiProvider {
 		generationConfig.put("temperature", Math.max(0.0, Math.min(2.0, temperatur)));
 		payload.put("generationConfig", generationConfig);
 
-		System.out.println("[Gemini] Payload erstellt:");
-		System.out.println(payload.toString(2));
-
 		// -----------------------------
 		// Request senden
 		// -----------------------------
@@ -96,20 +85,14 @@ public class ApiKIGemini implements KiProvider {
 
 			byte[] input = payload.toString().getBytes(StandardCharsets.UTF_8);
 
-			System.out.println("[Gemini] Request wird gesendet, Bytes: " + input.length);
-
 			os.write(input);
 			os.flush();
 		}
-
-		System.out.println("[Gemini] Request gesendet");
 
 		// -----------------------------
 		// Response Code
 		// -----------------------------
 		int statusCode = connection.getResponseCode();
-
-		System.out.println("[Gemini] HTTP Status: " + statusCode);
 
 		// -----------------------------
 		// Fehlerfall
@@ -126,12 +109,9 @@ public class ApiKIGemini implements KiProvider {
 				}
 			}
 
-			System.out.println("[Gemini] ERROR RESPONSE: " + errorResponse);
-
 			responses = "Fehler: API Status " + statusCode
 					+ (errorResponse.length() > 0 ? " Details: " + errorResponse : "");
 
-			System.out.println("[Gemini] ABORT wegen Fehlerstatus");
 			return;
 		}
 
@@ -148,9 +128,6 @@ public class ApiKIGemini implements KiProvider {
 				responseBuilder.append(line.trim());
 			}
 		}
-
-		System.out.println("[Gemini] RAW RESPONSE:");
-		System.out.println(responseBuilder.toString());
 
 		// -----------------------------
 		// JSON parse
@@ -185,8 +162,6 @@ public class ApiKIGemini implements KiProvider {
 
 			responses = text.toString().trim();
 
-			System.out.println("[Gemini] FINAL RESPONSE: " + responses);
-
 		} catch (Exception e) {
 			System.out.println("[Gemini] PARSE ERROR: " + e.getMessage());
 			e.printStackTrace();
@@ -194,7 +169,6 @@ public class ApiKIGemini implements KiProvider {
 			responses = "Fehler beim Verarbeiten: " + e.getMessage();
 		}
 
-		System.out.println("===== GEMINI DEBUG END =====");
 	}
 
 	@Override

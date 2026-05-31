@@ -300,7 +300,7 @@ public class BerichtHelper {
 	}
 
 	public static String getProgrammUrl(String vereinnr) {
-		return ConfigManager.getConfigValue(vereinnr, "programm.URL");
+		return ConfigManager.getProgrammUrl(vereinnr);
 	}
 
 	public static String bestimmenVereinnr(String ort) {

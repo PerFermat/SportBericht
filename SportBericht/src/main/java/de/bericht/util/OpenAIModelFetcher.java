@@ -119,7 +119,7 @@ public class OpenAIModelFetcher {
 				String id = model.optString("id", null);
 
 				if (id != null && !id.isBlank() && isTextCapableModel(id)) {
-					names.add("claude:" + id);
+					names.add(id);
 				}
 			}
 		}

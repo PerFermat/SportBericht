@@ -128,7 +128,7 @@ public class ConfigManager {
 	}
 
 	public static int getWortanzahlKiBericht(String vereinnr) {
-		String value = getConfigValue(vereinnr, "gericht.ki.wortanzahl");
+		String value = getConfigValue(vereinnr, "ki.bericht.wortanzahl");
 
 		if (value == null || value.isBlank()) {
 			return 150;
@@ -392,8 +392,8 @@ public class ConfigManager {
 		return getConfigValue(vereinnr, "spielplan.URL");
 	}
 
-	public String getProgrammUrl(String vereinnr) {
-		return getConfigValue(vereinnr, "programm.url");
+	public static String getProgrammUrl(String vereinnr) {
+		return getConfigValue(vereinnr, "programm.URL");
 	}
 
 	public static boolean isTischtennis(String vereinnr) {
