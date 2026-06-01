@@ -57,7 +57,11 @@ ftpBean
 
 
 
+
+
 .parserAusgabeCss
+
+
 
 
 
@@ -139,6 +143,9 @@ ftpBean
 											action="#{ftpBean.hochladen}" update="ftpForm"
 											rendered="#{ftpBean.adminFreigabe}" />
 									</div>
+									
+									<h2> #{ftpBean.pdfMonat} </h2>
+
 									<p:inputTextarea value="#{ftpBean.emailFreitext}" rows="3"
 										style="width:100%; margin-bottom: 12px;"
 										placeholder="Freitext..." />
@@ -157,7 +164,7 @@ ftpBean
 											<div style="min-width: 200px;">
 												<p:selectOneMenu value="#{parserTermin.status}"
 													styleClass="status-select" style="width:100%;">
-													<f:selectItems value="#{ftpBean.terminStatusOptionen}" />
+													<f:selectItems value="#{parserTermin.terminStatusOptionen}" />
 												</p:selectOneMenu>
 											</div>
 

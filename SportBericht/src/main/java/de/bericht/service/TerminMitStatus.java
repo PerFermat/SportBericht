@@ -5,11 +5,11 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 
-import de.bericht.controller.FtpBean.ManuellerTagEintrag;
 import de.bericht.service.HallenPdfParser.ParserBlock;
 import de.bericht.util.SchoolHolidayApiClient;
 import de.jollyday.HolidayManager;
 import de.jollyday.ManagerParameters;
+import jakarta.faces.model.SelectItem;
 
 public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus> {
 	private static final long serialVersionUID = 1L;
@@ -17,15 +17,17 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 	private final String htmlText;
 	private String wochentag;
 	private int tag;
+	private List<SelectItem> statusVarianten;
 	private static final HolidayManager HOLIDAY_MANAGER = HolidayManager.getInstance(ManagerParameters.create("de"));
 
-	public TerminMitStatus(String tag, String htmlText, String wochentag) {
+	public TerminMitStatus(String tag, String htmlText, String wochentag, List<SelectItem> statusVarianten) {
 		this.htmlText = htmlText;
 		this.wochentag = wochentag;
 		this.tag = numTag(tag);
+		this.statusVarianten = statusVarianten;
 	}
 
-	public TerminMitStatus(String vereinnr, YearMonth pdfMonat, ManuellerTagEintrag manEintrag,
+	public TerminMitStatus(String vereinnr, YearMonth pdfMonat, FtpManuellerTagEintrag manEintrag,
 			List<ParserBlock> terminEintraege) {
 		tag = 99;
 		String text = null;
@@ -63,12 +65,10 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 
 		htmlText = ParserAusgabeFormatter.formatBlock(manEintrag.getTag() + " [status]",
 				manEintrag.getText() + "\n\n" + text, "manuell");
-		this.wochentag = "manuell";
-	}
 
-	private String erstelleFeiertagTermin(LocalDate datum) {
-		return HOLIDAY_MANAGER.getHolidays(datum.getYear(), "bw").stream().filter(h -> h.getDate().equals(datum))
-				.map(h -> "Feiertag: " + h.getDescription()).findFirst().orElse(null);
+		statusVarianten = ParserAusgabeFormatter.statusVarianten(manEintrag.getTag() + " [status]",
+				manEintrag.getText() + "\n\n" + text, "manuell");
+		this.wochentag = "manuell";
 	}
 
 	public TerminMitStatus(Heimspiele heim, String spiele, List<ParserBlock> terminEintraege) {
@@ -97,7 +97,16 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 		htmlText = ParserAusgabeFormatter.formatBlock(
 				heim.getTagText().replace("Halle", "<strong>Halle</strong>") + ". " + titel + "[status]",
 				spiele + "\n\n" + text, "heimspiel");
+
+		statusVarianten = ParserAusgabeFormatter.statusVarianten(
+				heim.getTagText().replace("Halle", "<strong>Halle</strong>") + ". " + titel + "[status]",
+				spiele + "\n\n" + text, "heimspiel");
 		this.wochentag = "heimspiel";
+	}
+
+	private String erstelleFeiertagTermin(LocalDate datum) {
+		return HOLIDAY_MANAGER.getHolidays(datum.getYear(), "bw").stream().filter(h -> h.getDate().equals(datum))
+				.map(h -> "Feiertag: " + h.getDescription()).findFirst().orElse(null);
 	}
 
 	private boolean tagGleich(String tag1, String tag2) {
@@ -181,5 +190,9 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 
 	public void setTag(int tag) {
 		this.tag = tag;
+	}
+
+	public List<SelectItem> getTerminStatusOptionen() {
+		return statusVarianten;
 	}
 }

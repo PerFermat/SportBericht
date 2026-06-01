@@ -1,30 +1,59 @@
 package de.bericht.service;
 
+import java.util.Arrays;
 import java.util.List;
+
+import de.bericht.util.enums.TerminStatus;
+import jakarta.faces.model.SelectItem;
 
 public final class ParserAusgabeFormatter {
 
 	private ParserAusgabeFormatter() {
 	}
 
-	public record SuchbegriffFarbe(String suchbegriff, String wochentag, String cssStyleName, String cssStyle) {
+	public record SuchbegriffFarbe(String suchbegriff, String wochentag, String cssStyleName, String cssStyle,
+			List<TerminStatus> statusOption) {
+		public List<SelectItem> getSelectItems() {
+			return statusOption.stream().map(TerminStatus::toSelectItem).toList();
+		}
 	}
 
 	private static final List<SuchbegriffFarbe> SUCHBEGRIFFE_FARBEN = List.of(
 			new SuchbegriffFarbe("Halle", "Mo,Fr", "halle",
-					".halle{background-color:#ffebee;border-left:6px solid #c62828}"),
+					".halle{background-color:#ffebee;border-left:6px solid #c62828}",
+					List.of(TerminStatus.TRAININGSAUSFALL, TerminStatus.TRAINING, TerminStatus.TRAINING_NORMAL,
+							TerminStatus.NICHT_RELEVANT, TerminStatus.UEBERPRUEFE)),
 			new SuchbegriffFarbe("Feiertag", "Mo,Fr", "feiertag",
-					".feiertag{background-color:#fff8e1;border-left:6px solid #ff8f00}"),
-			new SuchbegriffFarbe("Tischtennis", "Mo,Di,Mi,Do,Fr,Sa,So", "tischtennis",
-					".tischtennis{background-color:#e8f5e9;border-left:6px solid #2e7d32}"),
-			new SuchbegriffFarbe("TT-", "Mo,Di,Mi,Do,Fr,Sa,So", "tischtennis",
-					".tischtennis{background-color:#e8f5e9;border-left:6px solid #2e7d32}"),
+					".feiertag{background-color:#fff8e1;border-left:6px solid #ff8f00}",
+					List.of(TerminStatus.TRAININGSAUSFALL, TerminStatus.TRAINING, TerminStatus.TRAINING_NORMAL,
+							TerminStatus.NICHT_RELEVANT, TerminStatus.UEBERPRUEFE)),
+			new SuchbegriffFarbe("Tischtennis", "Mo,Fr", "tischtennis",
+					".tischtennis{background-color:#e8f5e9;border-left:6px solid #2e7d32}",
+					List.of(TerminStatus.TRAININGSAUSFALL, TerminStatus.TRAINING, TerminStatus.TRAINING_NORMAL,
+							TerminStatus.NICHT_RELEVANT, TerminStatus.UEBERPRUEFE)),
+			new SuchbegriffFarbe("TT-", "Mo,Fr", "tischtennis",
+					".tischtennis{background-color:#e8f5e9;border-left:6px solid #2e7d32}",
+					List.of(TerminStatus.TRAININGSAUSFALL, TerminStatus.TRAINING, TerminStatus.TRAINING_NORMAL,
+							TerminStatus.NICHT_RELEVANT, TerminStatus.UEBERPRUEFE)),
+			new SuchbegriffFarbe("Tischtennis", "Di,Mi,Do,Sa,So", "tischtennis",
+					".tischtennis{background-color:#e8f5e9;border-left:6px solid #2e7d32}",
+					List.of(TerminStatus.TERMIN, TerminStatus.NICHT_RELEVANT, TerminStatus.IGNORIEREN,
+							TerminStatus.UEBERPRUEFE, TerminStatus.HALLE_FREIGEBEN)),
+			new SuchbegriffFarbe("TT-", "Di,Mi,Do,Sa,So", "tischtennis",
+					".tischtennis{background-color:#e8f5e9;border-left:6px solid #2e7d32}",
+					List.of(TerminStatus.TERMIN, TerminStatus.NICHT_RELEVANT, TerminStatus.IGNORIEREN,
+							TerminStatus.UEBERPRUEFE, TerminStatus.HALLE_FREIGEBEN)),
 			new SuchbegriffFarbe("Heimspiel", "heimspiel", "heimspiel",
-					".heimspiel{background-color:#e3f2fd;border-left:6px solid #1565c0}"),
+					".heimspiel{background-color:#e3f2fd;border-left:6px solid #1565c0}",
+					List.of(TerminStatus.SPIELTAG_OK, TerminStatus.SPIELTAG_KRITISCH, TerminStatus.HALLE_FREIGEBEN,
+							TerminStatus.NICHT_RELEVANT, TerminStatus.UEBERPRUEFE)),
 			new SuchbegriffFarbe("Ferien", "Mo,Fr", "ferien",
-					".ferien{background-color:#fff8e1;border-left:6px solid #ff8f00}"),
+					".ferien{background-color:#fff8e1;border-left:6px solid #ff8f00}",
+					List.of(TerminStatus.TRAININGSAUSFALL, TerminStatus.TRAINING, TerminStatus.TRAINING_NORMAL,
+							TerminStatus.NICHT_RELEVANT, TerminStatus.UEBERPRUEFE)),
 			new SuchbegriffFarbe("Manuell", "manuell", "manuell",
-					".manuell{background-color:#D1D1D1;border-left:6px solid #595959}"));
+					".manuell{background-color:#D1D1D1;border-left:6px solid #595959}",
+					List.of(TerminStatus.values())));
 
 	public static boolean sucheBegriff(String text, String wochentag) {
 
@@ -67,6 +96,17 @@ public final class ParserAusgabeFormatter {
 		return html.toString();
 	}
 
+	public static List<SelectItem> statusVarianten(String titel, String blockText, String wochentag) {
+		for (SuchbegriffFarbe suchbegriffFarbe : SUCHBEGRIFFE_FARBEN) {
+			if ((blockText.contains(suchbegriffFarbe.suchbegriff) && suchbegriffFarbe.wochentag.contains(wochentag))
+					|| suchbegriffFarbe.wochentag.equals(wochentag)) {
+				return suchbegriffFarbe.getSelectItems();
+			}
+		}
+
+		return Arrays.stream(TerminStatus.values()).map(TerminStatus::toSelectItem).toList();
+	}
+
 	public static String formatBlockText(String text) {
 		String ausgabe = escapeHtml(text);
 		for (SuchbegriffFarbe suchbegriffFarbe : SUCHBEGRIFFE_FARBEN) {
@@ -82,4 +122,5 @@ public final class ParserAusgabeFormatter {
 		}
 		return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}
+
 }
