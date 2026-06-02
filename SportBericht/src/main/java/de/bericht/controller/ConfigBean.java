@@ -26,6 +26,7 @@ import de.bericht.util.OpenAIModelFetcher;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
+import jakarta.faces.model.SelectItem;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 import jakarta.mail.MessagingException;
@@ -177,9 +178,9 @@ public class ConfigBean implements Serializable {
 				key -> enumWerteAusWertebereichUndDaten(key, eintrag));
 	}
 
-	public List<String> getChatGptModelle() {
+	public List<SelectItem> getChatGptModelle() {
 		if (!chatGptModelle.isEmpty()) {
-			return chatGptModelle;
+			return OpenAIModelFetcher.buildGroupedModelSelectItems(chatGptModelle);
 		}
 		String apiKey = ConfigManager.getChatGptPasswort(vereinnr);
 		if (!isNotBlank(apiKey)) {
@@ -189,10 +190,11 @@ public class ConfigBean implements Serializable {
 			OpenAIModelFetcher fetcher = new OpenAIModelFetcher(vereinnr);
 
 			chatGptModelle = fetcher.getModelNames().stream().sorted().collect(Collectors.toList());
+
 		} catch (Exception e) {
 			return Collections.emptyList();
 		}
-		return chatGptModelle;
+		return OpenAIModelFetcher.buildGroupedModelSelectItems(chatGptModelle);
 	}
 
 	public void openPasswortDialog(ConfigEintrag eintrag) {

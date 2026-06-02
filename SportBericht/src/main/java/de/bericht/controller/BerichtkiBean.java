@@ -47,6 +47,7 @@ import de.bericht.util.Spielbericht;
 import de.bericht.util.StilGenerator;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
+import jakarta.faces.model.SelectItem;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
 
@@ -172,8 +173,9 @@ public class BerichtkiBean implements Serializable {
 		berichtgroesse = ConfigManager.getWortanzahlKiBericht(vereinnr);
 	}
 
-	public List<String> getModelle() {
-		return modelle.getModelNames().stream().sorted().collect(Collectors.toList());
+	public List<SelectItem> getModelle() {
+		return OpenAIModelFetcher
+				.buildGroupedModelSelectItems(modelle.getModelNames().stream().sorted().collect(Collectors.toList()));
 	}
 
 	public List<String> getThinking() {

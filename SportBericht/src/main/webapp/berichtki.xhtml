@@ -35,7 +35,7 @@
 				<f:param name="ergebnis" value="#{berichtkiBean.ergebnis}" />
 				<f:param name="ergebnisLink" value="#{berichtkiBean.ergebnisLink}" />
 				<f:param name="uuid" value="#{berichtkiBean.uuid}" />
-				<f:param name="ligaSpiel" value="#{berichtkiBean.ligaSpiel}" />				
+				<f:param name="ligaSpiel" value="#{berichtkiBean.ligaSpiel}" />
 				<f:param name="liga" value="#{berichtkiBean.liga}" />
 				<f:param name="gruppeUrl" value="#{berichtkiBean.gruppeUrl}" />
 			</p:commandButton>
@@ -242,10 +242,14 @@
 						collapsed="#{berichtkiBean.berichtMannschaft eq null ? false : true}">
 
 						<h:outputText value="Gewünschtes KI-Model auswählen: " />
-						<p:selectOneMenu value="#{berichtkiBean.selectedModel}">
+						<p:selectOneMenu value="#{berichtkiBean.selectedModel}"
+							escape="false" style="width:300px">
+
 							<f:selectItem itemLabel="Modell auswählen" itemValue=""
 								noSelectionOption="true" />
+
 							<f:selectItems value="#{berichtkiBean.modelle}" />
+
 						</p:selectOneMenu>
 						<br />
 						<br />
@@ -361,7 +365,7 @@ Empfohlen:   <br />
 						<f:param name="ergebnisLink" value="#{berichtkiBean.ergebnisLink}" />
 						<f:param name="uuid" value="#{berichtkiBean.uuid}" />
 						<f:param name="liga" value="#{berichtkiBean.liga}" />
-						<f:param name="ligaSpiel" value="#{berichtkiBean.ligaSpiel}" />							
+						<f:param name="ligaSpiel" value="#{berichtkiBean.ligaSpiel}" />
 						<f:param name="gruppeUrl" value="#{berichtkiBean.gruppeUrl}" />
 					</p:commandButton>
 				</div>
@@ -393,7 +397,7 @@ Empfohlen:   <br />
 									value="#{berichtkiBean.ergebnisLink}" />
 								<f:param name="uuid" value="#{berichtkiBean.uuid}" />
 								<f:param name="liga" value="#{berichtkiBean.liga}" />
-								<f:param name="ligaSpiel" value="#{berichtKiBean.ligaSpiel}" />									
+								<f:param name="ligaSpiel" value="#{berichtKiBean.ligaSpiel}" />
 								<f:param name="gruppeUrl" value="#{berichtkiBean.gruppeUrl}" />
 							</p:commandButton>
 
@@ -409,7 +413,7 @@ Empfohlen:   <br />
 									value="#{berichtkiBean.ergebnisLink}" />
 								<f:param name="uuid" value="#{berichtkiBean.uuid}" />
 								<f:param name="liga" value="#{berichtkiBean.liga}" />
-								<f:param name="ligaSpiel" value="#{berichtkiBean.ligaSpiel}" />									
+								<f:param name="ligaSpiel" value="#{berichtkiBean.ligaSpiel}" />
 								<f:param name="gruppeUrl" value="#{berichtkiBean.gruppeUrl}" />
 							</p:commandButton>
 							<p:commandButton

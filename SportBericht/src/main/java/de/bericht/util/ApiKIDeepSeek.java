@@ -19,7 +19,7 @@ public class ApiKIDeepSeek implements KiProvider {
 	private String response = "";
 
 	private void debug(String message) {
-		System.out.println("[DeepSeek] " + message);
+		// System.out.println("[DeepSeek] " + message);
 	}
 
 	private String maskApiKey(String apiKey) {

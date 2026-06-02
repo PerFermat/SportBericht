@@ -20,16 +20,11 @@ public class ApiKIGemini implements KiProvider {
 	public ApiKIGemini(String vereinnr, String frage, String selectedModel, String thinking, double temperatur,
 			double frequencyPenalty, double presencePenalty, JSONObject jsonSchema) throws IOException {
 
-		System.out.println("===== GEMINI DEBUG START =====");
-
 		ConfigManager config = ConfigManager.getInstance();
 		String apiKey = config.getGeminiApiKey(vereinnr);
 
-		System.out.println("[Gemini] API-Key geladen: " + (apiKey != null && !apiKey.isBlank()));
-
 		if (apiKey == null || apiKey.isEmpty()) {
 			responses = "Fehler: Kein Gemini API-Key gesetzt.";
-			System.out.println("[Gemini] FEHLER: Kein API-Key!");
 			return;
 		}
 
@@ -54,8 +49,6 @@ public class ApiKIGemini implements KiProvider {
 		// Prompt
 		// -----------------------------
 		String finalPrompt = frage;
-
-		System.out.println("[Gemini] Frage: " + frage);
 
 		if (jsonSchema != null) {
 			finalPrompt += "\n\nACHTUNG: Antworte ausschließlich als gültiges JSON.\n" + jsonSchema.toString(2);
@@ -136,7 +129,6 @@ public class ApiKIGemini implements KiProvider {
 			JSONObject json = new JSONObject(responseBuilder.toString());
 
 			if (json.has("error")) {
-				System.out.println("[Gemini] API ERROR JSON: " + json);
 				responses = "API-Fehler: " + json.getJSONObject("error").getString("message");
 				return;
 			}
@@ -144,7 +136,6 @@ public class ApiKIGemini implements KiProvider {
 			JSONArray candidates = json.optJSONArray("candidates");
 
 			if (candidates == null || candidates.length() == 0) {
-				System.out.println("[Gemini] Keine candidates im Response!");
 				responses = "Keine Antwort erhalten.";
 				return;
 			}
@@ -156,14 +147,12 @@ public class ApiKIGemini implements KiProvider {
 
 			for (int i = 0; i < parts.length(); i++) {
 				String partText = parts.getJSONObject(i).optString("text");
-				System.out.println("[Gemini] Part " + i + ": " + partText);
 				text.append(partText);
 			}
 
 			responses = text.toString().trim();
 
 		} catch (Exception e) {
-			System.out.println("[Gemini] PARSE ERROR: " + e.getMessage());
 			e.printStackTrace();
 
 			responses = "Fehler beim Verarbeiten: " + e.getMessage();

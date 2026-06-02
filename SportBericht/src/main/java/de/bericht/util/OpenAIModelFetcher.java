@@ -2,14 +2,18 @@ package de.bericht.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import de.bericht.util.enums.KiSystem;
+import jakarta.faces.model.SelectItem;
+import jakarta.faces.model.SelectItemGroup;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -213,6 +217,20 @@ public class OpenAIModelFetcher {
 
 		String lower = name.toLowerCase();
 
+		// ❌ Harte Ausschlüsse
+		if (lower.startsWith("gemma")) {
+			return false;
+		}
+		if (lower.startsWith("veo")) {
+			return false;
+		}
+		if (lower.startsWith("lyria")) {
+			return false;
+		}
+		if (lower.startsWith("deep-research")) {
+			return false;
+		}
+
 		// ❌ Harte Ausschlüsse (teuer / high-end)
 		if (lower.contains("pro") || lower.contains("ultra")) {
 			return false;
@@ -255,4 +273,74 @@ public class OpenAIModelFetcher {
 	public List<String> getModelNames() {
 		return new ArrayList<>(modelNames);
 	}
+
+	public static List<SelectItem> buildGroupedModelSelectItems(List<String> models) {
+
+		Map<KiSystem, List<SelectItem>> grouped = new LinkedHashMap<>();
+
+		for (KiSystem system : KiSystem.values()) {
+			grouped.put(system, new ArrayList<>());
+		}
+
+		for (String fullModel : models) {
+
+			KiSystem system = KiSystem.fromModel(fullModel);
+			String pureModel = KiSystem.extractPureModel(fullModel);
+
+			String icon = getIcon(system);
+
+			// 👉 HTML im Label!
+			String label = "<i class='" + icon + "' style='margin-right:6px'></i>" + pureModel;
+
+			grouped.get(system).add(new SelectItem(fullModel, label, null, false, false, true));
+		}
+
+		List<SelectItem> result = new ArrayList<>();
+
+		for (Map.Entry<KiSystem, List<SelectItem>> entry : grouped.entrySet()) {
+
+			if (entry.getValue().isEmpty()) {
+				continue;
+			}
+
+			SelectItemGroup group = new SelectItemGroup(formatLabel(entry.getKey()));
+			group.setSelectItems(entry.getValue().toArray(new SelectItem[0]));
+
+			result.add(group);
+		}
+
+		return result;
+	}
+
+	private static String formatLabel(KiSystem system) {
+
+		switch (system) {
+		case CHATGPT:
+			return "ChatGPT (OpenAI)";
+		case DEEPSEEK:
+			return "DeepSeek";
+		case CLAUDE:
+			return "Claude (Anthropic)";
+		case GEMINI:
+			return "Gemini (Google)";
+		default:
+			return system.name();
+		}
+	}
+
+	private static String getIcon(KiSystem system) {
+		switch (system) {
+		case CHATGPT:
+			return "pi pi-comments"; // 🤖
+		case DEEPSEEK:
+			return "pi pi-search"; // 🔍
+		case CLAUDE:
+			return "pi pi-circle"; // 🧠 (falls nicht vorhanden → pi pi-circle)
+		case GEMINI:
+			return "pi pi-bolt"; // ⚡
+		default:
+			return "pi pi-circle";
+		}
+	}
+
 }
