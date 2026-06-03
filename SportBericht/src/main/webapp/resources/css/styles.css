@@ -1739,3 +1739,10 @@ max-width
     cursor: help;
     font-size: 1rem;
 }
+
+.json-box {
+    white-space: pre-wrap;       /* Einrückungen bleiben erhalten */
+    word-wrap: break-word;       /* ältere Browser */
+    overflow-wrap: break-word;   /* moderne Browser */
+    word-break: break-word;      /* harte Umbrüche bei sehr langen Wörtern */
+}

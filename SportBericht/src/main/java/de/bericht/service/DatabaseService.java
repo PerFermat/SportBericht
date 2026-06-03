@@ -1484,7 +1484,8 @@ public class DatabaseService {
 		String sql = "SELECT b.ueberschrift " + "FROM berichte b " + "JOIN ( "
 				+ "   SELECT ergebnislink, MAX(`timestamp`) AS last_ts " + "   FROM log_tabelle "
 				+ "   WHERE vereinnr = ? " + "   GROUP BY ergebnislink " + ") x ON b.ergebnislink = x.ergebnislink "
-				+ "WHERE x.last_ts >= NOW() - INTERVAL ? DAY " + "order by x.last_ts DESC";
+				+ "WHERE x.last_ts >= NOW() - INTERVAL ? DAY " + " and b.berichtText IS NOT NULL "
+				+ " AND TRIM(b.berichtText) <> ''" + "order by x.last_ts DESC";
 
 		List<String> ueberschriften = new ArrayList<>();
 

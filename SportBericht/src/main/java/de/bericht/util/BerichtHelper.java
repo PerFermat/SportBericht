@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
@@ -13,6 +14,7 @@ import org.jsoup.nodes.Node;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
@@ -462,4 +464,48 @@ public class BerichtHelper {
 		return sb.toString();
 	}
 
+	public static String formatJsonBlocks(String input) {
+
+		if (input == null) {
+			return "";
+		}
+
+		Pattern pattern = Pattern.compile("```\\s*json\\s*([\\s\\S]*?)\\s*```", Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(input);
+
+		StringBuffer sb = new StringBuffer();
+
+		while (matcher.find()) {
+			String json = matcher.group(1);
+
+			String prettyJson = json;
+
+			try {
+				ObjectMapper mapper = new ObjectMapper();
+				Object obj = mapper.readValue(json, Object.class);
+
+				prettyJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
+
+			} catch (Exception ignored) {
+				// wenn kein valides JSON → roh lassen
+			}
+
+			String html = "<pre style='white-space:pre-wrap !important;" + "overflow-wrap:anywhere !important;"
+					+ "word-break:break-word !important;'>" + escapeHtml(prettyJson) + "</pre>";
+
+			matcher.appendReplacement(sb, Matcher.quoteReplacement(html));
+		}
+
+		matcher.appendTail(sb);
+
+		return sb.toString();
+	}
+
+	private static String escapeHtml(String text) {
+		if (text == null) {
+			return "-";
+		}
+		return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'",
+				"&#39;");
+	}
 }

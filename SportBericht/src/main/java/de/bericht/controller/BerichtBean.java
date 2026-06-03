@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -180,7 +182,7 @@ public class BerichtBean implements Serializable {
 			BerichtData data = dbService.loadBerichtData(vereinnr, ergebnisLink);
 			this.bildUnterschrift = data.getBildUnterschrift() != null ? data.getBildUnterschrift() : "";
 			if (isHttpLink()) {
-				this.ueberschrift = datum + " - " + heim + " - " + gast + "   " + ergebnis + " (" + liga + ")";
+				this.ueberschrift = datum + " - " + heim + " - " + gast + "   " + ergebnis + " (" + ligaSpiel + ")";
 			} else {
 				this.ueberschrift = data.getUeberschrift() != null ? data.getUeberschrift() : heim;
 			}
@@ -448,7 +450,7 @@ public class BerichtBean implements Serializable {
 			frage.append(
 					" Der vorliegende Zeitungsbericht wurde bereits geprüft. Gib daher nur noch wirkliche Fehler aus und extem schlechte Formulierungen. ");
 		}
-		frage.append("Ab hier beginnt der Zeitungsbericht: ");
+		frage.append(" \n ### Ab hier beginnt der Zeitungsbericht: \n ");
 		frage.append(text);
 
 		int anzahlKi = dbService.anzahlKI(vereinnr, ergebnisLink, "korrigiert");
@@ -476,8 +478,7 @@ public class BerichtBean implements Serializable {
 			KiProvider ki = KiProviderFactory.create(vereinnr, frage.toString(),
 					ConfigManager.getConfigValue(vereinnr, "ki.model.korrektur"), "none", 0.0, 0.0, 0.0, schema);
 
-			kiRueckgabe = "<strong>Frage:</strong> <br> " + frage + "<br><br><strong>Antwort:</strong><br>"
-					+ ki.getResponse();
+			kiRueckgabe = " \n ## Frage: \n " + frage + "\n ## Antwort: \n" + ki.getResponse();
 			fehlerListe = parseFehlerListe(ki.getResponse(), kiSaetze);
 			dbService.saveLogData(vereinnr, ergebnisLink, "KI", "KI-Bericht korrigiert", "");
 		} else {
@@ -909,7 +910,11 @@ public class BerichtBean implements Serializable {
 	}
 
 	public String getKiRueckgabe() {
-		return kiRueckgabe;
+		System.out.println(kiRueckgabe);
+		Parser parser = Parser.builder().build();
+		HtmlRenderer renderer = HtmlRenderer.builder().build();
+		return BerichtHelper.SAFE_HTML_POLICY.sanitize(decodeUrl(
+				BerichtHelper.formatJsonBlocks(renderer.render(parser.parse(kiRueckgabe == null ? "" : kiRueckgabe)))));
 	}
 
 	public void setKiRueckgabe(String kiRueckgabe) {

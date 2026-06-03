@@ -13,6 +13,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -84,13 +86,8 @@ public class BerichtkiBean implements Serializable {
 	private Mannschaft selectedMannschaft;
 
 	private String frage;
-	private String frageAusgabe;
-	private String prettyJson;
-	private String prettyJsonTabelle;
-	private String prettyJsonSpielplan;
-	private String prettyJsonBilanz;
 
-	private String freiPrompt;
+	private String jahresrueckblickPrompt;
 	private String zusammenfassenPrompt;
 	private String vereinnr;
 	private String freiMannschaft;
@@ -240,7 +237,6 @@ public class BerichtkiBean implements Serializable {
 		}
 
 		String jsonSpielplan = "";
-		String prettyJsonSpielplan = "";
 		String besondereSonder = "";
 		if (zusaetzlicheJSON && tabelleUrl != null && tabelleUrl.startsWith("http")) {
 			try {
@@ -253,13 +249,10 @@ public class BerichtkiBean implements Serializable {
 				ObjectMapper objectMapper = new ObjectMapper();
 				jsonSpielplan = objectMapper.writeValueAsString(mappedList);
 				ObjectMapper mapper = new ObjectMapper();
-				prettyJsonSpielplan = mapper.writerWithDefaultPrettyPrinter()
-						.writeValueAsString(mapper.readValue(jsonSpielplan, Object.class));
-				prettyJsonSpielplan.replace("\n", "<br/>").replace(" ", "&nbsp;");
 				FacesContext.getCurrentInstance().addMessage(null,
 						new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Spielplan -> Json - Erfolgreich"));
 				if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
-					besondereSonder = "- Berücksichtige im Bericht die kommenden Spiele. " + besondereSonder;
+					besondereSonder = "* Berücksichtige im Bericht die kommenden Spiele. " + besondereSonder;
 				}
 			} catch (Exception e) {
 				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
@@ -268,7 +261,6 @@ public class BerichtkiBean implements Serializable {
 		}
 
 		String jsonBilanz = "";
-		String prettyJsonBilanz = "";
 		if (zusaetzlicheJSON && bilanzUrl != null && bilanzUrl.startsWith("http")) {
 			try {
 				// TischtennisBilanzService service = new TischtennisBilanzService();
@@ -280,13 +272,10 @@ public class BerichtkiBean implements Serializable {
 				ObjectMapper objectMapper = new ObjectMapper();
 				jsonBilanz = objectMapper.writeValueAsString(bil);
 				ObjectMapper mapper = new ObjectMapper();
-				prettyJsonBilanz = mapper.writerWithDefaultPrettyPrinter()
-						.writeValueAsString(mapper.readValue(jsonBilanz, Object.class));
-				prettyJsonBilanz.replace("\n", "<br/>").replace(" ", "&nbsp;");
 				FacesContext.getCurrentInstance().addMessage(null,
 						new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Bilanzen -> Json - Erfolgreich"));
 				if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
-					besondereSonder = "- Berücksichtige im Bericht aussergewöhnlich gute Bilanzen. " + besondereSonder;
+					besondereSonder = "* Berücksichtige im Bericht aussergewöhnlich gute Bilanzen. " + besondereSonder;
 				}
 			} catch (Exception e) {
 				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
@@ -294,7 +283,6 @@ public class BerichtkiBean implements Serializable {
 			}
 		}
 		String jsonTabelle = "";
-		String prettyJsonTabelle = "";
 		if (zusaetzlicheJSON && tabelleUrl != null && tabelleUrl.startsWith("http")) {
 			try {
 				TabellenProvider service = TabellenFactory.create(tabelleUrl);
@@ -302,13 +290,10 @@ public class BerichtkiBean implements Serializable {
 				ObjectMapper objectMapper = new ObjectMapper();
 				jsonTabelle = objectMapper.writeValueAsString(tab);
 				ObjectMapper mapper = new ObjectMapper();
-				prettyJsonTabelle = mapper.writerWithDefaultPrettyPrinter()
-						.writeValueAsString(mapper.readValue(jsonTabelle, Object.class));
-				prettyJsonTabelle.replace("\n", "<br/>").replace(" ", "&nbsp;");
 				FacesContext.getCurrentInstance().addMessage(null,
 						new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Tabelle -> Json - Erfolgreich"));
 				if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
-					besondereSonder = "- Berücksichtige im Bericht die Tabellenposition und die Position der kommenden Gegner. "
+					besondereSonder = "* Berücksichtige im Bericht die Tabellenposition und die Position der kommenden Gegner. "
 							+ besondereSonder;
 				}
 			} catch (Exception e) {
@@ -317,47 +302,38 @@ public class BerichtkiBean implements Serializable {
 			}
 		}
 
-		if (mehrereBerichte) {
-
-		}
 		String json = null;
 		if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http") && provider != null) {
 			try {
-				json = provider.summaryToJson();
-				ObjectMapper mapper = new ObjectMapper();
-				Object json2 = mapper.readValue(json, Object.class);
-				prettyJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json2);
-				prettyJson.replace("\n", "<br/>").replace(" ", "&nbsp;");
+				json = prettyJson("Spielbericht", provider.summaryToJson());
 			} catch (Exception e) {
 				FacesContext.getCurrentInstance().addMessage(null,
 						new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Parsen Spielplan " + e.getMessage()));
 			}
 		} else {
 			json = "";
-			prettyJson = "";
 		}
 
 		if (!"".equals(jsonSpielplan)) {
-			json = json + " Hier ist der Spielplan: " + jsonSpielplan;
-			prettyJson = prettyJson + "\n Hier ist der Spielplan: \n" + prettyJsonSpielplan;
+			json = json + prettyJson("Spielplan", jsonSpielplan);
 		}
 
 		if (!"".equals(jsonTabelle)) {
-			json = json + " Hier ist die Tabelle: " + jsonTabelle;
-			prettyJson = prettyJson + "\n Hier ist die Tabelle: \n" + prettyJsonTabelle;
+			json = json + prettyJson("Tabelle", jsonTabelle);
 		}
 
 		if (!"".equals(jsonBilanz)) {
-			json = json + " Hier die Bilanzen: " + jsonBilanz;
-			prettyJson = prettyJson + " \n Hier die Bilanzen: \n " + prettyJsonBilanz;
+			json = json + prettyJson("Bilanzen", jsonBilanz);
 		}
-
 		String besondere;
-		if (besondereSonder.isBlank()) {
-			besondere = "Neben dem Spielbericht brauchen keine besondere Vorkommnisse erwähnt werden.";
+		if (besondereSonder.isBlank() && mehrereBerichte) {
+			besondere = "Neben den Daten aus den alten Berichten brauchen keine besondere Vorkommnisse erwähnt werden.";
+		} else if (besondereSonder.isBlank()) {
+			besondere = "Neben den JSON-Daten brauchen keine besondere Vorkommnisse erwähnt werden.";
 		} else {
 			besondere = besondereSonder;
 		}
+
 		if (besondereVorkommnisse != null && !besondereVorkommnisse.isEmpty()) {
 			if (namensSpeicher == null) {
 				besondere = besondereSonder + " " + besondereVorkommnisse;
@@ -370,7 +346,7 @@ public class BerichtkiBean implements Serializable {
 		StilGenerator stil = new StilGenerator();
 		String stilrichtung = "";
 		try {
-			stilrichtung = stil.stilvariationen(vereinnr, wirkungen);
+			stilrichtung = "```json\n" + stil.stilvariationen(vereinnr, wirkungen) + "\n```";
 		} catch (Exception e) {
 			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
 					"Stilvariationen to Json " + e.getMessage()));
@@ -382,23 +358,15 @@ public class BerichtkiBean implements Serializable {
 		if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 			this.frage = ConfigManager.erstellenPrompt(vereinnr, berichtMannschaft, String.valueOf(berichtgroesse),
 					besondere, json, stilrichtung, wirkungen.size());
-			this.frageAusgabe = ConfigManager.erstellenPrompt(vereinnr, berichtMannschaft,
-					String.valueOf(berichtgroesse), besondere, "", stilrichtung, wirkungen.size());
 		} else if (zusaetzlicheJSON) {
-			this.frage = ConfigManager.erstellenFreiPrompt(vereinnr, freiMannschaft, freiPrompt,
+			this.frage = ConfigManager.erstellenFreiPrompt(vereinnr, freiMannschaft, getJahresrueckblickPrompt(),
 					String.valueOf(berichtgroesse), besondere, json, stilrichtung, wirkungen.size());
-			this.frageAusgabe = ConfigManager.erstellenFreiPrompt(vereinnr, freiMannschaft, freiPrompt,
-					String.valueOf(berichtgroesse), besondere, "", stilrichtung, wirkungen.size());
 		} else if (mehrereBerichte) {
-			this.frage = ConfigManager.erstellenFreiPrompt(vereinnr, freiMannschaft, freiPrompt,
-					String.valueOf(berichtgroesse), besondere, getFormatBerichte(), stilrichtung, wirkungen.size());
-			this.frageAusgabe = ConfigManager.erstellenFreiPrompt(vereinnr, "", zusammenfassenPrompt,
+			this.frage = ConfigManager.erstellenFreiPrompt(vereinnr, freiMannschaft, getZusammenfassenPrompt(),
 					String.valueOf(berichtgroesse), besondere, getFormatBerichte(), stilrichtung, wirkungen.size());
 		} else {
 			this.frage = ConfigManager.erstellenPromptohneSpielbericht(vereinnr, heim, String.valueOf(berichtgroesse),
 					besondere, json, stilrichtung, wirkungen.size());
-			this.frageAusgabe = ConfigManager.erstellenPromptohneSpielbericht(vereinnr, heim,
-					String.valueOf(berichtgroesse), besondere, "", stilrichtung, wirkungen.size());
 		}
 		anzahlKi = dbService.anzahlKI(vereinnr, ergebnisLink, "generiert");
 		String antworten = "";
@@ -451,6 +419,17 @@ public class BerichtkiBean implements Serializable {
 		ersetzungen = namensSpeicher.zeigeAlle();
 		wirkungen.clear();
 
+	}
+
+	public static String prettyJson(String ueberschrift, String eingabe) {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			Object obj = mapper.readValue(eingabe, Object.class);
+			String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
+			return " **" + ueberschrift + ":**\n ```json\n" + json + "\n```";
+		} catch (Exception e) {
+			return eingabe; // fallback
+		}
 	}
 
 	public void onSlide() {
@@ -669,11 +648,11 @@ public class BerichtkiBean implements Serializable {
 	}
 
 	public String getFrageAusgabe() {
-		return frageAusgabe;
-	}
-
-	public void setFrageAusgabe(String frageAusgabe) {
-		this.frageAusgabe = frageAusgabe;
+		Parser parser = Parser.builder().build();
+		HtmlRenderer renderer = HtmlRenderer.builder().build();
+		String textAusgabe = BerichtHelper.SAFE_HTML_POLICY.sanitize(
+				decodeUrl(BerichtHelper.formatJsonBlocks(renderer.render(parser.parse(frage == null ? "" : frage)))));
+		return textAusgabe;
 	}
 
 	public void updBearbeitung() {
@@ -731,8 +710,8 @@ public class BerichtkiBean implements Serializable {
 		int berichtNr = 1;
 
 		for (KiZusammenfassenText bericht : zusammenfassenTexte) {
-			sb.append("Bericht ").append(berichtNr++).append(":\n").append(bericht.getUeberschrift()).append("\n")
-					.append(bericht.getText()).append("\n\n");
+			sb.append("#### Bericht ").append(berichtNr++).append(" :\n *").append(bericht.getUeberschrift())
+					.append("*\n").append(bericht.getText()).append("\n\n");
 		}
 
 		return sb.toString();
@@ -804,14 +783,6 @@ public class BerichtkiBean implements Serializable {
 		return this.berichte;
 	}
 
-	public String getPrettyJson() {
-		return prettyJson;
-	}
-
-	public void setPrettyJson(String prettyJson) {
-		this.prettyJson = prettyJson;
-	}
-
 	public boolean getFreierBericht() {
 		if (ergebnisLink.startsWith("http")) {
 			return false;
@@ -819,11 +790,11 @@ public class BerichtkiBean implements Serializable {
 		return true;
 	}
 
-	public String getFreiPrompt() {
-		if (freiPrompt == null || "".equals(freiPrompt)) {
-			freiPrompt = ConfigManager.getConfigValue(vereinnr, "ki.prompt.freierbericht");
+	public String getJahresrueckblickPrompt() {
+		if (jahresrueckblickPrompt == null || "".equals(jahresrueckblickPrompt)) {
+			jahresrueckblickPrompt = ConfigManager.getConfigValue(vereinnr, "ki.prompt.jahresrueckblick");
 		}
-		return freiPrompt;
+		return jahresrueckblickPrompt;
 	}
 
 	public String getZusammenfassenPrompt() {
@@ -834,8 +805,8 @@ public class BerichtkiBean implements Serializable {
 		return zusammenfassenPrompt;
 	}
 
-	public void setFreiPrompt(String freiPrompt) {
-		this.freiPrompt = freiPrompt;
+	public void setJahresrueckblickPrompt(String jahresrueckblickPrompt) {
+		this.jahresrueckblickPrompt = jahresrueckblickPrompt;
 	}
 
 	public void setZusammenfassenPrompt(String zusammenfassenPrompt) {
@@ -875,30 +846,6 @@ public class BerichtkiBean implements Serializable {
 
 	public void setBilanzUrl(String bilanzUrl) {
 		this.bilanzUrl = bilanzUrl;
-	}
-
-	public String getPrettyJsonTabelle() {
-		return prettyJsonTabelle;
-	}
-
-	public String getPrettyJsonSpielplan() {
-		return prettyJsonSpielplan;
-	}
-
-	public String getPrettyJsonBilanz() {
-		return prettyJsonBilanz;
-	}
-
-	public void setPrettyJsonTabelle(String prettyJsonTabelle) {
-		this.prettyJsonTabelle = prettyJsonTabelle;
-	}
-
-	public void setPrettyJsonSpielplan(String prettyJsonSpielplan) {
-		this.prettyJsonSpielplan = prettyJsonSpielplan;
-	}
-
-	public void setPrettyJsonBilanz(String prettyJsonBilanz) {
-		this.prettyJsonBilanz = prettyJsonBilanz;
 	}
 
 	public boolean isZusaetzlicheJSON() {

@@ -169,7 +169,7 @@
 						<h:outputText value="Hier kann die KI-Eingabe angepasst werden " />
 						<br />
 						<p:inputTextarea id="freiPrompt"
-							value="#{berichtkiBean.freiPrompt}" rows="10"
+							value="#{berichtkiBean.jahresrueckblickPrompt}" rows="10"
 							styleClass="my-custom-box" />
 						<br />
 						<br />
@@ -432,10 +432,7 @@ Empfohlen:   <br />
 					<h:outputText value="#{berichtkiBean.info}" escape="false" />
 					<br />
 					<h2>Die KI wurde mit folgender Anweisung gefüttert</h2>
-					<h:outputText value="#{berichtkiBean.frageAusgabe}" />
-					<pre>
-  					<h:outputText value="#{berichtkiBean.prettyJson}" />
-				</pre>
+					<h:outputText value="#{berichtkiBean.frageAusgabe}" escape="false" />
 				</h:panelGroup>
 				<h:panelGroup id="spielplanPanel"
 					rendered="#{berichtkiBean.spielplan}">
