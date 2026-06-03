@@ -252,7 +252,7 @@ public class BerichtkiBean implements Serializable {
 				FacesContext.getCurrentInstance().addMessage(null,
 						new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Spielplan -> Json - Erfolgreich"));
 				if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
-					besondereSonder = "* Berücksichtige im Bericht die kommenden Spiele. " + besondereSonder;
+					besondereSonder = "* Berücksichtige im Bericht die kommenden Spiele. \n" + besondereSonder;
 				}
 			} catch (Exception e) {
 				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
@@ -275,7 +275,8 @@ public class BerichtkiBean implements Serializable {
 				FacesContext.getCurrentInstance().addMessage(null,
 						new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Bilanzen -> Json - Erfolgreich"));
 				if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
-					besondereSonder = "* Berücksichtige im Bericht aussergewöhnlich gute Bilanzen. " + besondereSonder;
+					besondereSonder = "* Berücksichtige im Bericht aussergewöhnlich gute Bilanzen. \n"
+							+ besondereSonder;
 				}
 			} catch (Exception e) {
 				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
@@ -426,7 +427,7 @@ public class BerichtkiBean implements Serializable {
 			ObjectMapper mapper = new ObjectMapper();
 			Object obj = mapper.readValue(eingabe, Object.class);
 			String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
-			return " **" + ueberschrift + ":**\n ```json\n" + json + "\n```";
+			return "\n **" + ueberschrift + ":** \n ```json \n " + json + " \n ```";
 		} catch (Exception e) {
 			return eingabe; // fallback
 		}
