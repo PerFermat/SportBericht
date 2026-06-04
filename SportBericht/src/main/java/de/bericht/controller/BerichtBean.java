@@ -451,6 +451,7 @@ public class BerichtBean implements Serializable {
 					" Der vorliegende Zeitungsbericht wurde bereits geprüft. Gib daher nur noch wirkliche Fehler aus und extem schlechte Formulierungen. ");
 		}
 		frage.append(" \n ### Ab hier beginnt der Zeitungsbericht: \n ");
+
 		frage.append(text);
 
 		int anzahlKi = dbService.anzahlKI(vereinnr, ergebnisLink, "korrigiert");
@@ -477,8 +478,9 @@ public class BerichtBean implements Serializable {
 					.put("required", new JSONArray().put("Korrekturen"));
 			KiProvider ki = KiProviderFactory.create(vereinnr, frage.toString(),
 					ConfigManager.getConfigValue(vereinnr, "ki.model.korrektur"), "none", 0.0, 0.0, 0.0, schema);
-
-			kiRueckgabe = " \n ## Frage: \n " + frage + "\n ## Antwort: \n" + ki.getResponse();
+			String reintext = frage.toString().replaceAll("(?i)</p>", "\n").replaceAll("(?i)<br\\s*/?>", "\n")
+					.replaceAll("<[^>]+>", "");
+			kiRueckgabe = " \n ## Frage: \n " + reintext + "\n ## Antwort: \n" + ki.getResponse();
 			fehlerListe = parseFehlerListe(ki.getResponse(), kiSaetze);
 			dbService.saveLogData(vereinnr, ergebnisLink, "KI", "KI-Bericht korrigiert", "");
 		} else {
@@ -910,11 +912,10 @@ public class BerichtBean implements Serializable {
 	}
 
 	public String getKiRueckgabe() {
-		System.out.println(kiRueckgabe);
 		Parser parser = Parser.builder().build();
 		HtmlRenderer renderer = HtmlRenderer.builder().build();
 		return BerichtHelper.SAFE_HTML_POLICY.sanitize(decodeUrl(
-				BerichtHelper.formatJsonBlocks(renderer.render(parser.parse(kiRueckgabe == null ? "" : kiRueckgabe)))));
+				renderer.render(parser.parse(kiRueckgabe == null ? "" : BerichtHelper.formatJsonBlocks(kiRueckgabe)))));
 	}
 
 	public void setKiRueckgabe(String kiRueckgabe) {

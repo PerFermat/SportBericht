@@ -652,7 +652,7 @@ public class BerichtkiBean implements Serializable {
 		Parser parser = Parser.builder().build();
 		HtmlRenderer renderer = HtmlRenderer.builder().build();
 		String textAusgabe = BerichtHelper.SAFE_HTML_POLICY.sanitize(
-				decodeUrl(BerichtHelper.formatJsonBlocks(renderer.render(parser.parse(frage == null ? "" : frage)))));
+				decodeUrl(renderer.render(parser.parse(frage == null ? "" : BerichtHelper.formatJsonBlocks(frage)))));
 		return textAusgabe;
 	}
 
