@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -16,6 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -47,6 +50,7 @@ import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.LoginCookieDaten;
 import de.bericht.util.enums.FtpUploadThema;
+import de.bericht.util.enums.TerminStatus;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -64,6 +68,13 @@ public class FtpBean implements Serializable {
 	private enum TerminHtmlZweck {
 		MAIL, HTML_DATEI
 	}
+
+	private record SftpZiel(String host, String user, int port, String passwort, String zielPfad, String backupPfad) {
+	}
+
+	private static final Set<String> ICS_TERMIN_STATUS = Set.of(TerminStatus.TRAININGSAUSFALLJA.getLabel(),
+			TerminStatus.TRAININGSAUSFALLJ.getLabel(), TerminStatus.TRAININGSAUSFALLA.getLabel(),
+			TerminStatus.TRAINING.getLabel(), TerminStatus.TERMINNEU.getLabel());
 
 	private static final long serialVersionUID = 1L;
 	private static final int SFTP_CONNECT_TIMEOUT_MS = 15000;
@@ -139,6 +150,58 @@ public class FtpBean implements Serializable {
 
 	public boolean isAdminFreigabe() {
 		return adminFreigabe;
+	}
+
+	public void termineEintragen() {
+		if (!adminFreigabe) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Keine Berechtigung",
+					"Das Eintragen der Termine per FTP ist nur mit Admin-Passwort möglich.");
+			return;
+		}
+		if (!isHallenThemaAusgewaehlt() || !isHallenAnalyseBereit()) {
+			addMessage(FacesMessage.SEVERITY_WARN, "Analyse fehlt", "Bitte zuerst eine PDF auswählen und analysieren.");
+			return;
+		}
+
+		byte[] icsBytes = erstelleTerminIcsBytes();
+		if (icsBytes.length == 0) {
+			addMessage(FacesMessage.SEVERITY_WARN, "Keine Termine ausgewählt",
+					"Bitte mindestens einen passenden Terminstatus für den Kalendereintrag auswählen.");
+			return;
+		}
+
+		SftpZiel ziel;
+		try {
+			ziel = ermittleSftpZiel("ics");
+		} catch (IllegalArgumentException e) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "SFTP-Konfiguration unvollständig", e.getMessage());
+			return;
+		}
+
+		Session session = null;
+		ChannelSftp sftp = null;
+		try {
+			JSch jsch = new JSch();
+			session = jsch.getSession(ziel.user(), ziel.host(), ziel.port());
+			session.setPassword(ziel.passwort());
+			session.setConfig("StrictHostKeyChecking", "no");
+			session.connect(SFTP_CONNECT_TIMEOUT_MS);
+
+			sftp = (ChannelSftp) session.openChannel("sftp");
+			sftp.connect(SFTP_CONNECT_TIMEOUT_MS);
+			uploadMitBackup(sftp, icsBytes, ziel.zielPfad(), ziel.backupPfad());
+			addMessage(FacesMessage.SEVERITY_INFO, "Termine eingetragen",
+					"ICS-Datei wurde per SFTP übertragen: " + ziel.zielPfad());
+		} catch (JSchException | SftpException | IOException e) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "Termine eintragen fehlgeschlagen", e.getMessage());
+		} finally {
+			if (sftp != null && sftp.isConnected()) {
+				sftp.disconnect();
+			}
+			if (session != null && session.isConnected()) {
+				session.disconnect();
+			}
+		}
 	}
 
 	public void hochladen() {
@@ -584,6 +647,105 @@ public class FtpBean implements Serializable {
 		}
 	}
 
+	private SftpZiel ermittleSftpZiel(String dateiendung) {
+		if (vereinnr == null || vereinnr.isBlank()) {
+			throw new IllegalArgumentException(
+					"Die Vereinsnummer fehlt. Bitte Seite über den regulären Einstieg öffnen.");
+		}
+
+		String host = ConfigManager.getSftpUrl(vereinnr);
+		String user = ConfigManager.getSftpUser(vereinnr);
+		String portRaw = ConfigManager.getSftpPort(vereinnr);
+		String passwort = ConfigManager.getSftpPasswort(vereinnr);
+		if (isBlank(host) || isBlank(user) || isBlank(portRaw) || isBlank(passwort)) {
+			throw new IllegalArgumentException(
+					"Bitte sftp.url, sftp.user, sftp.port und sftp.passwort in der Config prüfen.");
+		}
+
+		int port;
+		try {
+			port = Integer.parseInt(portRaw.trim());
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("sftp.port ist keine Zahl: " + portRaw);
+		}
+
+		FtpUploadThema thema = FtpUploadThema.fromKey(ausgewaehltesThema);
+		String originalDateiname = sanitizeDateiname(ausgewaehlterDateiname);
+		String pdfDateiname = thema.neuerDateiname != null ? thema.neuerDateiname : originalDateiname;
+		String zielDateiname = ersetzePdfEndung(pdfDateiname, dateiendung);
+		String zielVerzeichnis = ConfigManager.getConfigValue(vereinnr, "sftp.verzeichnis.pdf") + thema.verzeichnis;
+		String zielPfad = buildRemotePath(zielVerzeichnis, zielDateiname);
+		String backupPfad = thema.alterDateiname != null
+				? buildRemotePath(zielVerzeichnis, ersetzePdfEndung(thema.alterDateiname, dateiendung))
+				: null;
+		return new SftpZiel(host, user, port, passwort, zielPfad, backupPfad);
+	}
+
+	private byte[] erstelleTerminIcsBytes() {
+		List<TerminMitStatus> termine = parserTerminStatusListe.stream().filter(this::istIcsTermin).toList();
+		if (termine.isEmpty()) {
+			return new byte[0];
+		}
+
+		StringBuilder ics = new StringBuilder();
+		ics.append("BEGIN:VCALENDAR\r\n");
+		ics.append("VERSION:2.0\r\n");
+		ics.append("PRODID:-//SportBericht//Hallenbelegung//DE\r\n");
+		ics.append("CALSCALE:GREGORIAN\r\n");
+		ics.append("METHOD:PUBLISH\r\n");
+		for (TerminMitStatus termin : termine) {
+			LocalDate datum = datumFuerTermin(termin);
+			if (datum == null) {
+				continue;
+			}
+			String status = termin.getStatus();
+			String titel = status;
+			String beschreibung = termin.getTerminFreitext() == null ? "" : termin.getTerminFreitext().trim();
+			if (TerminStatus.TERMINNEU.getLabel().equals(status)) {
+				String[] zeilen = (termin.getTerminFreitext() == null ? "" : termin.getTerminFreitext()).split("\\R",
+						-1);
+				titel = zeilen.length > 0 && !zeilen[0].isBlank() ? zeilen[0].trim()
+						: TerminStatus.TERMINNEU.getLabel();
+				beschreibung = zeilen.length > 1
+						? String.join("\n", Arrays.copyOfRange(zeilen, 1, zeilen.length)).trim()
+						: "";
+			}
+
+			ics.append("BEGIN:VEVENT\r\n");
+			appendIcsProperty(ics, "UID", UUID.randomUUID() + "@sportbericht");
+			appendIcsProperty(ics, "DTSTAMP", DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
+					.format(java.time.ZonedDateTime.now(ZoneOffset.UTC)));
+			appendIcsProperty(ics, "SUMMARY", titel);
+			appendIcsProperty(ics, "DESCRIPTION", beschreibung);
+			appendIcsProperty(ics, "DTSTART;VALUE=DATE", datum.format(DateTimeFormatter.BASIC_ISO_DATE));
+			appendIcsProperty(ics, "DTEND;VALUE=DATE", datum.plusDays(1).format(DateTimeFormatter.BASIC_ISO_DATE));
+			ics.append("END:VEVENT\r\n");
+		}
+		ics.append("END:VCALENDAR\r\n");
+		return ics.toString().getBytes(StandardCharsets.UTF_8);
+	}
+
+	private boolean istIcsTermin(TerminMitStatus termin) {
+		return termin != null && ICS_TERMIN_STATUS.contains(termin.getStatus()) && datumFuerTermin(termin) != null;
+	}
+
+	private void appendIcsProperty(StringBuilder ics, String name, String value) {
+		String line = name + ":" + escapeIcsText(value);
+		while (line.length() > 73) {
+			ics.append(line, 0, 73).append("\r\n ");
+			line = line.substring(73);
+		}
+		ics.append(line).append("\r\n");
+	}
+
+	private String escapeIcsText(String text) {
+		if (text == null) {
+			return "";
+		}
+		return text.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\r\n", "\\n")
+				.replace("\n", "\\n").replace("\r", "\\n");
+	}
+
 	private boolean remoteExists(ChannelSftp sftp, String remotePath) {
 		try {
 			sftp.lstat(remotePath);
@@ -615,13 +777,19 @@ public class FtpBean implements Serializable {
 	}
 
 	private String ersetzePdfEndungDurchHtml(String dateiname) {
+		return ersetzePdfEndung(dateiname, "html");
+	}
+
+	private String ersetzePdfEndung(String dateiname, String neueEndung) {
+		String endung = neueEndung.startsWith(".") ? neueEndung : "." + neueEndung;
+
 		if (dateiname == null || dateiname.isBlank()) {
-			return "upload.html";
+			return "upload" + endung;
 		}
 		if (dateiname.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
-			return dateiname.substring(0, dateiname.length() - 4) + ".html";
+			return dateiname.substring(0, dateiname.length() - 4) + endung;
 		}
-		return dateiname + ".html";
+		return dateiname + endung;
 	}
 
 	private String buildRemotePath(String verzeichnis, String dateiname) {

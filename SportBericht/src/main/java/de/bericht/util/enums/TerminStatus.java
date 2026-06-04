@@ -15,6 +15,10 @@ public enum TerminStatus {
 		this.label = label;
 	}
 
+	public String getLabel() {
+		return label;
+	}
+
 	public SelectItem toSelectItem() {
 		return new SelectItem(label);
 	}

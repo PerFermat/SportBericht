@@ -69,7 +69,11 @@ ftpBean
 
 
 
+
+
 .parserAusgabeCss
+
+
 
 
 
@@ -164,6 +168,10 @@ ftpBean
 											disabled="#{not ftpBean.hallenAnalyseBereit}" />
 										<p:commandButton value="Hochladen"
 											action="#{ftpBean.hochladen}" update="ftpForm"
+											disabled="#{not ftpBean.hallenAnalyseBereit}"
+											rendered="#{ftpBean.adminFreigabe}" />
+										<p:commandButton value="Termine eintragen"
+											action="#{ftpBean.termineEintragen}" update="ftpForm"
 											disabled="#{not ftpBean.hallenAnalyseBereit}"
 											rendered="#{ftpBean.adminFreigabe}" />
 									</div>
