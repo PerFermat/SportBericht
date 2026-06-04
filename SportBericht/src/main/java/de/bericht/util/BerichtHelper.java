@@ -471,12 +471,6 @@ public class BerichtHelper {
 		}
 
 		Pattern pattern = Pattern.compile("```\\s*json\\s*([\\s\\S]*?)\\s*```", Pattern.CASE_INSENSITIVE);
-		byte[] bytes = input.toString().getBytes(StandardCharsets.UTF_8);
-
-		for (int i = 0; i < bytes.length; i++) {
-			System.out.printf("%02X ", bytes[i]);
-		}
-		System.out.println();
 
 		Matcher matcher = pattern.matcher(input);
 

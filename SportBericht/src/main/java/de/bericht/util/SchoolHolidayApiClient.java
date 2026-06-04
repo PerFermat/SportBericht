@@ -78,7 +78,6 @@ public class SchoolHolidayApiClient {
 		try {
 			String url = String.format(API_URL, ConfigManager.getConfigValue(vereinnr, "sftp.ferien.bundeslaender"),
 					year, year);
-			System.out.println(url);
 
 			HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url))
 					.timeout(java.time.Duration.ofSeconds(10)).GET().build();

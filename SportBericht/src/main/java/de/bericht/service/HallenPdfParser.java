@@ -32,7 +32,6 @@ public class HallenPdfParser {
 	 * Konstruktor: Interpretiert direkt das PDF aus dem InputStream.
 	 */
 	public HallenPdfParser(String vereinnr, InputStream pdfInputStream, YearMonth pdfMonat) throws IOException {
-		System.out.println("H1" + pdfMonat);
 		this.pdfMonat = pdfMonat;
 
 		String pdfText = lesePdf(pdfInputStream);
