@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -3013,4 +3014,47 @@ public class DatabaseService {
 			throw new IllegalStateException("Schulferien konnten nicht gespeichert werden.", e);
 		}
 	}
+
+	public Map<LocalDate, String> ladeHallenbelegung(YearMonth monat) {
+		Map<LocalDate, String> eintraege = new LinkedHashMap<>();
+		if (monat == null) {
+			return eintraege;
+		}
+
+		String sql = "SELECT datum, kalendereintrag, terminFreitext FROM Hallenbelegung WHERE datum BETWEEN ? AND ? ORDER BY datum";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setDate(1, Date.valueOf(monat.atDay(1)));
+			pstmt.setDate(2, Date.valueOf(monat.atEndOfMonth()));
+			try (ResultSet rs = pstmt.executeQuery()) {
+				while (rs.next()) {
+					Date datum = rs.getDate("datum");
+					if (datum != null) {
+						eintraege.put(datum.toLocalDate(), Objects.toString(rs.getString("kalendereintrag"), "") + "###"
+								+ Objects.toString(rs.getString("terminFreitext"), ""));
+					}
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return eintraege;
+	}
+
+	public void speichereHallenbelegung(LocalDate datum, String kalendereintrag, String terminFreitext) {
+		if (datum == null) {
+			return;
+		}
+
+		String sql = "INSERT INTO Hallenbelegung (datum, kalendereintrag, terminFreitext) VALUES (?, ?, ?) "
+				+ "ON DUPLICATE KEY UPDATE kalendereintrag = VALUES(kalendereintrag) , terminFreitext = VALUES(terminFreitext)";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setDate(1, Date.valueOf(datum));
+			pstmt.setString(2, kalendereintrag);
+			pstmt.setString(3, terminFreitext);
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 }

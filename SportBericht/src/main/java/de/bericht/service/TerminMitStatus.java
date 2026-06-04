@@ -19,11 +19,14 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 	private int tag;
 	private List<SelectItem> statusVarianten;
 	private static final HolidayManager HOLIDAY_MANAGER = HolidayManager.getInstance(ManagerParameters.create("de"));
+	private String tagText;
+	private String terminFreitext;
 
 	public TerminMitStatus(String tag, String htmlText, String wochentag, List<SelectItem> statusVarianten) {
 		this.htmlText = htmlText;
 		this.wochentag = wochentag;
 		this.tag = numTag(tag);
+		this.tagText = tag;
 		this.statusVarianten = statusVarianten;
 	}
 
@@ -31,6 +34,7 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 			List<ParserBlock> terminEintraege) {
 		tag = 99;
 		String text = null;
+		this.tagText = manEintrag.getTag();
 		String wochentag = null;
 		for (ParserBlock terminEintrag : terminEintraege) {
 			if (tagGleich(terminEintrag.getTag(), manEintrag.getTag())) {
@@ -75,6 +79,7 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 		tag = 99;
 		String text = null;
 		String wochentag = null;
+		this.tagText = heim.getTagText();
 		for (ParserBlock terminEintrag : terminEintraege) {
 			if (tagGleich(terminEintrag.getTag(), heim.getTagText())) {
 				this.tag = numTag(terminEintrag.getTag());
@@ -102,6 +107,10 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 				heim.getTagText().replace("Halle", "<strong>Halle</strong>") + ". " + titel + "[status]",
 				spiele + "\n\n" + text, "heimspiel");
 		this.wochentag = "heimspiel";
+	}
+
+	public String getTagText() {
+		return tagText;
 	}
 
 	private String erstelleFeiertagTermin(LocalDate datum) {
@@ -194,5 +203,13 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 
 	public List<SelectItem> getTerminStatusOptionen() {
 		return statusVarianten;
+	}
+
+	public String getTerminFreitext() {
+		return terminFreitext;
+	}
+
+	public void setTerminFreitext(String terminFreitext) {
+		this.terminFreitext = terminFreitext;
 	}
 }

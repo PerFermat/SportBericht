@@ -59,7 +59,27 @@ ftpBean
 
 
 
+
+
+
+
+
+
+
+
+
+
 .parserAusgabeCss
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -122,10 +142,11 @@ ftpBean
 					<div
 						style="margin-top: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
 						<p:commandButton value="Analyse" action="#{ftpBean.analysierePdf}"
-							update="messages ausgabeTabs"
+							update="messages ausgabeTabs ftpForm"
+							disabled="#{not ftpBean.dateiAusgewaehlt}"
 							rendered="#{ftpBean.hallenThemaAusgewaehlt}" />
 						<p:commandButton value="Hochladen" action="#{ftpBean.hochladen}"
-							update="ftpForm"
+							update="ftpForm" disabled="#{not ftpBean.dateiAusgewaehlt}"
 							rendered="#{not ftpBean.hallenThemaAusgewaehlt and ftpBean.adminFreigabe}" />
 					</div>
 					<div class="text-input">
@@ -136,15 +157,18 @@ ftpBean
 									<div
 										style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px;">
 										<p:commandButton value="E-Mail senden"
-											action="#{ftpBean.sendeTerminMail}" update="ftpForm" />
+											action="#{ftpBean.sendeTerminMail}" update="ftpForm"
+											disabled="#{not ftpBean.hallenAnalyseBereit}" />
 										<p:commandButton value="KI-Analyse hinzufügen"
-											action="#{ftpBean.kiAnalyse}" update="ftpForm" />
+											action="#{ftpBean.kiAnalyse}" update="ftpForm"
+											disabled="#{not ftpBean.hallenAnalyseBereit}" />
 										<p:commandButton value="Hochladen"
 											action="#{ftpBean.hochladen}" update="ftpForm"
+											disabled="#{not ftpBean.hallenAnalyseBereit}"
 											rendered="#{ftpBean.adminFreigabe}" />
 									</div>
-									
-									<h2> #{ftpBean.pdfMonat} </h2>
+
+									<h2>#{ftpBean.pdfMonat}</h2>
 
 									<p:inputTextarea value="#{ftpBean.emailFreitext}" rows="3"
 										style="width:100%; margin-bottom: 12px;"
@@ -161,11 +185,21 @@ ftpBean
 													escape="false" />
 											</div>
 											<!-- Linke Seite: Dropdown -->
-											<div style="min-width: 200px;">
+											<div style="width: 300px;">
 												<p:selectOneMenu value="#{parserTermin.status}"
 													styleClass="status-select" style="width:100%;">
 													<f:selectItems value="#{parserTermin.terminStatusOptionen}" />
+													<p:ajax
+														listener="#{ftpBean.speichereHallenbelegung(parserTermin)}"
+														process="@this" update=":ftpForm:messages" />
 												</p:selectOneMenu>
+												<p:inputTextarea value="#{parserTermin.terminFreitext}"
+													rows="3" style="width:100%; margin-bottom: 12px;"
+													placeholder="Freitext...">
+													<p:ajax
+														listener="#{ftpBean.speichereHallenbelegung(parserTermin)}"
+														process="@this" update=":ftpForm:messages" />
+												</p:inputTextarea>
 											</div>
 
 										</div>
@@ -184,7 +218,8 @@ ftpBean
 										</div>
 									</ui:repeat>
 									<p:commandButton value="Neuer Tag" action="#{ftpBean.neuerTag}"
-										update="ftpForm" style="margin-bottom: 8px;" />
+										update="ftpForm" style="margin-bottom: 8px;"
+										disabled="#{not ftpBean.hallenAnalyseBereit}" />
 									<div class="ki-output" style="margin-top: 12px;">
 										<p:outputLabel value="#{ftpBean.kiAusgabeText}" escape="false" />
 									</div>

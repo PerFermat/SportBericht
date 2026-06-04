@@ -3,8 +3,9 @@ package de.bericht.util.enums;
 import jakarta.faces.model.SelectItem;
 
 public enum TerminStatus {
-	TRAININGSAUSFALL("Trainingsausfall eingetragen"), TRAINING("Training eingetragen"),
-	TRAINING_NORMAL("Training normal"), TERMIN("Termin eingetragen"), NICHT_RELEVANT("Nicht relevant"),
+	TRAININGSAUSFALLJA("Kein Jugend- und Aktiventraining"), TRAININGSAUSFALLJ("Kein Jugendtraining"),
+	TRAININGSAUSFALLA("Kein Aktiventraining"), TRAINING("Training findet statt"), TERMINNEU("Termin eintragen"),
+	TRAINING_NORMAL("Training normal"), TERMINOK("Termin ist eingetragen"), NICHT_RELEVANT("Nicht relevant"),
 	UEBERPRUEFE("Überprüfe"), SPIELTAG_OK("Spieltag OK"), SPIELTAG_KRITISCH("Spieltag kritisch"),
 	HALLE_FREIGEBEN("Halle freigeben"), IGNORIEREN("ignorieren");
 

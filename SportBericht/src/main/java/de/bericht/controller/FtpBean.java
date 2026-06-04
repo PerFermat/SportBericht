@@ -94,6 +94,7 @@ public class FtpBean implements Serializable {
 	private byte[] ausgewaehlteDateiBytes;
 	private String ausgewaehlterDateiname;
 	private YearMonth pdfMonat;
+	private boolean analyseDurchgefuehrt;
 
 	@PostConstruct
 	public void init() {
@@ -151,6 +152,11 @@ public class FtpBean implements Serializable {
 			addMessage(FacesMessage.SEVERITY_WARN, "Keine Datei ausgewählt", "Bitte zuerst eine Datei auswählen.");
 			return;
 		}
+		if (isHallenThemaAusgewaehlt() && !isHallenAnalyseBereit()) {
+			addMessage(FacesMessage.SEVERITY_WARN, "Analyse fehlt", "Bitte zuerst eine PDF auswählen und analysieren.");
+			return;
+		}
+
 		if (vereinnr == null || vereinnr.isBlank()) {
 			addMessage(FacesMessage.SEVERITY_ERROR, "Fehlende Vereinsnummer",
 					"Die Vereinsnummer fehlt. Bitte Seite über den regulären Einstieg öffnen.");
@@ -235,6 +241,7 @@ public class FtpBean implements Serializable {
 			addMessage(FacesMessage.SEVERITY_WARN, "Keine Datei ausgewählt", "Bitte zuerst eine Datei auswählen.");
 			return;
 		}
+		analyseDurchgefuehrt = false;
 		FtpUploadThema thema = FtpUploadThema.fromKey(ausgewaehltesThema);
 		if (!thema.isHalleParcer()) {
 			addMessage(FacesMessage.SEVERITY_WARN, "Analyse nicht verfügbar",
@@ -293,7 +300,9 @@ public class FtpBean implements Serializable {
 					parserTerminStatusListe.add(termin);
 				}
 			}
+			ladeGespeicherteHallenbelegung();
 			Collections.sort(parserTerminStatusListe);
+			analyseDurchgefuehrt = true;
 			addMessage(FacesMessage.SEVERITY_INFO, "Analyse erfolgreich", "PDF wurde analysiert.");
 		} catch (IOException e) {
 			addMessage(FacesMessage.SEVERITY_ERROR, "Analyse fehlgeschlagen", e.getMessage());
@@ -310,10 +319,91 @@ public class FtpBean implements Serializable {
 		ausgewaehlterDateiname = file.getFileName();
 		uploadedDatei = null;
 		originalPdfBytes = ausgewaehlteDateiBytes;
+		pdfParcer = null;
+		pdfMonat = null;
+		analyseDurchgefuehrt = false;
+		parserTerminStatusListe.clear();
+		manuelleTage.clear();
+
 	}
 
 	public void kiAnalyse() {
+		if (!isHallenAnalyseBereit()) {
+			addMessage(FacesMessage.SEVERITY_WARN, "Analyse fehlt", "Bitte zuerst eine PDF auswählen und analysieren.");
+			return;
+		}
+
 		kiAusgabeText = erstelleKiAnalyse(pdfParcer.getPlainText(), originalPdfBytes);
+	}
+
+	public boolean isDateiAusgewaehlt() {
+		return ausgewaehlteDateiBytes != null && ausgewaehlteDateiBytes.length > 0;
+	}
+
+	public boolean isHallenAnalyseBereit() {
+		return isDateiAusgewaehlt() && analyseDurchgefuehrt && pdfMonat != null && pdfParcer != null;
+	}
+
+	public void speichereHallenbelegung(TerminMitStatus termin) {
+		LocalDate datum = datumFuerTermin(termin);
+		if (datum == null) {
+			return;
+		}
+		System.out.println("Speichern " + termin.getStatus() + " - " + termin.getTerminFreitext());
+		dbService.speichereHallenbelegung(datum, termin.getStatus(), termin.getTerminFreitext());
+	}
+
+	private void ladeGespeicherteHallenbelegung() {
+		Map<LocalDate, String> gespeicherteEintraege = dbService.ladeHallenbelegung(pdfMonat);
+		if (gespeicherteEintraege.isEmpty()) {
+			return;
+		}
+
+		List<LocalDate> hinzugefuegteDaten = new ArrayList<>();
+		for (TerminMitStatus termin : parserTerminStatusListe) {
+			LocalDate datum = datumFuerTermin(termin);
+			if (gespeicherteEintraege.get(datum) != null) {
+				String[] gespeicherterStatus = gespeicherteEintraege.get(datum).split("###");
+				termin.setStatus(gespeicherterStatus[0]);
+				if (gespeicherterStatus.length > 1) {
+					System.out.println(gespeicherterStatus[1]);
+					termin.setTerminFreitext(gespeicherterStatus[1]);
+				}
+				hinzugefuegteDaten.add(datum);
+			}
+		}
+
+		for (Map.Entry<LocalDate, String> eintrag : gespeicherteEintraege.entrySet()) {
+			if (hinzugefuegteDaten.contains(eintrag.getKey())) {
+				continue;
+			}
+			FtpManuellerTagEintrag manuellerTag = new FtpManuellerTagEintrag();
+			manuellerTag.setTag(tagLabelFuerDatum(eintrag.getKey()));
+			manuellerTag.setText("Manuell gespeicherter Kalendereintrag");
+			TerminMitStatus termin = new TerminMitStatus(vereinnr, pdfMonat, manuellerTag, pdfParcer.getParserAlle());
+			termin.setStatus(eintrag.getValue());
+			parserTerminStatusListe.add(termin);
+		}
+	}
+
+	private LocalDate datumFuerTermin(TerminMitStatus termin) {
+		if (termin == null || pdfMonat == null || termin.getTag() < 1 || termin.getTag() > pdfMonat.lengthOfMonth()) {
+			return null;
+		}
+		return pdfMonat.atDay(termin.getTag());
+	}
+
+	private String tagLabelFuerDatum(LocalDate datum) {
+		if (datum == null) {
+			return "";
+		}
+		String tagPrefix = datum.getDayOfMonth() + ".";
+		for (String eintrag : ueberschrift) {
+			if (eintrag != null && eintrag.trim().startsWith(tagPrefix)) {
+				return eintrag;
+			}
+		}
+		return tagPrefix;
 	}
 
 	private String erstelleKiAnalyse(String pdfText, byte[] uploadedPdf) {
@@ -637,6 +727,11 @@ public class FtpBean implements Serializable {
 	}
 
 	public void sendeTerminMail() {
+		if (!isHallenAnalyseBereit()) {
+			addMessage(FacesMessage.SEVERITY_WARN, "Analyse fehlt", "Bitte zuerst eine PDF auswählen und analysieren.");
+			return;
+		}
+
 		if (originalPdfBytes == null || originalPdfBytes.length == 0) {
 			addMessage(FacesMessage.SEVERITY_WARN, "Keine PDF verfügbar", "Bitte zuerst eine PDF hochladen.");
 			return;
@@ -699,6 +794,7 @@ public class FtpBean implements Serializable {
 			TerminMitStatus termin = new TerminMitStatus(vereinnr, ermittlePdfMonat(originalPdfBytes), p,
 					pdfParcer.getParserAlle());
 			parserTerminStatusListe.add(termin);
+			speichereHallenbelegung(termin);
 		}
 		Collections.sort(parserTerminStatusListe);
 		manuelleTage.clear();
