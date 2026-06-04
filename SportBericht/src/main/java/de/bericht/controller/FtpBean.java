@@ -3,6 +3,7 @@ package de.bericht.controller;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -59,6 +60,10 @@ import jakarta.servlet.http.Part;
 @Named
 @ViewScoped
 public class FtpBean implements Serializable {
+
+	private enum TerminHtmlZweck {
+		MAIL, HTML_DATEI
+	}
 
 	private static final long serialVersionUID = 1L;
 	private static final int SFTP_CONNECT_TIMEOUT_MS = 15000;
@@ -136,7 +141,6 @@ public class FtpBean implements Serializable {
 	}
 
 	public void hochladen() {
-		ueberschrift.clear();
 		if (!adminFreigabe) {
 			addMessage(FacesMessage.SEVERITY_ERROR, "Keine Berechtigung",
 					"Upload per FTP ist nur mit Admin-Passwort möglich.");
@@ -175,11 +179,15 @@ public class FtpBean implements Serializable {
 		FtpUploadThema thema = FtpUploadThema.fromKey(ausgewaehltesThema);
 		String originalDateiname = sanitizeDateiname(ausgewaehlterDateiname);
 		String zielDateiname = thema.neuerDateiname != null ? thema.neuerDateiname : originalDateiname;
-		String zielPfad = buildRemotePath(
-				ConfigManager.getConfigValue(vereinnr, "sftp.verzeichnis.pdf") + thema.verzeichnis, zielDateiname);
-		String backupPfad = thema.alterDateiname != null
-				? buildRemotePath(ConfigManager.getConfigValue(vereinnr, "sftp.verzeichnis.pdf") + thema.verzeichnis,
-						thema.alterDateiname)
+		String zielVerzeichnis = ConfigManager.getConfigValue(vereinnr, "sftp.verzeichnis.pdf") + thema.verzeichnis;
+		String zielPfad = buildRemotePath(zielVerzeichnis, zielDateiname);
+		String backupPfad = thema.alterDateiname != null ? buildRemotePath(zielVerzeichnis, thema.alterDateiname)
+				: null;
+		String zielHtmlDateiname = ersetzePdfEndungDurchHtml(zielDateiname);
+		String zielHtmlPfad = buildRemotePath(zielVerzeichnis, zielHtmlDateiname);
+		String backupHtmlPfad = thema.alterDateiname != null
+				? buildRemotePath(zielVerzeichnis, ersetzePdfEndungDurchHtml(thema.alterDateiname))
+
 				: null;
 
 		Session session = null;
@@ -194,81 +202,12 @@ public class FtpBean implements Serializable {
 			sftp = (ChannelSftp) session.openChannel("sftp");
 			sftp.connect(SFTP_CONNECT_TIMEOUT_MS);
 
-			boolean bestehendeDateiGesichert = false;
-			if (backupPfad != null && remoteExists(sftp, zielPfad)) {
-				if (remoteExists(sftp, backupPfad)) {
-					sftp.rm(backupPfad);
-				}
-				sftp.rename(zielPfad, backupPfad);
-				bestehendeDateiGesichert = true;
-			}
-
 			byte[] uploadedPdf = ausgewaehlteDateiBytes;
-			try (InputStream inputStream = new java.io.ByteArrayInputStream(uploadedPdf)) {
-				sftp.put(inputStream, zielPfad, ChannelSftp.OVERWRITE);
-			} catch (IOException | SftpException e) {
-				if (bestehendeDateiGesichert && remoteExists(sftp, backupPfad) && !remoteExists(sftp, zielPfad)) {
-					sftp.rename(backupPfad, zielPfad);
-				}
-				throw e;
-			}
+			uploadMitBackup(sftp, uploadedPdf, zielPfad, backupPfad);
 
-			try {
-				if (thema.isHalleParcer()) {
-					pdfMonat = ermittlePdfMonat(uploadedPdf);
-					pdfParcer = new HallenPdfParser(vereinnr, new java.io.ByteArrayInputStream(uploadedPdf), pdfMonat);
-					ueberschrift = pdfParcer.getUeberschrift();
-					ausgabeText = pdfParcer.getHtmlText();
-					heim = ladeHeimspiele(pdfMonat);
-
-					terminEintraege = extrahiereTermine(ausgabeText);
-
-					parserTerminStatusListe = new ArrayList<>(
-							pdfParcer.getParserBloecke().stream()
-									.map(block -> new TerminMitStatus(block.getTag(),
-											ParserAusgabeFormatter
-													.formatBlock(block.getTag() + " " + block.getTitel() + " [status] ",
-															block.getText(), block.getWochentag()),
-											block.getWochentag(),
-											ParserAusgabeFormatter.statusVarianten(
-													block.getTag() + " " + block.getTitel() + " [status] ",
-													block.getText(), block.getWochentag())))
-									.toList());
-
-					manuelleTage = new ArrayList<>();
-					emailFreitext = "";
-
-					originalPdfBytes = uploadedPdf;
-
-					for (int i = 0; i < 31; i++) {
-						String spiele = "";
-						Heimspiele heim = null;
-						for (Heimspiele b : spieleDaheim) {
-							if (i == b.getTag()) {
-								spiele = spiele + b.getLiga() + ": Heimspiel gegen " + " " + b.getGast() + " um "
-										+ b.getZeit() + " \n";
-								heim = b;
-							}
-
-						}
-
-						if (!spiele.isBlank()) {
-							TerminMitStatus termin = new TerminMitStatus(heim, spiele, pdfParcer.getParserAlle());
-							parserTerminStatusListe.add(termin);
-						}
-					}
-				} else {
-					if (heim != null) {
-						heim.clear();
-					}
-					ausgabeText = "";
-					kiAusgabeText = "";
-					originalPdfBytes = null;
-				}
-				Collections.sort(parserTerminStatusListe);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			if (thema.isHalleParcer() && originalPdfBytes != null && originalPdfBytes.length > 0 && pdfParcer != null) {
+				byte[] htmlBytes = erstelleTerminHtml(TerminHtmlZweck.HTML_DATEI).getBytes(StandardCharsets.UTF_8);
+				uploadMitBackup(sftp, htmlBytes, zielHtmlPfad, backupHtmlPfad);
 			}
 
 			addMessage(FacesMessage.SEVERITY_INFO, "Upload erfolgreich",
@@ -564,6 +503,37 @@ public class FtpBean implements Serializable {
 		}
 	}
 
+	private void uploadMitBackup(ChannelSftp sftp, byte[] inhalt, String zielPfad, String backupPfad)
+			throws IOException, SftpException {
+		boolean bestehendeDateiGesichert = false;
+		if (backupPfad != null && remoteExists(sftp, zielPfad)) {
+			if (remoteExists(sftp, backupPfad)) {
+				sftp.rm(backupPfad);
+			}
+			sftp.rename(zielPfad, backupPfad);
+			bestehendeDateiGesichert = true;
+		}
+
+		try (InputStream inputStream = new java.io.ByteArrayInputStream(inhalt)) {
+			sftp.put(inputStream, zielPfad, ChannelSftp.OVERWRITE);
+		} catch (IOException | SftpException e) {
+			if (bestehendeDateiGesichert && remoteExists(sftp, backupPfad) && !remoteExists(sftp, zielPfad)) {
+				sftp.rename(backupPfad, zielPfad);
+			}
+			throw e;
+		}
+	}
+
+	private String ersetzePdfEndungDurchHtml(String dateiname) {
+		if (dateiname == null || dateiname.isBlank()) {
+			return "upload.html";
+		}
+		if (dateiname.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
+			return dateiname.substring(0, dateiname.length() - 4) + ".html";
+		}
+		return dateiname + ".html";
+	}
+
 	private String buildRemotePath(String verzeichnis, String dateiname) {
 		String basis = verzeichnis.endsWith("/") ? verzeichnis.substring(0, verzeichnis.length() - 1) : verzeichnis;
 		return basis + "/" + dateiname;
@@ -676,21 +646,47 @@ public class FtpBean implements Serializable {
 			addMessage(FacesMessage.SEVERITY_ERROR, "Empfänger fehlt", "mail.termin.empfaenger ist nicht gepflegt.");
 			return;
 		}
+
+		String inhalt = erstelleTerminHtml(TerminHtmlZweck.MAIL);
+		try {
+			new EmailService(vereinnr, empfaenger, null).sendEmail(vereinnr, "Terminabstimmung " + getVerein(), inhalt,
+					originalPdfBytes, "Hallenbelegung.pdf", true);
+			addMessage(FacesMessage.SEVERITY_INFO, "E-Mail versendet",
+					"Termine wurden an " + empfaenger + " gesendet.");
+		} catch (MessagingException ex) {
+			addMessage(FacesMessage.SEVERITY_ERROR, "E-Mail fehlgeschlagen", ex.getMessage());
+		}
+	}
+
+	private String erstelleTerminHtml(TerminHtmlZweck zweck) {
+		String wrapperKlasse = zweck == TerminHtmlZweck.MAIL ? "mail-wrapper" : "mail-wrapper html-datei-wrapper";
+
 		StringBuilder inhalt = new StringBuilder();
 		inhalt.append("<html><head><meta name='viewport' content='width=device-width, initial-scale=1.0'/>").append(
 				"<style>body{font-family:Arial,sans-serif;font-size:14px;line-height:1.5;margin:0;padding:0}.mail-wrapper{max-width:600px;margin:0 auto;padding:0 12px}.mail-block{text-align:left}")
-				.append(ParserAusgabeFormatter.css()).append("</style></head><body><div class='mail-wrapper'>")
-				.append("<div class='mail-block'>Hallo,<br/><br/>" + "ich habe das PDF der Hallennutzung vom "
-						+ getPdfMonat()
-						+ " geprüft und die relevanten Termine bereits in unseren Kalender eingetragen.<br/>"
-						+ "Unten findest du eine Zusammenfassung der Änderungen sowie die Ergebnisse der automatischen Auswertung zur Kontrolle.<br/><br/>"
+				.append(ParserAusgabeFormatter.css()).append("</style>");
+		if (zweck == zweck.HTML_DATEI) {
+			inhalt.append("<script>").append("function sendHeight() {")
+					.append("    var height = document.documentElement.scrollHeight;")
+					.append("    window.parent.postMessage(height, '*');").append("}")
+					.append("window.onload = sendHeight;").append("window.onresize = sendHeight;")
+					.append("var observer = new MutationObserver(sendHeight);")
+					.append("observer.observe(document.body, { childList: true, subtree: true });").append("</script>");
+		}
+		inhalt.append("</head><body><div class='").append(wrapperKlasse).append("'>")
+				.append("<div class='mail-block'>");
+		if (zweck == zweck.MAIL) {
+			inhalt.append("Hallo,<br/><br/>" + "ich habe das PDF der Hallennutzung vom " + getPdfMonat()
+					+ " geprüft und die relevanten Termine bereits in unseren Kalender eingetragen.<br/>"
+					+ "Unten findest du eine Zusammenfassung der Änderungen sowie die Ergebnisse der automatischen Auswertung zur Kontrolle.<br/><br/>");
 
-						+ "<strong>Farblegende:</strong><br/>"
-						+ "<span style='background-color:#ffebee;border-left:6px solid #c62828;padding:2px 6px;display:inline-block;'>Rot </span> = Halle gefunden -> evtl. Trainingsausfall<br/>"
-						+ "<span style='background-color:#e8f5e9;border-left:6px solid #2e7d32;padding:2px 6px;display:inline-block;'>Grün</span> = Erwähnungen Tischtennis<br/>"
-						+ "<span style='background-color:#e3f2fd;border-left:6px solid #1565c0;padding:2px 6px;display:inline-block;'>Blau</span> = Heimspiel<br/>"
-						+ "<span style='background-color:#fff8e1;border-left:6px solid #ff8f00;padding:2px 6px;display:inline-block;'>Gelb</span> = Feiertag / Ferien<br/>"
-						+ "<span style='background-color:#D1D1D1;border-left:6px solid #595959;padding:2px 6px;display:inline-block;'>Grau</span> = Manuell geprüft / eingetragen<br/><br/>");
+			inhalt.append("<strong>Farblegende:</strong><br/>"
+					+ "<span style='background-color:#ffebee;border-left:6px solid #c62828;padding:2px 6px;display:inline-block;'>Rot </span> = Halle gefunden -> evtl. Trainingsausfall<br/>"
+					+ "<span style='background-color:#e8f5e9;border-left:6px solid #2e7d32;padding:2px 6px;display:inline-block;'>Grün</span> = Erwähnungen Tischtennis<br/>"
+					+ "<span style='background-color:#e3f2fd;border-left:6px solid #1565c0;padding:2px 6px;display:inline-block;'>Blau</span> = Heimspiel<br/>"
+					+ "<span style='background-color:#fff8e1;border-left:6px solid #ff8f00;padding:2px 6px;display:inline-block;'>Gelb</span> = Feiertag / Ferien<br/>"
+					+ "<span style='background-color:#D1D1D1;border-left:6px solid #595959;padding:2px 6px;display:inline-block;'>Grau</span> = Manuell geprüft / eingetragen<br/><br/>");
+		}
 
 		if (!(emailFreitext == null || emailFreitext.isBlank())) {
 			inhalt.append("<h2>Allgemeine Bemerkungen</h2>").append("<div class='hinweis'>");
@@ -707,7 +703,16 @@ public class FtpBean implements Serializable {
 		Collections.sort(parserTerminStatusListe);
 		manuelleTage.clear();
 
-		inhalt.append("<div class='mail-block'><h2>Hallenbelegung Trainingstage und Erwähnungen vom Tischtennis</h2>");
+		inhalt.append("<div class='mail-block'>");
+
+		if (zweck == zweck.MAIL) {
+			inhalt.append("<h2>Hallenbelegung Trainingstage und Erwähnungen vom Tischtennis</h2>");
+		}
+		if (zweck == zweck.HTML_DATEI) {
+			inhalt.append("<h2>" + getPdfMonat() + "</h2>");
+			inhalt.append("Beachte die eingetragenen Termine in unserem Kalender</h2>");
+		}
+
 		for (TerminMitStatus p : parserTerminStatusListe) {
 			if (!p.getStatus().equals("ignorieren")) {
 				inhalt.append(p.getHtmlText(p.getStatus()));
@@ -715,21 +720,15 @@ public class FtpBean implements Serializable {
 		}
 
 		inhalt.append("</div>");
-
-		if (!(kiAusgabeText == null || kiAusgabeText.isBlank())) {
-			inhalt.append("<div class='mail-block'><h2>KI Auswertung der PDF-Daten</h2>");
-			inhalt.append(kiAusgabeText);
-			inhalt.append("</div>");
+		if (zweck == zweck.MAIL) {
+			if (!(kiAusgabeText == null || kiAusgabeText.isBlank())) {
+				inhalt.append("<div class='mail-block'><h2>KI Auswertung der PDF-Daten</h2>");
+				inhalt.append(kiAusgabeText);
+				inhalt.append("</div>");
+			}
 		}
 		inhalt.append("</div></body></html>");
-		try {
-			new EmailService(vereinnr, empfaenger, null).sendEmail(vereinnr, "Terminabstimmung " + getVerein(),
-					inhalt.toString(), originalPdfBytes, "Hallenbelegung.pdf", true);
-			addMessage(FacesMessage.SEVERITY_INFO, "E-Mail versendet",
-					"Termine wurden an " + empfaenger + " gesendet.");
-		} catch (MessagingException ex) {
-			addMessage(FacesMessage.SEVERITY_ERROR, "E-Mail fehlgeschlagen", ex.getMessage());
-		}
+		return inhalt.toString();
 	}
 
 	public void neuerTagHinzufuegen() {
