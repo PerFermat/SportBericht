@@ -24,6 +24,7 @@ public class Hallenbelegung implements Serializable {
 		this.wochentag = "";
 		this.datum = datum;
 		this.titel = titel;
+		System.out.println("Datenbank " + this.datum + " " + this.titel);
 		this.text = text;
 	}
 

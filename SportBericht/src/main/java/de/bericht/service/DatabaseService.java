@@ -3015,8 +3015,8 @@ public class DatabaseService {
 		}
 	}
 
-	public Map<LocalDate, String> ladeHallenbelegung(YearMonth monat) {
-		Map<LocalDate, String> eintraege = new LinkedHashMap<>();
+	public Map<LocalDate, Hallenbelegung> ladeHallenbelegung(YearMonth monat) {
+		Map<LocalDate, Hallenbelegung> eintraege = new LinkedHashMap<>();
 		if (monat == null) {
 			return eintraege;
 		}
@@ -3029,8 +3029,8 @@ public class DatabaseService {
 				while (rs.next()) {
 					Date datum = rs.getDate("datum");
 					if (datum != null) {
-						eintraege.put(datum.toLocalDate(), Objects.toString(rs.getString("kalendereintrag"), "") + "###"
-								+ Objects.toString(rs.getString("terminFreitext"), ""));
+						eintraege.put(datum.toLocalDate(), new Hallenbelegung(datum.toLocalDate(),
+								rs.getString("kalendereintrag"), rs.getString("terminFreitext")));
 					}
 				}
 			}

@@ -413,12 +413,11 @@ public class FtpBean implements Serializable {
 		if (datum == null) {
 			return;
 		}
-		System.out.println("Speichern " + termin.getStatus() + " - " + termin.getTerminFreitext());
 		dbService.speichereHallenbelegung(datum, termin.getStatus(), termin.getTerminFreitext());
 	}
 
 	private void ladeGespeicherteHallenbelegung() {
-		Map<LocalDate, String> gespeicherteEintraege = dbService.ladeHallenbelegung(pdfMonat);
+		Map<LocalDate, Hallenbelegung> gespeicherteEintraege = dbService.ladeHallenbelegung(pdfMonat);
 		if (gespeicherteEintraege.isEmpty()) {
 			return;
 		}
@@ -427,17 +426,14 @@ public class FtpBean implements Serializable {
 		for (TerminMitStatus termin : parserTerminStatusListe) {
 			LocalDate datum = datumFuerTermin(termin);
 			if (gespeicherteEintraege.get(datum) != null) {
-				String[] gespeicherterStatus = gespeicherteEintraege.get(datum).split("###");
-				termin.setStatus(gespeicherterStatus[0]);
-				if (gespeicherterStatus.length > 1) {
-					System.out.println(gespeicherterStatus[1]);
-					termin.setTerminFreitext(gespeicherterStatus[1]);
-				}
+				Hallenbelegung gespeicherterStatus = gespeicherteEintraege.get(datum);
+				termin.setStatus(gespeicherterStatus.getTitel());
+				termin.setTerminFreitext(gespeicherterStatus.getText());
 				hinzugefuegteDaten.add(datum);
 			}
 		}
 
-		for (Map.Entry<LocalDate, String> eintrag : gespeicherteEintraege.entrySet()) {
+		for (Map.Entry<LocalDate, Hallenbelegung> eintrag : gespeicherteEintraege.entrySet()) {
 			if (hinzugefuegteDaten.contains(eintrag.getKey())) {
 				continue;
 			}
@@ -445,7 +441,8 @@ public class FtpBean implements Serializable {
 			manuellerTag.setTag(tagLabelFuerDatum(eintrag.getKey()));
 			manuellerTag.setText("Manuell gespeicherter Kalendereintrag");
 			TerminMitStatus termin = new TerminMitStatus(vereinnr, pdfMonat, manuellerTag, pdfParcer.getParserAlle());
-			termin.setStatus(eintrag.getValue());
+			termin.setStatus(eintrag.getValue().getTitel());
+			termin.setTerminFreitext(eintrag.getValue().getText());
 			parserTerminStatusListe.add(termin);
 		}
 	}
@@ -701,8 +698,11 @@ public class FtpBean implements Serializable {
 				continue;
 			}
 			String titel = termin.getTitel();
-			String beschreibung = termin.getText() == null ? "" : termin.getText().trim();
+			if (!ICS_TERMIN_STATUS.contains(titel)) {
+				continue;
+			}
 
+			String beschreibung = termin.getText() == null ? "" : termin.getText().trim();
 			if (TerminStatus.TERMINNEU.getLabel().equals(titel)) {
 				String[] zeilen = (termin.getText() == null ? "" : termin.getText()).split("\\R", -1);
 				titel = zeilen.length > 0 && !zeilen[0].isBlank() ? zeilen[0].trim()
@@ -710,6 +710,7 @@ public class FtpBean implements Serializable {
 				beschreibung = zeilen.length > 1
 						? String.join("\n", Arrays.copyOfRange(zeilen, 1, zeilen.length)).trim()
 						: "";
+
 			}
 
 			ics.append("BEGIN:VEVENT\r\n");
@@ -976,7 +977,12 @@ public class FtpBean implements Serializable {
 
 		for (TerminMitStatus p : parserTerminStatusListe) {
 			if (!p.getStatus().equals("ignorieren")) {
-				inhalt.append(p.getHtmlText(p.getStatus()));
+
+				String kalender = "";
+				if (ICS_TERMIN_STATUS.contains(p.getStatus())) {
+					kalender = " (in Kalender eingetragen) ";
+				}
+				inhalt.append(p.getHtmlText(p.getStatus() + kalender));
 			}
 		}
 
