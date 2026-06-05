@@ -94,11 +94,15 @@
 					style="margin-left: 8px; width: 100%;" />
 			</div>
 
-
-
-			<p:commandButton value="Anmelden" action="#{indexBean.anmelden}"
-				update="@form" ajax="false" style="width:100%;" />
-
+			<p:commandButton id="anmeldenBtn" value="Anmelden"
+				action="#{indexBean.anmelden}" update="@form" ajax="false"
+				style="width:100%;"
+				onclick="setTimeout(function(){ 
+        var btn = document.getElementById('loginForm:anmeldenBtn');
+        btn.style.opacity='0.7';
+        btn.style.pointerEvents='none';
+        btn.querySelector('span.ui-button-text').textContent='Bitte warten...';
+    }, 0);" />
 			<!-- Info-Box -->
 			<div
 				style="margin-top: 20px; padding: 12px; background: #d9edf7; border: 1px solid #bce8f1; border-radius: 8px; color: #31708f; font-size: 0.9em;">

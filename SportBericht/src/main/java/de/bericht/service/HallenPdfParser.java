@@ -2,7 +2,6 @@ package de.bericht.service;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -22,8 +21,8 @@ public class HallenPdfParser {
 	private final String htmlText;
 	private final String plainText;
 	private List<String> ueberschrift = new ArrayList<>();
-	private final List<ParserBlock> parserBloecke = new ArrayList<>();
-	private final List<ParserBlock> parserAlle = new ArrayList<>();
+	private final List<Hallenbelegung> parserBloecke = new ArrayList<>();
+	private final List<Hallenbelegung> parserAlle = new ArrayList<>();
 	private YearMonth pdfMonat;
 
 	private static final HolidayManager HOLIDAY_MANAGER = HolidayManager.getInstance(ManagerParameters.create("de"));
@@ -51,11 +50,11 @@ public class HallenPdfParser {
 		return plainText;
 	}
 
-	public List<ParserBlock> getParserBloecke() {
+	public List<Hallenbelegung> getParserBloecke() {
 		return parserBloecke;
 	}
 
-	public List<ParserBlock> getParserAlle() {
+	public List<Hallenbelegung> getParserAlle() {
 		return parserAlle;
 	}
 
@@ -158,7 +157,7 @@ public class HallenPdfParser {
 		default -> "Unbekannter Tag";
 		};
 		this.ueberschrift.add(tag + " " + titel);
-		parserAlle.add(new ParserBlock(tag, wochentag, titel, blockText));
+		parserAlle.add(new Hallenbelegung(tag, wochentag, titel, blockText));
 
 		LocalDate datum = LocalDate.of(pdfMonat.getYear(), pdfMonat.getMonth(), numTag(tag));
 		String feiertag = erstelleFeiertagTermin(datum);
@@ -176,7 +175,7 @@ public class HallenPdfParser {
 			return;
 		}
 		html.append(ParserAusgabeFormatter.formatBlock(tag + " " + titel, blockText, wochentag));
-		parserBloecke.add(new ParserBlock(tag, wochentag, titel, blockText));
+		parserBloecke.add(new Hallenbelegung(tag, wochentag, titel, blockText));
 	}
 
 	private int numTag(String tag) {
@@ -207,37 +206,6 @@ public class HallenPdfParser {
 
 	public YearMonth getPdfMonat() {
 		return pdfMonat;
-	}
-
-	public static class ParserBlock implements Serializable {
-		private static final long serialVersionUID = 1L;
-		private final String tag;
-		private final String wochentag;
-		private final String text;
-		private final String titel;
-
-		public ParserBlock(String tag, String wochentag, String titel, String text) {
-			this.tag = tag;
-			this.wochentag = wochentag;
-			this.titel = titel;
-			this.text = text;
-		}
-
-		public String getTag() {
-			return tag;
-		}
-
-		public String getWochentag() {
-			return wochentag;
-		}
-
-		public String getTitel() {
-			return titel;
-		}
-
-		public String getText() {
-			return text;
-		}
 	}
 
 }

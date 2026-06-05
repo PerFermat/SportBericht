@@ -3040,6 +3040,27 @@ public class DatabaseService {
 		return eintraege;
 	}
 
+	public List<Hallenbelegung> ladeHallenbelegung() {
+		List<Hallenbelegung> termine = new ArrayList<Hallenbelegung>();
+		String sql = "SELECT datum, kalendereintrag, terminFreitext FROM Hallenbelegung order by datum";
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			try (ResultSet rs = pstmt.executeQuery()) {
+				while (rs.next()) {
+					Date datum = rs.getDate("datum");
+					if (datum != null) {
+
+						termine.add(new Hallenbelegung(datum.toLocalDate(),
+								Objects.toString(rs.getString("kalendereintrag"), ""),
+								Objects.toString(rs.getString("terminFreitext"))));
+					}
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return termine;
+	}
+
 	public void speichereHallenbelegung(LocalDate datum, String kalendereintrag, String terminFreitext) {
 		if (datum == null) {
 			return;

@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 
-import de.bericht.service.HallenPdfParser.ParserBlock;
 import de.bericht.util.SchoolHolidayApiClient;
 import de.jollyday.HolidayManager;
 import de.jollyday.ManagerParameters;
@@ -31,12 +30,12 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 	}
 
 	public TerminMitStatus(String vereinnr, YearMonth pdfMonat, FtpManuellerTagEintrag manEintrag,
-			List<ParserBlock> terminEintraege) {
+			List<Hallenbelegung> terminEintraege) {
 		tag = 99;
 		String text = null;
 		this.tagText = manEintrag.getTag();
 		String wochentag = null;
-		for (ParserBlock terminEintrag : terminEintraege) {
+		for (Hallenbelegung terminEintrag : terminEintraege) {
 			if (tagGleich(terminEintrag.getTag(), manEintrag.getTag())) {
 				this.tag = numTag(terminEintrag.getTag());
 				text = terminEintrag.getText();
@@ -75,12 +74,12 @@ public class TerminMitStatus implements Serializable, Comparable<TerminMitStatus
 		this.wochentag = "manuell";
 	}
 
-	public TerminMitStatus(Heimspiele heim, String spiele, List<ParserBlock> terminEintraege) {
+	public TerminMitStatus(Heimspiele heim, String spiele, List<Hallenbelegung> terminEintraege) {
 		tag = 99;
 		String text = null;
 		String wochentag = null;
 		this.tagText = heim.getTagText();
-		for (ParserBlock terminEintrag : terminEintraege) {
+		for (Hallenbelegung terminEintrag : terminEintraege) {
 			if (tagGleich(terminEintrag.getTag(), heim.getTagText())) {
 				this.tag = numTag(terminEintrag.getTag());
 				text = terminEintrag.getText();

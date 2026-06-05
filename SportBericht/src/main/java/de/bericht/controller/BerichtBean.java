@@ -480,7 +480,8 @@ public class BerichtBean implements Serializable {
 					ConfigManager.getConfigValue(vereinnr, "ki.model.korrektur"), "none", 0.0, 0.0, 0.0, schema);
 			String reintext = frage.toString().replaceAll("(?i)</p>", "\n").replaceAll("(?i)<br\\s*/?>", "\n")
 					.replaceAll("<[^>]+>", "");
-			kiRueckgabe = " \n ## Frage: \n " + reintext + "\n ## Antwort: \n" + ki.getResponse();
+			kiRueckgabe = " \n ## Frage: \n " + reintext + "\n ## Antwort: \n" + "'''json \n" + ki.getResponse()
+					+ "\n '''";
 			fehlerListe = parseFehlerListe(ki.getResponse(), kiSaetze);
 			dbService.saveLogData(vereinnr, ergebnisLink, "KI", "KI-Bericht korrigiert", "");
 		} else {

@@ -118,7 +118,12 @@
 						<p:commandButton value="Bericht" action="bericht.xhtml"
 							ajax="false"
 							rendered="#{not empty spiel.ergebnis and not spielplanBean.hasFreigabe(spiel.ergebnisLink)}"
-							styleClass="myButton">
+							styleClass="myButton"
+							onclick="setTimeout(function(btn){
+    btn.style.opacity='0.7';
+    btn.style.pointerEvents='none';
+    btn.querySelector('span.ui-button-text').textContent='warten...';
+}.bind(null, this), 0);">
 							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 							<f:param name="heim" value="#{spiel.heimEncoded}" />
 							<f:param name="gast" value="#{spiel.gastEncoded}" />
@@ -143,7 +148,8 @@
 							<f:param name="frei" value="Nein" />
 						</p:commandButton>
 						<p:menuButton value="Spielinfo"
-							rendered="#{empty spiel.ergebnis and spielplanBean.tischtennis}" styleClass="myButtonLight">
+							rendered="#{empty spiel.ergebnis and spielplanBean.tischtennis}"
+							styleClass="myButtonLight">
 
 							<p:menuitem value="Aufstellung" action="aufstellung.xhtml"
 								icon="pi pi-users">
@@ -162,15 +168,15 @@
 								<f:param name="ruecksprung" value="spielplan.xhtml" />
 								<f:param name="key" value="#{spiel.generateUniqueKey}" />
 							</p:menuitem>
-							<p:menuitem value="Jugendbetreuung"
-								action="bestaetigung.xhtml" icon="pi pi-check"
+							<p:menuitem value="Jugendbetreuung" action="bestaetigung.xhtml"
+								icon="pi pi-check"
 								rendered="#{spielplanBean.isBetreuungBestaetigungSichtbar(spiel)}">
 								<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 								<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
 								<f:param name="ruecksprung" value="spielplan.xhtml" />
 							</p:menuitem>
-							<p:menuitem value="Verfügbarkeit"
-								action="verfuegbar.xhtml" icon="pi pi-thumbs-up" >
+							<p:menuitem value="Verfügbarkeit" action="verfuegbar.xhtml"
+								icon="pi pi-thumbs-up">
 								<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 								<f:param name="uuid" value="#{spiel.generateUniqueKey}" />
 								<f:param name="ruecksprung" value="spielplan.xhtml" />

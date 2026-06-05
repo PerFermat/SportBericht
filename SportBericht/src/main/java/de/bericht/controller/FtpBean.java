@@ -43,6 +43,7 @@ import de.bericht.service.EmailService;
 import de.bericht.service.FtpManuellerTagEintrag;
 import de.bericht.service.FtpTerminEintrag;
 import de.bericht.service.HallenPdfParser;
+import de.bericht.service.Hallenbelegung;
 import de.bericht.service.Heimspiele;
 import de.bericht.service.ParserAusgabeFormatter;
 import de.bericht.service.TerminMitStatus;
@@ -682,7 +683,8 @@ public class FtpBean implements Serializable {
 	}
 
 	private byte[] erstelleTerminIcsBytes() {
-		List<TerminMitStatus> termine = parserTerminStatusListe.stream().filter(this::istIcsTermin).toList();
+		List<Hallenbelegung> termine = dbService.ladeHallenbelegung();
+
 		if (termine.isEmpty()) {
 			return new byte[0];
 		}
@@ -693,17 +695,16 @@ public class FtpBean implements Serializable {
 		ics.append("PRODID:-//SportBericht//Hallenbelegung//DE\r\n");
 		ics.append("CALSCALE:GREGORIAN\r\n");
 		ics.append("METHOD:PUBLISH\r\n");
-		for (TerminMitStatus termin : termine) {
-			LocalDate datum = datumFuerTermin(termin);
+		for (Hallenbelegung termin : termine) {
+			LocalDate datum = termin.getDatum();
 			if (datum == null) {
 				continue;
 			}
-			String status = termin.getStatus();
-			String titel = status;
-			String beschreibung = termin.getTerminFreitext() == null ? "" : termin.getTerminFreitext().trim();
-			if (TerminStatus.TERMINNEU.getLabel().equals(status)) {
-				String[] zeilen = (termin.getTerminFreitext() == null ? "" : termin.getTerminFreitext()).split("\\R",
-						-1);
+			String titel = termin.getTitel();
+			String beschreibung = termin.getText() == null ? "" : termin.getText().trim();
+
+			if (TerminStatus.TERMINNEU.getLabel().equals(titel)) {
+				String[] zeilen = (termin.getText() == null ? "" : termin.getText()).split("\\R", -1);
 				titel = zeilen.length > 0 && !zeilen[0].isBlank() ? zeilen[0].trim()
 						: TerminStatus.TERMINNEU.getLabel();
 				beschreibung = zeilen.length > 1
@@ -723,10 +724,6 @@ public class FtpBean implements Serializable {
 		}
 		ics.append("END:VCALENDAR\r\n");
 		return ics.toString().getBytes(StandardCharsets.UTF_8);
-	}
-
-	private boolean istIcsTermin(TerminMitStatus termin) {
-		return termin != null && ICS_TERMIN_STATUS.contains(termin.getStatus()) && datumFuerTermin(termin) != null;
 	}
 
 	private void appendIcsProperty(StringBuilder ics, String name, String value) {
