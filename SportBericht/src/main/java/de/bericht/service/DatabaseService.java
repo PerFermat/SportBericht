@@ -485,25 +485,25 @@ public class DatabaseService {
 	 * @return true, wenn sich der ErgebnisLink in Bearbeitung befindet, false
 	 *         sonst.
 	 */
-	public boolean inBearbeitung(String vereinnr, String ergebnisLink, String uuid) {
+	public String inBearbeitung(String vereinnr, String name, String ergebnisLink, String uuid) {
 		String tableName = "doppel";
-		String sql = "SELECT COUNT(DISTINCT uuid) FROM " + tableName
-				+ " WHERE vereinnr = ? and ergebnisLink = ? AND timestamp >= ? AND uuid <> ?";
+		String sql = "SELECT name FROM " + tableName
+				+ " WHERE vereinnr = ? and ergebnisLink = ? AND timestamp >= ? AND uuid <> ? AND name <> ? order by timestamp desc";
 		LocalDateTime vorEinerMinute = LocalDateTime.now().minus(10, ChronoUnit.SECONDS);
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, vereinnr);
 			pstmt.setString(2, ergebnisLink);
 			pstmt.setTimestamp(3, Timestamp.valueOf(vorEinerMinute));
 			pstmt.setString(4, uuid);
+			pstmt.setString(5, name);
 			ResultSet rs = pstmt.executeQuery();
 			if (rs.next()) {
-				int anzahlUuids = rs.getInt(1);
-				return anzahlUuids == 1;
+				return rs.getString("name");
 			}
 		} catch (SQLException e) {
 			System.err.println("Fehler beim Überprüfen des Bearbeitungsstatus: " + e.getMessage());
 		}
-		return false; // Im Fehlerfall oder wenn kein Ergebnis gefunden wird, false zurückgeben
+		return null;
 	}
 
 	// Nur Text speichern (überschreibt Text, lässt Bild und Unterschrift
@@ -855,11 +855,11 @@ public class DatabaseService {
 		return logEntries;
 	}
 
-	public void verarbeiteEintrag(String vereinnr, String ergebnisLink, String uuid) {
+	public void verarbeiteEintrag(String vereinnr, String name, String ergebnisLink, String uuid) {
 		if (eintragExistiert(vereinnr, ergebnisLink, uuid)) {
 			aktualisiereTimestamp(vereinnr, ergebnisLink, uuid);
 		} else {
-			fuegeNeuenEintragHinzu(vereinnr, ergebnisLink, uuid);
+			fuegeNeuenEintragHinzu(vereinnr, name, ergebnisLink, uuid);
 		}
 	}
 
@@ -880,16 +880,18 @@ public class DatabaseService {
 		}
 	}
 
-	private void fuegeNeuenEintragHinzu(String vereinnr, String ergebnisLink, String uuid) {
+	private void fuegeNeuenEintragHinzu(String vereinnr, String name, String ergebnisLink, String uuid) {
 		String tableName = "doppel";
-		String sql = "INSERT INTO " + tableName + " (vereinnr, ergebnisLink, uuid, timestamp) VALUES (?, ?, ? , ?)";
+		String sql = "INSERT INTO " + tableName
+				+ " (vereinnr, ergebnisLink, name, uuid, timestamp) VALUES (?, ?, ?, ? , ?)";
 		try (Connection conn = openConnection();
 
 				PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, vereinnr);
 			pstmt.setString(2, ergebnisLink);
-			pstmt.setString(3, uuid);
-			pstmt.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+			pstmt.setString(3, name);
+			pstmt.setString(4, uuid);
+			pstmt.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			System.err.println("Fehler beim Einfügen des neuen Eintrags: " + e.getMessage());

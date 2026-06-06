@@ -48,6 +48,7 @@ public class AenderungBean implements Serializable {
 	private String ligaSpiel;
 	private String vereinnr;
 	private String uuid;
+	private String name;
 	private String berichtText;
 	private Spielbericht berichtTextNeu = new Spielbericht();
 	private String spielErgebnis; // Für die Anzeige der Spielergebnisse
@@ -70,6 +71,7 @@ public class AenderungBean implements Serializable {
 		this.liga = params.get("liga");
 		this.ligaSpiel = params.get("ligaSpiel");
 		this.uuid = params.get("uuid");
+		this.name = params.get("name");
 		this.gruppeUrl = params.get("gruppeUrl");
 		if (uuid == null) {
 			uuid = UUID.randomUUID().toString();
@@ -698,7 +700,7 @@ public class AenderungBean implements Serializable {
 	 * Eintrag hinzu).
 	 */
 	public void updBearbeitung() {
-		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
+		dbService.verarbeiteEintrag(vereinnr, name, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
 	}
 
 	/**

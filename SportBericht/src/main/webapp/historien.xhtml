@@ -17,9 +17,16 @@
 	<!-- Einbinden des externen Skripts -->
 	<h:outputScript library="js" name="script.js" target="head" />
 	<style>
-		.diff-green { background-color: #d4edda; color: #155724; }
-		.diff-red { background-color: #f8d7da; color: #721c24; }
-	</style>	
+.diff-green {
+	background-color: #d4edda;
+	color: #155724;
+}
+
+.diff-red {
+	background-color: #f8d7da;
+	color: #721c24;
+}
+</style>
 </h:head>
 
 <h:body>
@@ -42,12 +49,12 @@
 		</h3>
 	</div>
 
-	<h:panelGroup id="textPanel" rendered="#{historienBean.inBearbeitung}">
+	<h:panelGroup id="textPanel"
+		rendered="#{not empty berichtBean.inBearbeitung}">
 		<div class="responsive-container">
 			<div class="red-container">
 				<div class="text-input">
-					<h:outputText
-						value="Achtung: Bericht wird möglicherweise gerade von jemand Bearbeitet. Bitte das Log überprüfen und ggf. ein paar Minuten warten. " />
+					<h:outputText value="#{berichtBean.inBearbeitung}" />
 				</div>
 			</div>
 		</div>
@@ -74,7 +81,8 @@
 					<!-- Eingabefeld, wenn obige Bedingung NICHT zutrifft -->
 					<h:panelGroup
 						rendered="#{empty historienBean.ergebnisLink or not historienBean.ergebnisLink.startsWith('http')}">
-						<h:outputText value="#{historienBean.aktuelleUeberschriftDiffHtml}"
+						<h:outputText
+							value="#{historienBean.aktuelleUeberschriftDiffHtml}"
 							style="font-size: 1.5em;">>
 							</h:outputText>
 					</h:panelGroup>
@@ -129,7 +137,8 @@
 					<div class="hover-container">
 						<h:panelGroup
 							rendered="#{empty historienBean.ergebnisLink or not historienBean.ergebnisLink.startsWith('http')}">
-						<h:outputText value="#{historienBean.historieUeberschriftDiffHtml}"
+							<h:outputText
+								value="#{historienBean.historieUeberschriftDiffHtml}"
 								style="font-size: 1.5em;">>
 							</h:outputText>
 						</h:panelGroup>
@@ -189,7 +198,7 @@
 				<f:param name="ergebnisLink" value="#{historienBean.ergebnisLink}" />
 				<f:param name="uuid" value="#{historienBean.uuid}" />
 				<f:param name="liga" value="#{historienBean.liga}" />
-				<f:param name="ligaSpiel" value="#{historienBean.ligaSpiel}" />					
+				<f:param name="ligaSpiel" value="#{historienBean.ligaSpiel}" />
 				<f:param name="gruppeUrl" value="#{historienBean.gruppeUrl}" />
 			</p:commandButton>
 			<!-- Zurück-Button -->
@@ -203,8 +212,8 @@
 				<f:param name="ergebnisLink" value="#{historienBean.ergebnisLink}" />
 				<f:param name="uuid" value="#{historienBean.uuid}" />
 				<f:param name="liga" value="#{historienBean.liga}" />
-				<f:param name="ligaSpiel" value="#{historienBean.ligaSpiel}" />							
-				<f:param name="gruppeUrl" value="#{historienBean.gruppeUrl}" />				
+				<f:param name="ligaSpiel" value="#{historienBean.ligaSpiel}" />
+				<f:param name="gruppeUrl" value="#{historienBean.gruppeUrl}" />
 			</p:commandButton>
 		</div>
 	</h:form>

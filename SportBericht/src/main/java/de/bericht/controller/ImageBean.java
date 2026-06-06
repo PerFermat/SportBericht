@@ -35,8 +35,9 @@ public class ImageBean extends HttpServlet implements Serializable {
 	private byte[] processedImage;
 	private String imagePath;
 	private String liga;
-	private String ligaSpiel;	
+	private String ligaSpiel;
 	private String uuid;
+	private String name;
 	private DatabaseService dbService = new DatabaseService();
 	private String gruppeUrl;
 
@@ -52,8 +53,9 @@ public class ImageBean extends HttpServlet implements Serializable {
 		this.ergebnisLink = params.get("ergebnisLink");
 		this.berichtText = params.get("berichtText");
 		this.liga = params.get("liga");
-		this.ligaSpiel = params.get("ligaSpiel");		
+		this.ligaSpiel = params.get("ligaSpiel");
 		this.uuid = params.get("uuid");
+		this.name = params.get("name");
 		this.gruppeUrl = params.get("gruppeUrl");
 		imagePath = "data:image/jpg;base64," + java.util.Base64.getEncoder().encodeToString(loadImageFromDatabase());
 
@@ -204,7 +206,7 @@ public class ImageBean extends HttpServlet implements Serializable {
 	}
 
 	public void updBearbeitung() {
-		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
+		dbService.verarbeiteEintrag(vereinnr, name, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
 	}
 
 	// Diese Methode wird durch den "Speichern"-Button aufgerufen.

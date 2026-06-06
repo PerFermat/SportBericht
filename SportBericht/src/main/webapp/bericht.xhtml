@@ -80,19 +80,19 @@
 						<f:param name="liga" value="#{berichtBean.liga}" />
 						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
-						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
+						<f:param name="gruppeUrl" value="#{bericht.name}" />
 					</p:commandButton>
 				</div>
 
 				<!-- Linker Bereich: Texteingabefeld und Button "Bericht generieren" -->
 				<div class="text-container">
 					<h:panelGroup id="textPanel"
-						rendered="#{berichtBean.inBearbeitung}">
+						rendered="#{not empty berichtBean.inBearbeitung}">
 						<div class="responsive-container">
 							<div class="red-container">
 								<div class="text-input">
 									<h:outputText
-										value="Achtung: Bericht wird möglicherweise gerade von jemand Bearbeitet. Bitte das Log überprüfen und ggf. ein paar Minuten warten. " />
+										value="#{berichtBean.inBearbeitung}" />
 								</div>
 							</div>
 						</div>
@@ -158,6 +158,7 @@
 							<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />
 							<f:param name="uuid" value="#{berichtBean.uuid}" />
 							<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
+							<f:param name="name" value="#{berichtBean.name}" />
 						</p:commandButton>
 					</div>
 					<div class="text-container">
@@ -218,6 +219,7 @@
 						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
+						<f:param name="name" value="#{berichtBean.name}" />
 					</p:commandButton>
 					<p:commandButton value="Freigeben" action="spielplan.xhtml"
 						rendered="#{berichtBean.anzFreigabe and berichtBean.ergebnisLink.startsWith('http')}"
@@ -452,6 +454,7 @@
 						<f:param name="ligaSpiel" value="#{berichtBean.ligaSpiel}" />
 						<f:param name="uuid" value="#{berichtBean.uuid}" />
 						<f:param name="gruppeUrl" value="#{berichtBean.gruppeUrl}" />
+						<f:param name="name" value="#{berichtBean.name}" />
 					</p:commandButton>
 					<p:commandButton value="Spielberichtsbogen neu lesen"
 						action="#{berichtBean.spielHtmlLesen}" immediate="true"

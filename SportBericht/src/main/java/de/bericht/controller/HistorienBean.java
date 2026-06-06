@@ -69,7 +69,7 @@ public class HistorienBean implements Serializable {
 		this.ligaSpiel = params.get("ligaSpiel");
 		this.uuid = params.get("uuid");
 		this.gruppeUrl = params.get("gruppeUrl");
-		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
+		dbService.verarbeiteEintrag(vereinnr, name, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
 		logEntries = dbService.getLogEntries(vereinnr, ergebnisLink);
 		// Spielergebnisse abrufen
 		if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
@@ -197,12 +197,19 @@ public class HistorienBean implements Serializable {
 		return false; // Kein Umlaut gefunden
 	}
 
-	public boolean getInBearbeitung() {
-		return dbService.inBearbeitung(vereinnr, ergebnisLink, uuid);
+	public String getInBearbeitung() {
+		String doppelName = dbService.inBearbeitung(vereinnr, name, ergebnisLink, uuid);
+
+		if (doppelName == null || doppelName.isEmpty()) {
+			return null;
+		}
+		String meldung = "Achtung: Bericht wird gerade von " + doppelName
+				+ " bearbeitet. Bitte das Log überprüfen und ggf. ein paar Minuten warten.";
+		return meldung;
 	}
 
 	public void updBearbeitung() {
-		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
+		dbService.verarbeiteEintrag(vereinnr, name, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
 	}
 
 	public String getAktuellesBildUrl() {

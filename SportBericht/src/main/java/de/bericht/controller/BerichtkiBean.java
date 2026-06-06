@@ -76,6 +76,7 @@ public class BerichtkiBean implements Serializable {
 	private String liga;
 	private String ligaSpiel;
 	private String uuid;
+	private String name;
 	private String ersetzungen;
 	private List<String> wirkungen = new ArrayList<>();
 	private List<String> berichte = new ArrayList<>();
@@ -114,6 +115,7 @@ public class BerichtkiBean implements Serializable {
 		this.ergebnis = params.get("ergebnis");
 		this.ergebnisLink = params.get("ergebnisLink");
 		this.gruppeUrl = params.get("gruppeUrl");
+		this.name = params.get("name");
 		this.tabelleUrl = gruppeUrl;
 		this.besondereVorkommnisse = params.get("besondereVorkommnisse");
 		if (params.get("berichtText") != null && !params.get("berichtText").isEmpty()) {
@@ -657,7 +659,7 @@ public class BerichtkiBean implements Serializable {
 	}
 
 	public void updBearbeitung() {
-		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
+		dbService.verarbeiteEintrag(vereinnr, name, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
 	}
 
 	public String getWirkungBeispiel() {

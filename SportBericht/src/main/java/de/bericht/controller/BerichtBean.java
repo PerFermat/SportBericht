@@ -159,7 +159,7 @@ public class BerichtBean implements Serializable {
 			return;
 		}
 
-		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
+		dbService.verarbeiteEintrag(vereinnr, name, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
 		if (dbService.eMailVersand(vereinnr, ergebnisLink) > 0) {
 			email = true;
 		}
@@ -867,12 +867,19 @@ public class BerichtBean implements Serializable {
 		this.uuid = uuid;
 	}
 
-	public boolean getInBearbeitung() {
-		return dbService.inBearbeitung(vereinnr, ergebnisLink, uuid);
+	public String getInBearbeitung() {
+		String doppelName = dbService.inBearbeitung(vereinnr, name, ergebnisLink, uuid);
+
+		if (doppelName == null || doppelName.isEmpty()) {
+			return null;
+		}
+		String meldung = "Achtung: Bericht wird gerade von " + doppelName
+				+ " bearbeitet. Bitte das Log überprüfen und ggf. ein paar Minuten warten.";
+		return meldung;
 	}
 
 	public void updBearbeitung() {
-		dbService.verarbeiteEintrag(vereinnr, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
+		dbService.verarbeiteEintrag(vereinnr, name, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
 	}
 
 	// Diese Methode wird durch den "Speichern"-Button aufgerufen.
