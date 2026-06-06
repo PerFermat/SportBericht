@@ -938,8 +938,8 @@ public class FtpBean implements Serializable {
 				.append("<div class='mail-block'>");
 		if (zweck == zweck.MAIL) {
 			inhalt.append("Hallo,<br/><br/>" + "ich habe das PDF der Hallennutzung vom " + getPdfMonat()
-					+ " geprüft und die relevanten Termine bereits in unseren Kalender eingetragen.<br/>"
-					+ "Unten findest du eine Zusammenfassung der Änderungen sowie die Ergebnisse der automatischen Auswertung zur Kontrolle.<br/><br/>");
+					+ " geprüft. Dabei habe ich bei den relevanten Terminen geschaut, ob sie bereits in unserm Kalender eingetragen wurden.<br/>"
+					+ "Unten findest du eine Zusammenfassung meiner Prüfergebnisse.<br/><br/>");
 
 			inhalt.append("<strong>Farblegende:</strong><br/>"
 					+ "<span style='background-color:#ffebee;border-left:6px solid #c62828;padding:2px 6px;display:inline-block;'>Rot </span> = Halle gefunden -> evtl. Trainingsausfall<br/>"
