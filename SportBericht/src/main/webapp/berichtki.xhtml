@@ -374,10 +374,13 @@ Empfohlen:   <br />
 				<ui:repeat value="#{berichtkiBean.berichtText}" var="spiel"
 					varStatus="status">
 					<div class="text-container">
-						<h4>Generierter Bericht: #{spiel.variante}</h4>
-						<p>#{spiel.stilversion}</p>
-						<h5>Anzahl KI-Generierungen (max 5 möglich):
-							#{berichtkiBean.anzahlKi}</h5>
+						<h:panelGroup id="berichtTitel">
+							<h4>Generierter Bericht: #{spiel.variante}</h4>
+						</h:panelGroup>
+
+						<p:tooltip for="berichtTitel" escape="false">
+							<h:outputText value="#{spiel.stilversionTooltip}" escape="false" />
+						</p:tooltip>
 						<p:inputTextarea value="#{spiel.text}" readonly="true" rows="10"
 							autoResize="false" />
 						<br />

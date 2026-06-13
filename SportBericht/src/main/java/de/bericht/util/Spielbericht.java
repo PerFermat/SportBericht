@@ -31,6 +31,10 @@ public class Spielbericht {
 		return stilversion;
 	}
 
+	public String getStilversionTooltip() {
+		return stilversion.replace(";", "<br/>");
+	}
+
 	public void setStilversion(String stilversion) {
 		this.stilversion = stilversion;
 	}

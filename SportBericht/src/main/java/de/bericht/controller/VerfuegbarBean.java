@@ -1,6 +1,8 @@
 package de.bericht.controller;
 
 import java.io.Serializable;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -750,4 +752,50 @@ public class VerfuegbarBean implements Serializable {
 	public void zurueck() {
 
 	}
+
+	public String getErzeugeVerfuegbarLink() {
+
+		String baseUrl = BerichtHelper.getProgrammUrl(vereinnr);
+		String targetPage = baseUrl + "l/";
+
+		StringBuilder link = new StringBuilder("verfuegbar.xhtml?");
+
+		if (vereinnr != null && !vereinnr.isEmpty()) {
+			link.append("v=").append(vereinnr).append("&");
+		}
+		if (spielerFilterKey != null && !spielerFilterKey.isEmpty()) {
+			link.append("sp=").append(encodeUrl(spielerFilterKey)).append("&");
+		}
+		if (ruecksprung != null && !ruecksprung.isEmpty()) {
+			link.append("ruecksprung=").append(ruecksprung).append("&");
+		}
+		if (halbserie != null && !halbserie.isEmpty()) {
+			link.append("runde=").append(encodeUrl(halbserie)).append("&");
+		}
+		if (liga != null && !liga.isEmpty()) {
+			link.append("liga=").append(liga).append("&");
+		}
+		if (spielTeam != null && !spielTeam.isEmpty()) {
+			link.append("team=").append(encodeUrl(spielTeam)).append("&");
+		}
+
+// Letztes "&" entfernen, falls vorhanden
+		if (link.charAt(link.length() - 1) == '&') {
+			link.deleteCharAt(link.length() - 1);
+		}
+
+		return targetPage + databaseService.createShortLink(link.toString());
+	}
+
+	public static String encodeUrl(String rawUrl) {
+		try {
+			return URLEncoder.encode(rawUrl, StandardCharsets.UTF_8.toString());
+		} catch (Exception e) {
+			// Dies sollte mit StandardCharsets.UTF_8 nicht passieren, da UTF-8 immer
+			// unterstützt wird.
+			System.err.println("Fehler beim URL-Kodieren: " + e.getMessage());
+			return rawUrl; // Fallback: unkodierte URL zurückgeben (potenziell problematisch)
+		}
+	}
+
 }
