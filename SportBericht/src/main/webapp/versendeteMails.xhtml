@@ -130,9 +130,10 @@
 
 	<div class="tabheader-area">
 
-		<h:outputLink value="#{versendeteMailsBean.vereinHomepage}" target="_blank">
-			<img src="#{versendeteMailsBean.bestimmenIcon}" style="vertical-align: middle;"
-				width="50" />
+		<h:outputLink value="#{versendeteMailsBean.vereinHomepage}"
+			target="_blank">
+			<img src="#{versendeteMailsBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
 		</h:outputLink>
 		<h:form>
 			<p:commandButton type="button" value="Handbuch"
@@ -140,8 +141,9 @@
 		</h:form>
 		<h2>Versendete Mails – #{versendeteMailsBean.verein}</h2>
 		<h:form>
-			<p:commandButton value="Zurück" action="#{versendeteMailsBean.ruecksprung}"
-				immediate="true" rendered="#{not empty versendeteMailsBean.ruecksprung}">
+			<p:commandButton value="Zurück"
+				action="#{versendeteMailsBean.ruecksprung}" immediate="true"
+				rendered="#{not empty versendeteMailsBean.ruecksprung}">
 				<f:param name="vereinnr" value="#{versendeteMailsBean.vereinnr}" />
 			</p:commandButton>
 		</h:form>
@@ -189,13 +191,9 @@
 									styleClass="mail-delete ui-button-danger ui-button-flat" />
 
 								<p:commandLink
-									onclick="
-										$('.mail-eintrag-link').removeClass('aktiv');
-										$(this).addClass('aktiv');
-									"
 									actionListener="#{versendeteMailsBean.mailAuswaehlen(mail)}"
 									update=":mailForm:mailLayout :msgForm"
-									styleClass="mail-eintrag-link">
+									styleClass="mail-eintrag-link #{versendeteMailsBean.ausgewaehlteMail != null and versendeteMailsBean.ausgewaehlteMail.id == mail.id ? 'aktiv' : ''}">
 
 									<div>#{mail.betreff}</div>
 

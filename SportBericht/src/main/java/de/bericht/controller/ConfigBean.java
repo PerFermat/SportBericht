@@ -58,6 +58,7 @@ public class ConfigBean implements Serializable {
 	private String dialogWertebereich;
 	private List<String> dialogKategorien = new ArrayList<>();
 	private final Map<String, List<String>> enumWerteCache = new HashMap<>();
+	private final Map<String, List<String>> sqlWerteCache = new HashMap<>();
 	private final Map<String, String> originalWerteByKey = new HashMap<>();
 	private List<String> chatGptModelle = new ArrayList<>();
 	private ConfigEintrag passwortDialogEintrag;
@@ -153,9 +154,9 @@ public class ConfigBean implements Serializable {
 	}
 
 	public boolean textFeld(ConfigEintrag eintrag) {
-		return eintrag != null && (eintrag.isInhaltformatText()
-				|| (!isFarbFeld(eintrag) && !eintrag.isInhaltformatZahl() && !eintrag.isInhaltformatEnum()
-						&& !eintrag.isInhaltformatChatGpt() && !eintrag.isInhaltformatPasswort()));
+		return eintrag != null && (eintrag.isInhaltformatText() || (!isFarbFeld(eintrag)
+				&& !eintrag.isInhaltformatZahl() && !eintrag.isInhaltformatEnum() && !eintrag.isInhaltformatChatGpt()
+				&& !eintrag.isInhaltformatPasswort() && !eintrag.isInhaltformatSql()));
 	}
 
 	public int minWert(ConfigEintrag eintrag) {
@@ -176,6 +177,11 @@ public class ConfigBean implements Serializable {
 		}
 		return enumWerteCache.computeIfAbsent(eintrag.getEintrag(),
 				key -> enumWerteAusWertebereichUndDaten(key, eintrag));
+	}
+
+	public List<String> sqlWerte(ConfigEintrag eintrag) {
+		DatabaseService dbService = new DatabaseService(vereinnr);
+		return dbService.listeConfigSQL(eintrag.getWertebereich());
 	}
 
 	public List<SelectItem> getChatGptModelle() {

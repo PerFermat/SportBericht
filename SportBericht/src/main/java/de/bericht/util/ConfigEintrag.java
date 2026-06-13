@@ -8,7 +8,6 @@ public class ConfigEintrag {
 	private String inhaltformat;
 	private String wertebereich;
 	private String kategorien;
-	
 
 	public ConfigEintrag(String vereinnr, String eintrag, String wert) {
 		this.vereinnr = vereinnr;
@@ -64,6 +63,10 @@ public class ConfigEintrag {
 		return hasInhaltformat("enum");
 	}
 
+	public boolean isInhaltformatSql() {
+		return hasInhaltformat("sql");
+	}
+
 	public boolean isInhaltformatChatGpt() {
 		return hasInhaltformat("chatgpt");
 	}
@@ -71,7 +74,6 @@ public class ConfigEintrag {
 	public boolean isInhaltformatPasswort() {
 		return hasInhaltformat("passwort");
 	}
-	
 
 	public String getBedeutung() {
 		return bedeutung;
@@ -130,9 +132,9 @@ public class ConfigEintrag {
 	public void setKategorien(String kategorien) {
 		this.kategorien = kategorien;
 	}
+
 	private boolean hasInhaltformat(String format) {
 		return inhaltformat != null && inhaltformat.trim().equalsIgnoreCase(format);
 	}
-
 
 }

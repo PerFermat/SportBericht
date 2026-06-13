@@ -282,6 +282,20 @@ public class DatabaseService {
 		return wirkungListe;
 	}
 
+	public List<String> listeConfigSQL(String sql) {
+		List<String> wirkungListe = new ArrayList<>();
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				wirkungListe.add(rs.getString(1));
+			}
+			rs.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return wirkungListe;
+	}
+
 	public Stil leseWirkung(String vereinnr, String wirkung) {
 		String sql = "SELECT sprachebene,stimmung,tonfall,humor,wertung,struktur FROM stilelemente Where wirkung = ?";
 		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {

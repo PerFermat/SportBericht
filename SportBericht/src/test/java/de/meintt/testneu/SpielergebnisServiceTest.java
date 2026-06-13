@@ -16,9 +16,9 @@ class SpielergebnisServiceTest {
 
 	ConfigManager config;
 	String ergebnis;
-	String vereinnr = "20233"; // <-- passe an, falls nötig
+	String vereinnr = "13014"; // <-- passe an, falls nötig
 
-	String url = "https://www.wtb-tennis.de/spielbetrieb/winter2025-2026/senioren/gruppe/spielbericht.html?tx_nuportalrs_meeting%5BmeetingId%5D=12520094&cHash=5a8933311953906d026299ea8cfd659e";
+	String url = "https://www.mytischtennis.de/click-tt/TTBW/25--26/ligen/E_BL/gruppe/494841/spielbericht/15437384/TSGV_Hattenhofen-vs-TSV_Heiningen";
 	SpielergebnisProvider provider;
 	NamensSpeicher ns = new NamensSpeicher();
 
@@ -31,8 +31,8 @@ class SpielergebnisServiceTest {
 			// Hier stehen die von dir gewünschten Zeilen am Anfang
 			ergebnis = provider.getSpielErgebnis();
 			System.out.println(ergebnis);
-			// System.out.println(provider.summaryToJson());
-			// System.out.println(ns.ausgabe());
+			System.out.println(provider.summaryToJson());
+			System.out.println(ns.ausgabe());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

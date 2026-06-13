@@ -161,6 +161,12 @@
 							<p:ajax event="change" update="configTable" process="@this" />
 						</p:selectOneMenu>
 					</ui:fragment>
+					<ui:fragment rendered="#{eintrag.inhaltformatSql}">
+						<p:selectOneMenu value="#{eintrag.wert}" style="width:100%;">
+							<f:selectItems value="#{configBean.sqlWerte(eintrag)}" />
+							<p:ajax event="change" update="configTable" process="@this" />
+						</p:selectOneMenu>
+					</ui:fragment>
 					<ui:fragment rendered="#{eintrag.inhaltformatChatGpt}">
 						<p:selectOneMenu value="#{eintrag.wert}" style="width:100%;">
 							<f:selectItems value="#{configBean.chatGptModelle}" />

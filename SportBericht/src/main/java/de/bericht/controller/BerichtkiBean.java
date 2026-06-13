@@ -149,7 +149,14 @@ public class BerichtkiBean implements Serializable {
 		} else {
 			this.berichtMannschaft = null;
 		}
-		wirkungen.add("Ideal für Zeitungen, wenig emotional, aber fundiert");
+
+		String stil = ConfigManager.getConfigValue(vereinnr, "ki.prompt.standardschreibstil");
+
+		if (stil == null || stil.isBlank() || stil.isEmpty()) {
+			wirkungen.add("Ideal für Zeitungen, wenig emotional, aber fundiert");
+		} else {
+			wirkungen.add(stil);
+		}
 
 		if (isHttpLink()) {
 			String spielEntscheidung = BerichtHelper.spielEntscheidung(ergebnis, istHeim);

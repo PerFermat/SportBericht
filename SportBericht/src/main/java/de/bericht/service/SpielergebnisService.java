@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -30,128 +29,219 @@ public class SpielergebnisService extends AbstractTischtennisSpielergebnisServic
 
 	@Override
 	protected String ermittleOrt(String berichtMannschaft, Document doc) {
-		String html = doc.html();
 
-		String regexHeader = "(?:Bezirk\\s+([^\\d]+?)|Verbandsoberliga\\s+([^\\d]+?)|(TTBW))\\s+(\\d{4}/\\d{2}).*?-.*?(?:<!-- -->\\s*)*([^<]+)</div>";
-		Pattern patternHeader = Pattern.compile(regexHeader, Pattern.DOTALL);
-		Matcher matcherHeader = patternHeader.matcher(html);
+		Element header = doc.selectFirst("div.rounded-xl.shadow-card.bg-white.p-4.text-center");
 
-		String regexTeams = "col-span-3[^>]*>([^<]+)</div>.*?" + "font-bold\">\\s*([^<]+)\\s*</div>.*?"
-				+ "col-span-3[^>]*>([^<]+)</div>";
-		Pattern patternTeams = Pattern.compile(regexTeams, Pattern.DOTALL);
-		Matcher matcherTeams = patternTeams.matcher(html);
-
-		if (matcherHeader.find() && matcherTeams.find()) {
-			String heim = matcherTeams.group(1).trim();
-			String gast = matcherTeams.group(3).trim();
-
-			if (heim.contains(berichtMannschaft) && gast.contains(berichtMannschaft)) {
-				return "HEIMGAST";
-			} else if (heim.contains(berichtMannschaft)) {
-				return "HEIM";
-			} else if (gast.contains(berichtMannschaft)) {
-				return "GAST";
-			}
+		if (header == null) {
+			return "";
 		}
+
+		Elements teams = header.select(".subgrid--mytt.grid-cols-9 > div");
+
+		if (teams.size() < 3) {
+			return "";
+		}
+
+		String heim = teams.get(0).text().trim();
+		String gast = teams.get(2).text().trim();
+
+		if (heim.contains(berichtMannschaft) && gast.contains(berichtMannschaft)) {
+			return "HEIMGAST";
+		} else if (heim.contains(berichtMannschaft)) {
+			return "HEIM";
+		} else if (gast.contains(berichtMannschaft)) {
+			return "GAST";
+		}
+
 		return "";
+	}
+
+	private String getCell(Elements cols, Integer index) {
+
+		if (index == null) {
+			return "";
+		}
+
+		if (index >= cols.size()) {
+			return "";
+		}
+
+		return cols.get(index).text();
 	}
 
 	@Override
 	protected TischtennisMatchSummary parseSummary(String vereinnr, String berichtMannschaft, Document doc) {
-		String html = doc.html();
 
-		String regexHeader = "(?:Bezirk\\s+([^\\d]+?)|Verbandsoberliga\\s+([^\\d]+?)|(TTBW))\\s+(\\d{4}/\\d{2}).*?-.*?(?:<!-- -->\\s*)*([^<]+)</div>";
-		Pattern patternHeader = Pattern.compile(regexHeader, Pattern.DOTALL);
-		Matcher matcherHeader = patternHeader.matcher(html);
+		Element header = doc.selectFirst("div.rounded-xl.shadow-card.bg-white.p-4.text-center");
 
-		String regexTeams = "col-span-3[^>]*>([^<]+)</div>.*?" + "font-bold\">\\s*([^<]+)\\s*</div>.*?"
-				+ "col-span-3[^>]*>([^<]+)</div>";
-		Pattern patternTeams = Pattern.compile(regexTeams, Pattern.DOTALL);
-		Matcher matcherTeams = patternTeams.matcher(html);
-
-		if (matcherHeader.find() && matcherTeams.find()) {
-			String bezirkRaw = matcherHeader.group(1) != null ? matcherHeader.group(1)
-					: matcherHeader.group(2) != null ? matcherHeader.group(2) : matcherHeader.group(3);
-
-			String bezirk = bezirkRaw.trim();
-			String saison = matcherHeader.group(4).trim();
-			String liga = matcherHeader.group(5).trim().replaceAll("<!--.*?-->", "").trim();
-
-			String heim = BerichtHelper.vereinsnummer(vereinnr, matcherTeams.group(1).trim(), liga);
-			String ergebnis = matcherTeams.group(2).trim();
-			String gast = BerichtHelper.vereinsnummer(vereinnr, matcherTeams.group(3).trim(), liga);
-			Map<String, String> zeiten = extractSpielzeiten(html);
-
-			return new TischtennisMatchSummary(berichtMannschaft, heim, gast, bezirk, saison, liga, ergebnis,
-					zeiten.get("spielbeginn"), zeiten.get("spielende"));
+		if (header == null) {
+			return new TischtennisMatchSummary(berichtMannschaft, "unbekannt", "unbekannt", "unbekannt", "unbekannt",
+					"unbekannt", "", "", "");
 		}
 
-		return new TischtennisMatchSummary(berichtMannschaft, "unbekannt", "unbekannt", "unbekannt", "unbekannt",
-				"unbekannt", "", "", "");
+		// Bezirk / Saison / Liga
+		String titel = header.selectFirst(".text-h4.py-4").text();
+		// Beispiel:
+		// Bezirk Staufen 2025/26 - Erwachsene Bezirksliga
+
+		Pattern p = Pattern.compile("(.+?)\\s+(\\d{4}/\\d{2})\\s+-\\s+(.+)");
+		Matcher m = p.matcher(titel);
+
+		String bezirk = "unbekannt";
+		String saison = "unbekannt";
+		String liga = "unbekannt";
+
+		if (m.matches()) {
+			bezirk = m.group(1).trim();
+			saison = m.group(2).trim();
+			liga = m.group(3).trim();
+		}
+
+		Elements teams = header.select(".subgrid--mytt.grid-cols-9 > div");
+
+		String heim = "unbekannt";
+		String gast = "unbekannt";
+		String ergebnis = "";
+
+		if (teams.size() >= 3) {
+			heim = BerichtHelper.vereinsnummer(vereinnr, teams.get(0).text().trim(), liga);
+
+			ergebnis = teams.get(1).selectFirst(".font-bold").text().trim();
+
+			gast = BerichtHelper.vereinsnummer(vereinnr, teams.get(2).text().trim(), liga);
+		}
+
+		Map<String, String> zeiten = extractSpielzeiten(doc);
+
+		return new TischtennisMatchSummary(berichtMannschaft, heim, gast, bezirk, saison, liga, ergebnis,
+				zeiten.get("spielbeginn"), zeiten.get("spielende"));
 	}
 
 	@Override
 	protected List<MatchErgebnis> parseMatches(String vereinnr, String berichtMannschaft, Document doc,
 			NamensSpeicher ns, Boolean verschluesseln, TischtennisMatchSummary summary) {
 
-		Elements tabellen = doc.select("table");
 		List<MatchErgebnis> matchList = new ArrayList<>();
 		String ergebnis = "";
+
 		boolean istHeim = summary.getHeimmannschaft().contains(berichtMannschaft);
 
-		for (Element row : tabellen.select("tr")) {
-			Elements cols = row.select("td");
+		for (Element table : doc.select("table")) {
 
-			if (cols.size() >= 10) {
-				String spielart = cols.get(0).text();
-				String spielheim;
-				String spielgast;
+			Element headerRow = table.selectFirst("thead tr");
+			if (headerRow == null) {
+				continue;
+			}
 
-				if (verschluesseln) {
-					spielheim = ns.formatName(vereinnr, cols.get(1).text(), ns);
-					spielgast = ns.formatName(vereinnr, cols.get(2).text(), ns);
-				} else {
-					spielheim = cols.get(1).text();
-					spielgast = cols.get(2).text();
+			Map<String, Integer> idx = new HashMap<>();
+
+			Elements headers = headerRow.select("th");
+			for (int i = 0; i < headers.size(); i++) {
+				idx.put(headers.get(i).text().trim(), i);
+			}
+
+			Integer spielartIdx = idx.get("");
+			Integer heimIdx = idx.get("Heim");
+			Integer gastIdx = idx.get("Gast");
+			Integer s1Idx = idx.get("S1");
+			Integer s2Idx = idx.get("S2");
+			Integer s3Idx = idx.get("S3");
+			Integer s4Idx = idx.get("S4");
+			Integer s5Idx = idx.get("S5");
+			Integer saetzeIdx = idx.get("Sätze");
+			Integer gesamtIdx = idx.get("Gesamt");
+
+			if (spielartIdx == null || heimIdx == null || gastIdx == null || saetzeIdx == null || gesamtIdx == null) {
+				continue;
+			}
+
+			for (Element row : table.select("tbody tr")) {
+
+				Elements cols = row.select("td");
+
+				// Normale Spielzeile
+				if (cols.size() > gesamtIdx) {
+
+					String spielart = cols.get(spielartIdx).text().trim();
+
+					String spielheim;
+					String spielgast;
+
+					if (verschluesseln) {
+						spielheim = ns.formatName(vereinnr, cols.get(heimIdx).text().trim(), ns);
+
+						spielgast = ns.formatName(vereinnr, cols.get(gastIdx).text().trim(), ns);
+					} else {
+						spielheim = cols.get(heimIdx).text().trim();
+						spielgast = cols.get(gastIdx).text().trim();
+					}
+
+					if (!spielart.startsWith("D") && spielheim.contains("/")) {
+						spielart = "Doppel " + spielart;
+					}
+
+					String spielsaetze = cols.get(saetzeIdx).text().trim();
+
+					if (!spielsaetze.isEmpty()) {
+
+						matchList.add(new MatchErgebnis(istHeim, spielart, spielheim, spielgast, getCell(cols, s1Idx),
+								getCell(cols, s2Idx), getCell(cols, s3Idx), getCell(cols, s4Idx), getCell(cols, s5Idx),
+								spielsaetze, cols.get(gesamtIdx).text().trim()));
+					}
 				}
 
-				if (!spielart.startsWith("D") && spielheim.contains("/")) {
-					spielart = "Doppel " + spielart;
-				}
+				// Abschlusszeile mit Gesamtergebnis
+				else if (cols.size() == 4) {
 
-				String spielsaetze = cols.get(8).text();
-				if (!spielsaetze.isEmpty()) {
-					matchList.add(new MatchErgebnis(istHeim, spielart, spielheim, spielgast, cols.get(3).text(),
-							cols.get(4).text(), cols.get(5).text(), cols.get(6).text(), cols.get(7).text(), spielsaetze,
-							cols.get(9).text()));
+					String wert = cols.get(3).text().trim();
+
+					if (wert.matches("\\d+\\s*:\\s*\\d+")) {
+						ergebnis = wert;
+					}
 				}
-			} else if (cols.size() == 4) {
-				ergebnis = cols.get(3).text();
 			}
 		}
 
 		if ((summary.getErgebnis() == null || summary.getErgebnis().isBlank()) && !ergebnis.isBlank()) {
 			summary.setErgebnis(ergebnis);
 		}
+
 		return matchList;
 	}
 
-	public static Map<String, String> extractSpielzeiten(String html) {
+	private Map<String, Integer> ermittleSpaltenIndex(Element table) {
+
+		Map<String, Integer> indexMap = new HashMap<>();
+
+		Element headerRow = table.selectFirst("thead tr");
+
+		if (headerRow == null) {
+			return indexMap;
+		}
+
+		Elements headers = headerRow.select("th");
+
+		for (int i = 0; i < headers.size(); i++) {
+			indexMap.put(headers.get(i).text().trim(), i);
+		}
+
+		return indexMap;
+	}
+
+	public static Map<String, String> extractSpielzeiten(Document doc) {
+
 		Map<String, String> result = new HashMap<>();
 
-		Document doc = Jsoup.parse(html);
-		Pattern timePattern = Pattern.compile("\\d{2}:\\d{2}");
-
 		for (Element div : doc.select("div.pb-2")) {
+
 			String text = div.text();
-			Matcher matcher = timePattern.matcher(text);
-			if (matcher.find()) {
-				String time = matcher.group();
-				if (text.startsWith("Spielbeginn")) {
-					result.put("spielbeginn", time);
-				} else if (text.startsWith("Spielende")) {
-					result.put("spielende", time);
-				}
+
+			if (text.startsWith("Spielbeginn:")) {
+				result.put("spielbeginn", text.replace("Spielbeginn:", "").replace("Uhr", "").trim());
+			}
+
+			if (text.startsWith("Spielende:")) {
+				result.put("spielende", text.replace("Spielende:", "").replace("Uhr", "").trim());
 			}
 		}
 
