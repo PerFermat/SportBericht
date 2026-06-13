@@ -1746,3 +1746,18 @@ max-width
     overflow-wrap: break-word;   /* moderne Browser */
     word-break: break-word;      /* harte Umbrüche bei sehr langen Wörtern */
 }
+
+/* ===== p:menuButton – alle Zustände fixieren ===== */
+.myButtonLight .ui-button.ui-state-hover,
+.myButtonLight .ui-button.ui-state-active,
+.myButtonLight .ui-button.ui-state-focus,
+.myButtonLight .ui-button:hover,
+.myButtonLight .ui-button:active,
+.myButtonLight .ui-button:focus {
+    background-color: var(--button-hover-bglight-color) !important;
+    background-image: none !important;
+    border-color: var(--button-hover-bglight-color) !important;
+    color: white !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
