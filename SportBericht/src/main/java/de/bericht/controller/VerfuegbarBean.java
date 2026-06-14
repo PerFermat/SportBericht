@@ -761,19 +761,16 @@ public class VerfuegbarBean implements Serializable {
 		StringBuilder link = new StringBuilder("verfuegbar.xhtml?");
 
 		if (vereinnr != null && !vereinnr.isEmpty()) {
-			link.append("v=").append(vereinnr).append("&");
+			link.append("vereinnr=").append(vereinnr).append("&");
 		}
 		if (spielerFilterKey != null && !spielerFilterKey.isEmpty()) {
 			link.append("sp=").append(encodeUrl(spielerFilterKey)).append("&");
-		}
-		if (ruecksprung != null && !ruecksprung.isEmpty()) {
-			link.append("ruecksprung=").append(ruecksprung).append("&");
 		}
 		if (halbserie != null && !halbserie.isEmpty()) {
 			link.append("runde=").append(encodeUrl(halbserie)).append("&");
 		}
 		if (liga != null && !liga.isEmpty()) {
-			link.append("liga=").append(liga).append("&");
+			link.append("liga=").append(encodeUrl(liga)).append("&");
 		}
 		if (spielTeam != null && !spielTeam.isEmpty()) {
 			link.append("team=").append(encodeUrl(spielTeam)).append("&");
