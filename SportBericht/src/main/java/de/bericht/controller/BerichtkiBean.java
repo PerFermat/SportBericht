@@ -234,7 +234,7 @@ public class BerichtkiBean implements Serializable {
 		SpielergebnisProvider provider = null;
 		if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 			try {
-				provider = SpielergebnisFactory.create(vereinnr, ergebnisLink, namensSpeicher);
+				provider = SpielergebnisFactory.create(vereinnr, berichtMannschaft, ergebnisLink, namensSpeicher);
 				// namensSpeicher.fuelleNamensspeicher(vereinnr, provider, namensSpeicher);
 
 				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,

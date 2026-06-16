@@ -17,6 +17,8 @@ public abstract class AbstractTischtennisSpielergebnisService extends AbstractSp
 
 	protected String ort;
 	protected String vereinnr;
+	private String heim;
+	private String gast;
 
 	protected AbstractTischtennisSpielergebnisService(String vereinnr, String url, NamensSpeicher ns,
 			Boolean verschluesseln) {
@@ -32,6 +34,8 @@ public abstract class AbstractTischtennisSpielergebnisService extends AbstractSp
 			this.ort = ermittleOrt(berichtMannschaft, doc).toUpperCase();
 
 			TischtennisMatchSummary ttSummary = parseSummary(vereinnr, berichtMannschaft, doc);
+			heim = ttSummary.getHeimmannschaft();
+			gast = ttSummary.getGastmannschaft();
 			List<MatchErgebnis> matchList = parseMatches(vereinnr, berichtMannschaft, doc, ns, verschluesseln,
 					ttSummary);
 
@@ -95,8 +99,13 @@ public abstract class AbstractTischtennisSpielergebnisService extends AbstractSp
 		StringBuilder ergebnisString = new StringBuilder();
 
 		for (int intern = 0; intern < 2; intern++) {
-			ergebnisString.append("<strong>Für ").append(BerichtHelper.getOrt(vereinnr))
-					.append(" spielten:<br></strong>");
+			if (ort.equals("HEIMGAST")) {
+				ergebnisString.append("<strong>Für ").append(intern == 1 ? heim : gast)
+						.append(" spielten:<br></strong>");
+			} else {
+				ergebnisString.append("<strong>Für ").append(BerichtHelper.getOrt(vereinnr))
+						.append(" spielten:<br></strong>");
+			}
 
 			ergebnisString.append("<strong>Doppel: </strong>");
 			int j = 0;

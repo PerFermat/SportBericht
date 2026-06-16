@@ -98,7 +98,7 @@ public abstract class MatchSummary {
 			this.punkteHeimmannschaft = Integer.parseInt(matcher.group(1));
 			this.punkteGastmannschaft = Integer.parseInt(matcher.group(2));
 
-			this.berichtMannschaftIstHeim = containsIgnoreCase(heimmannschaft, berichtMannschaft);
+			this.berichtMannschaftIstHeim = containsIgnoreCase(heimmannschaft, gastmannschaft, berichtMannschaft);
 
 			if (berichtMannschaftIstHeim) {
 				punkteBerichtMannschaft = punkteHeimmannschaft;
@@ -128,11 +128,25 @@ public abstract class MatchSummary {
 		this.spielEntscheidung = "Unbekannt";
 	}
 
-	private boolean containsIgnoreCase(String text, String part) {
-		if (text == null || part == null) {
+	private boolean containsIgnoreCase(String heimmannschaft, String gastmannschaft, String berichtMannschaft) {
+		if (heimmannschaft == null || berichtMannschaft == null) {
 			return false;
 		}
-		return text.toLowerCase().contains(part.toLowerCase());
+		if (gastmannschaft == null || berichtMannschaft == null) {
+			return false;
+		}
+
+		if (heimmannschaft.equals(berichtMannschaft)) {
+			return true;
+		} else if (gastmannschaft.equals(berichtMannschaft)) {
+			return false;
+		} else if (heimmannschaft.contains(berichtMannschaft)) {
+			return true;
+		} else if (gastmannschaft.contains(berichtMannschaft)) {
+			return false;
+		}
+
+		return false;
 	}
 
 	public String getSportart() {

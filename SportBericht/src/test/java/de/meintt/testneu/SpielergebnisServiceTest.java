@@ -18,7 +18,7 @@ class SpielergebnisServiceTest {
 	String ergebnis;
 	String vereinnr = "13014"; // <-- passe an, falls nötig
 
-	String url = "https://www.mytischtennis.de/click-tt/TTBW/25--26/ligen/E_BL/gruppe/494841/spielbericht/15437384/TSGV_Hattenhofen-vs-TSV_Heiningen";
+	String url = "https://www.mytischtennis.de/click-tt/TTBW/25--26/ligen/E_KL_A/gruppe/494540/spielbericht/15741747/TSG_Upfingen_II-vs-TSG_Upfingen";
 	SpielergebnisProvider provider;
 	NamensSpeicher ns = new NamensSpeicher();
 
@@ -27,7 +27,7 @@ class SpielergebnisServiceTest {
 	void setUp() {
 		config = ConfigManager.getInstance();
 		try {
-			provider = SpielergebnisFactory.create(vereinnr, url, ns, false);
+			provider = SpielergebnisFactory.create(vereinnr, "TSG Upfingen II", url, ns, false);
 			// Hier stehen die von dir gewünschten Zeilen am Anfang
 			ergebnis = provider.getSpielErgebnis();
 			System.out.println(ergebnis);

@@ -57,7 +57,11 @@ public class SpielergebnisClickTTService extends AbstractTischtennisSpielergebni
 		String heim = teamsMatcher.group(1).trim();
 		String gast = teamsMatcher.group(2).trim();
 
-		if (heim.contains(berichtMannschaft) && gast.contains(berichtMannschaft)) {
+		if (heim.equals(berichtMannschaft)) {
+			return "HEIM";
+		} else if (gast.equals(berichtMannschaft)) {
+			return "GAST";
+		} else if (heim.contains(berichtMannschaft) && gast.contains(berichtMannschaft)) {
 			return "HEIMGAST";
 		} else if (heim.contains(berichtMannschaft)) {
 			return "HEIM";
@@ -141,7 +145,16 @@ public class SpielergebnisClickTTService extends AbstractTischtennisSpielergebni
 		Elements tabellen = doc.select("table");
 		List<MatchErgebnis> matchList = new ArrayList<>();
 		String ergebnis = "";
-		boolean istHeim = summary.getHeimmannschaft().contains(berichtMannschaft);
+		boolean istHeim = false;
+		if (summary.getHeimmannschaft().equals(berichtMannschaft)) {
+			istHeim = true;
+		} else if (summary.getGastmannschaft().equals(berichtMannschaft)) {
+			istHeim = false;
+		} else if (summary.getHeimmannschaft().contains(berichtMannschaft)) {
+			istHeim = true;
+		} else if (summary.getGastmannschaft().contains(berichtMannschaft)) {
+			istHeim = false;
+		}
 
 		for (Element row : tabellen.select("tr")) {
 			Elements cols = row.select("td");

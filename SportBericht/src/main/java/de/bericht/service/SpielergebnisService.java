@@ -45,7 +45,11 @@ public class SpielergebnisService extends AbstractTischtennisSpielergebnisServic
 		String heim = teams.get(0).text().trim();
 		String gast = teams.get(2).text().trim();
 
-		if (heim.contains(berichtMannschaft) && gast.contains(berichtMannschaft)) {
+		if (heim.equals(berichtMannschaft)) {
+			return "HEIM";
+		} else if (gast.equals(berichtMannschaft)) {
+			return "GAST";
+		} else if (heim.contains(berichtMannschaft) && gast.contains(berichtMannschaft)) {
 			return "HEIMGAST";
 		} else if (heim.contains(berichtMannschaft)) {
 			return "HEIM";
@@ -124,7 +128,16 @@ public class SpielergebnisService extends AbstractTischtennisSpielergebnisServic
 		List<MatchErgebnis> matchList = new ArrayList<>();
 		String ergebnis = "";
 
-		boolean istHeim = summary.getHeimmannschaft().contains(berichtMannschaft);
+		boolean istHeim = false;
+		if (summary.getHeimmannschaft().equals(berichtMannschaft)) {
+			istHeim = true;
+		} else if (summary.getGastmannschaft().equals(berichtMannschaft)) {
+			istHeim = false;
+		} else if (summary.getHeimmannschaft().contains(berichtMannschaft)) {
+			istHeim = true;
+		} else if (summary.getGastmannschaft().contains(berichtMannschaft)) {
+			istHeim = false;
+		}
 
 		for (Element table : doc.select("table")) {
 
