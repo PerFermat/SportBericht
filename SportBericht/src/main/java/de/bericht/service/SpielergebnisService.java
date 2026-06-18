@@ -15,6 +15,7 @@ import de.bericht.util.BerichtHelper;
 import de.bericht.util.MatchErgebnis;
 import de.bericht.util.NamensSpeicher;
 import de.bericht.util.TischtennisMatchSummary;
+import de.bericht.util.enums.HeimGastArt;
 
 public class SpielergebnisService extends AbstractTischtennisSpielergebnisService {
 
@@ -22,9 +23,9 @@ public class SpielergebnisService extends AbstractTischtennisSpielergebnisServic
 		super(vereinnr, url, ns, verschluesseln);
 	}
 
-	public SpielergebnisService(String vereinnr, String berichtMannschaft, String url, NamensSpeicher ns,
-			Boolean verschluesseln) {
-		super(vereinnr, berichtMannschaft, url, ns, verschluesseln);
+	public SpielergebnisService(String vereinnr, HeimGastArt art, String berichtMannschaft, String url,
+			NamensSpeicher ns, Boolean verschluesseln) {
+		super(vereinnr, art, berichtMannschaft, url, ns, verschluesseln);
 	}
 
 	@Override
@@ -45,19 +46,7 @@ public class SpielergebnisService extends AbstractTischtennisSpielergebnisServic
 		String heim = teams.get(0).text().trim();
 		String gast = teams.get(2).text().trim();
 
-		if (heim.equals(berichtMannschaft)) {
-			return "HEIM";
-		} else if (gast.equals(berichtMannschaft)) {
-			return "GAST";
-		} else if (heim.contains(berichtMannschaft) && gast.contains(berichtMannschaft)) {
-			return "HEIMGAST";
-		} else if (heim.contains(berichtMannschaft)) {
-			return "HEIM";
-		} else if (gast.contains(berichtMannschaft)) {
-			return "GAST";
-		}
-
-		return "";
+		return BerichtHelper.ermittelnHeimGast(heim, gast, berichtMannschaft, art);
 	}
 
 	private String getCell(Elements cols, Integer index) {

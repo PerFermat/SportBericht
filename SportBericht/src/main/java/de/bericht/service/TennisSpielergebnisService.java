@@ -15,13 +15,14 @@ import de.bericht.util.NamensSpeicher;
 import de.bericht.util.SpielDetail;
 import de.bericht.util.TennisMatchSummary;
 import de.bericht.util.WebCache;
+import de.bericht.util.enums.HeimGastArt;
 
 public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 
 	private String vereinnr;
 
-	public TennisSpielergebnisService(String vereinnr, String berichtMannschaft, String url, NamensSpeicher ns,
-			Boolean verschluesseln) {
+	public TennisSpielergebnisService(String vereinnr, HeimGastArt art, String berichtMannschaft, String url,
+			NamensSpeicher ns, Boolean verschluesseln) {
 		this.vereinnr = vereinnr;
 
 		try {

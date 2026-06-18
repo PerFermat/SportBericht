@@ -19,6 +19,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import de.bericht.service.DatabaseService;
+import de.bericht.util.enums.HeimGastArt;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Named;
 
@@ -508,5 +509,29 @@ public class BerichtHelper {
 		}
 		return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'",
 				"&#39;");
+	}
+
+	public static String ermittelnHeimGast(String heim, String gast, String berichtMannschaft, HeimGastArt art) {
+
+		if (HeimGastArt.VEREIN.equals(art)) {
+			if (heim.contains(berichtMannschaft) && gast.contains(berichtMannschaft)) {
+				return "HEIMGAST";
+			} else if (heim.contains(berichtMannschaft)) {
+				return "HEIM";
+			} else if (gast.contains(berichtMannschaft)) {
+				return "GAST";
+			} else {
+				return "Falsch";
+			}
+		} else {
+			if (heim.equals(berichtMannschaft)) {
+				return "HEIM";
+			} else if (gast.equals(berichtMannschaft)) {
+				return "GAST";
+			} else {
+				return "Falsch";
+			}
+		}
+
 	}
 }

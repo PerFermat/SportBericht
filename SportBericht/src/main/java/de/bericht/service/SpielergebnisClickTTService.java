@@ -13,9 +13,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import de.bericht.util.BerichtHelper;
 import de.bericht.util.MatchErgebnis;
 import de.bericht.util.NamensSpeicher;
 import de.bericht.util.TischtennisMatchSummary;
+import de.bericht.util.enums.HeimGastArt;
 
 public class SpielergebnisClickTTService extends AbstractTischtennisSpielergebnisService {
 
@@ -23,9 +25,9 @@ public class SpielergebnisClickTTService extends AbstractTischtennisSpielergebni
 		super(vereinnr, url, ns, verschluesseln);
 	}
 
-	public SpielergebnisClickTTService(String vereinnr, String berichtMannschaft, String url, NamensSpeicher ns,
-			Boolean verschluesseln) {
-		super(vereinnr, berichtMannschaft, url, ns, verschluesseln);
+	public SpielergebnisClickTTService(String vereinnr, HeimGastArt art, String berichtMannschaft, String url,
+			NamensSpeicher ns, Boolean verschluesseln) {
+		super(vereinnr, art, berichtMannschaft, url, ns, verschluesseln);
 	}
 
 	@Override
@@ -56,19 +58,7 @@ public class SpielergebnisClickTTService extends AbstractTischtennisSpielergebni
 
 		String heim = teamsMatcher.group(1).trim();
 		String gast = teamsMatcher.group(2).trim();
-
-		if (heim.equals(berichtMannschaft)) {
-			return "HEIM";
-		} else if (gast.equals(berichtMannschaft)) {
-			return "GAST";
-		} else if (heim.contains(berichtMannschaft) && gast.contains(berichtMannschaft)) {
-			return "HEIMGAST";
-		} else if (heim.contains(berichtMannschaft)) {
-			return "HEIM";
-		} else if (gast.contains(berichtMannschaft)) {
-			return "GAST";
-		}
-		return "";
+		return BerichtHelper.ermittelnHeimGast(heim, gast, berichtMannschaft, art);
 	}
 
 	@Override

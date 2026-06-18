@@ -47,6 +47,7 @@ import de.bericht.util.OpenAIModelFetcher;
 import de.bericht.util.SpielMapped;
 import de.bericht.util.Spielbericht;
 import de.bericht.util.StilGenerator;
+import de.bericht.util.enums.HeimGastArt;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItem;
@@ -234,7 +235,8 @@ public class BerichtkiBean implements Serializable {
 		SpielergebnisProvider provider = null;
 		if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 			try {
-				provider = SpielergebnisFactory.create(vereinnr, berichtMannschaft, ergebnisLink, namensSpeicher);
+				provider = SpielergebnisFactory.create(vereinnr, HeimGastArt.MANNSCHAFT, berichtMannschaft,
+						ergebnisLink, namensSpeicher);
 				// namensSpeicher.fuelleNamensspeicher(vereinnr, provider, namensSpeicher);
 
 				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,

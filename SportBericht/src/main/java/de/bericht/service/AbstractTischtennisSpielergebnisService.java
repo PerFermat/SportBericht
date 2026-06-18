@@ -12,6 +12,7 @@ import de.bericht.util.MatchErgebnis;
 import de.bericht.util.NamensSpeicher;
 import de.bericht.util.TischtennisMatchSummary;
 import de.bericht.util.WebCache;
+import de.bericht.util.enums.HeimGastArt;
 
 public abstract class AbstractTischtennisSpielergebnisService extends AbstractSpielergebnisService {
 
@@ -19,15 +20,18 @@ public abstract class AbstractTischtennisSpielergebnisService extends AbstractSp
 	protected String vereinnr;
 	private String heim;
 	private String gast;
+	public HeimGastArt art;
 
 	protected AbstractTischtennisSpielergebnisService(String vereinnr, String url, NamensSpeicher ns,
 			Boolean verschluesseln) {
-		this(vereinnr, ConfigManager.getConfigValue(vereinnr, "spielplan.Verein"), url, ns, verschluesseln);
+		this(vereinnr, HeimGastArt.VEREIN, ConfigManager.getConfigValue(vereinnr, "spielplan.Verein"), url, ns,
+				verschluesseln);
 	}
 
-	protected AbstractTischtennisSpielergebnisService(String vereinnr, String berichtMannschaft, String url,
-			NamensSpeicher ns, Boolean verschluesseln) {
+	protected AbstractTischtennisSpielergebnisService(String vereinnr, HeimGastArt art, String berichtMannschaft,
+			String url, NamensSpeicher ns, Boolean verschluesseln) {
 		this.vereinnr = vereinnr;
+		this.art = art;
 
 		try {
 			Document doc = WebCache.getPage(url);
