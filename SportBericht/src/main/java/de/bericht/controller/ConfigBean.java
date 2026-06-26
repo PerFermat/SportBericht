@@ -134,7 +134,7 @@ public class ConfigBean implements Serializable {
 		if (eintrag == null || !isNotBlank(eintrag.getEintrag())) {
 			return;
 		}
-		service.insertOrUpdateConfigEintrag(vereinnr, eintrag.getEintrag(), defaultString(eintrag.getWert()));
+		service.insertOrUpdateConfigEintrag(vereinnr, eintrag.getEintrag(), eintrag.getWert());
 		ladeConfigEintraegeMitBedeutung();
 		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Gespeichert",
 				"Eintrag " + eintrag.getEintrag() + " wurde gespeichert."));
@@ -233,6 +233,18 @@ public class ConfigBean implements Serializable {
 		} catch (Exception e) {
 			// absichtlich leer, Anzeige bleibt unverändert
 		}
+	}
+
+	public void loeschePasswort(ConfigEintrag eintrag) {
+		if (!einmalpasswortGeprueft || eintrag == null || !isNotBlank(eintrag.getEintrag())) {
+			return;
+		}
+
+		eintrag.setWert(null);
+		service.insertOrUpdateConfigEintrag(vereinnr, eintrag.getEintrag(), null);
+		ladeConfigEintraegeMitBedeutung();
+		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Gespeichert",
+				"Passwort " + eintrag.getEintrag() + " wurde gelöscht."));
 	}
 
 	public void insertHomepage() {

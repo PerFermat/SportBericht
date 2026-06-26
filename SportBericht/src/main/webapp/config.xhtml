@@ -157,27 +157,39 @@
 					</ui:fragment>
 					<ui:fragment rendered="#{eintrag.inhaltformatEnum}">
 						<p:selectOneMenu value="#{eintrag.wert}" style="width:100%;">
+							<f:selectItem itemLabel="-- kein Wert --" itemValue="#{null}"
+								noSelectionOption="true" />
 							<f:selectItems value="#{configBean.enumWerte(eintrag)}" />
 							<p:ajax event="change" update="configTable" process="@this" />
 						</p:selectOneMenu>
 					</ui:fragment>
 					<ui:fragment rendered="#{eintrag.inhaltformatSql}">
 						<p:selectOneMenu value="#{eintrag.wert}" style="width:100%;">
+							<f:selectItem itemLabel="-- kein Wert --" itemValue="#{null}"
+								noSelectionOption="true" />
 							<f:selectItems value="#{configBean.sqlWerte(eintrag)}" />
 							<p:ajax event="change" update="configTable" process="@this" />
 						</p:selectOneMenu>
 					</ui:fragment>
 					<ui:fragment rendered="#{eintrag.inhaltformatChatGpt}">
 						<p:selectOneMenu value="#{eintrag.wert}" style="width:100%;">
+							<f:selectItem itemLabel="-- kein Wert --" itemValue="#{null}"
+								noSelectionOption="true" />
 							<f:selectItems value="#{configBean.chatGptModelle}" />
 							<p:ajax event="change" update="configTable" process="@this" />
 						</p:selectOneMenu>
 					</ui:fragment>
 					<ui:fragment rendered="#{eintrag.inhaltformatPasswort}">
-						<p:commandButton value="Passwort eingeben" 
-							actionListener="#{configBean.openPasswortDialog(eintrag)}"
-							process="@this" immediate="true" update=":passwortDialogForm"
-							oncomplete="PF('passwortDialog').show();" />
+						<div class="button4-container button-container-panel-white">
+							<p:commandButton value="Passwort eingeben"
+								actionListener="#{configBean.openPasswortDialog(eintrag)}"
+								process="@this" immediate="true" update=":passwortDialogForm"
+								oncomplete="PF('passwortDialog').show();" />
+							<p:commandButton icon="pi pi-trash"
+								styleClass="ui-button-danger ui-button-flat"
+								action="#{configBean.loeschePasswort(eintrag)}" process="@this"
+								update=":configTabelle:configTable" title="Löschen" />
+						</div>
 					</ui:fragment>
 					<ui:fragment rendered="#{configBean.textFeld(eintrag)}">
 						<p:inputTextarea value="#{eintrag.wert}" rows="2"
@@ -190,7 +202,7 @@
 
 			</p:dataTable>
 
-			<div class="button4-container">
+			<div class="button4-container report-action-buttons">
 				<p:commandButton value="Neuer Key"
 					actionListener="#{configBean.openNeuerKeyDialog}" process="@this"
 					immediate="true" update=":configDialogForm"
@@ -198,20 +210,23 @@
 				<p:commandButton value="Aktuallisieren Homepage-Configs-Einträge"
 					action="#{configBean.insertHomepage}" update="configTable" />
 
-				<p:commandButton value="Konfiguration der iFrames-Internetseiten" action="configHtml.xhtml"
-					immediate="true" rendered="#{configBean.tischtennis}">
+				<p:commandButton value="Konfiguration der iFrames-Internetseiten"
+					action="configHtml.xhtml" immediate="true"
+					rendered="#{configBean.tischtennis}">
 					<f:param name="vereinnr" value="#{configBean.vereinnr}" />
 					<f:param name="p" value="#{configBean.passwort}" />
 				</p:commandButton>
 
-				<p:commandButton value="Importieren Spielcodes" action="spielCodeParcer.xhtml"
-					immediate="true" rendered="#{configBean.tischtennis}">
+				<p:commandButton value="Importieren Spielcodes"
+					action="spielCodeParcer.xhtml" immediate="true"
+					rendered="#{configBean.tischtennis}">
 					<f:param name="vereinnr" value="#{configBean.vereinnr}" />
 					<f:param name="p" value="#{configBean.passwort}" />
 				</p:commandButton>
-				
-				<p:commandButton value="Importieren Aufstellung" action="aufstellungImport.xhtml"
-					immediate="true" rendered="#{configBean.tischtennis}">
+
+				<p:commandButton value="Importieren Aufstellung"
+					action="aufstellungImport.xhtml" immediate="true"
+					rendered="#{configBean.tischtennis}">
 					<f:param name="vereinnr" value="#{configBean.vereinnr}" />
 					<f:param name="p" value="#{configBean.passwort}" />
 				</p:commandButton>
@@ -296,8 +311,8 @@
 				columnClasses="ui-g-4,ui-g-8">
 				<h:outputLabel for="passwortInput" value="Passwort" />
 				<p:password id="passwortInput"
-					value="#{configBean.passwortDialogInput}" feedback="false" toggleMask="true"
-					style="width:100%;" redisplay="true" />
+					value="#{configBean.passwortDialogInput}" feedback="false"
+					toggleMask="true" style="width:100%;" redisplay="true" />
 			</h:panelGrid>
 			<div style="margin-top: 15px; text-align: right;">
 				<p:commandButton value="Speichern"

@@ -83,6 +83,15 @@ body {
 .button4-container.button-container-panel-bg {
 	background-color: var(--panel-content-bg);
 }
+/* Neue Klasse für Slider-Container mit Panel-Hintergrund */
+.button4-container.button-container-panel-gray {
+	background-color: var(--secondary-bg-color);
+}
+
+/* Neue Klasse für Slider-Container mit Panel-Hintergrund */
+.button4-container.button-container-panel-white {
+	background-color: var(--white);
+}
 
 /* Media Queries für Container-Layouts */
 @media ( min-width : 1000px) {
@@ -219,6 +228,22 @@ body {
 	text-align: left;
 	margin-top: 1rem;
 }
+
+.report-action-buttons {
+	flex-wrap: wrap;
+}
+
+@media ( max-width : 900px) {
+	.report-action-buttons>.ui-button {
+		flex: 1 1 calc(33.333% - 10px);
+		min-width: 0;
+	}
+	.report-action-buttons>.ui-button .ui-button-text {
+		white-space: normal;
+	}
+}
+
+
 
 /* Header Bereiche */
 .header-area {
