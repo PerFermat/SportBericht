@@ -381,7 +381,7 @@ Empfohlen:   <br />
 						<p:tooltip for="berichtTitel" escape="false">
 							<h:outputText value="#{spiel.stilversionTooltip}" escape="false" />
 						</p:tooltip>
-						<p:inputTextarea value="#{spiel.text}" readonly="true" rows="10"
+						<p:inputTextarea value="#{spiel.text}" rows="10"
 							autoResize="false" />
 						<br />
 
@@ -390,7 +390,7 @@ Empfohlen:   <br />
 							<p:commandButton value="Bericht übernehmen"
 								action="bericht.xhtml"
 								actionListener="#{berichtkiBean.speichern(status.index)}"
-								immediate="true" update="@form">
+								update="@form">
 								<f:param name="vereinnr" value="#{berichtkiBean.vereinnr}" />
 								<f:param name="heim" value="#{berichtkiBean.heim}" />
 								<f:param name="gast" value="#{berichtkiBean.gast}" />
@@ -400,7 +400,7 @@ Empfohlen:   <br />
 									value="#{berichtkiBean.ergebnisLink}" />
 								<f:param name="uuid" value="#{berichtkiBean.uuid}" />
 								<f:param name="liga" value="#{berichtkiBean.liga}" />
-								<f:param name="ligaSpiel" value="#{berichtKiBean.ligaSpiel}" />
+								<f:param name="ligaSpiel" value="#{berichtkiBean.ligaSpiel}" />
 								<f:param name="gruppeUrl" value="#{berichtkiBean.gruppeUrl}" />
 							</p:commandButton>
 
