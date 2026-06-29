@@ -1704,7 +1704,8 @@ body.dark-mode .button-bild-download:hover .ui-button-icon-left {
 }
 
 .spieler-name {
-	min-width: 260px;
+	flex: 1 1 200px;   /* nimmt den variablen Platz auf */
+	min-width: 0;      /* darf schrumpfen, statt die Zeile zu sprengen */
 	font-weight: 500;
 }
 
@@ -1713,10 +1714,16 @@ body.dark-mode .button-bild-download:hover .ui-button-icon-left {
 	color: var(--farbe-text-sekundaer);
 }
 
-@media (min-width: 992px) {
-	.spieler-kommentar {
-		margin-left: auto;
-	}
+/* "Zusätzliche Info" – feste Breite; als letztes Flex-Element rechtsbündig
+   im Container, konstante linke Kante unabhängig von der Namenslänge */
+.spieler-kommentar {
+	flex: 0 0 420px;
+	max-width: 100%;
+}
+
+@media (max-width: 640px) {
+	.spieler-name      { flex-basis: 100%; }
+	.spieler-kommentar { flex: 1 1 100%; }
 }
 
 /* ==================================================
