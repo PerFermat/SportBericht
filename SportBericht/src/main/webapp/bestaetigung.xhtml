@@ -14,13 +14,6 @@
 		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{bestaetigungBean.vereinnr}"
 		type="text/css" />
 	<h:outputStylesheet name="css/styles.css" />
-	<style>
-.bestaetigung-container {
-	width: 100%;
-	max-width: 1000px;
-	margin: 0 auto;
-}
-</style>
 </h:head>
 <h:body>
 	<div class="seitenkopf seitenkopf-navigation">
@@ -42,7 +35,7 @@
 			</p:commandButton>
 		</h:form>
 	</div>
-	<div class="bestaetigung-container">
+	<div class="container-zentriert-1000">
 		<h:form id="bestaetigungForm" styleClass="steuerung"
 			rendered="#{not empty bestaetigungBean.eintrag}">
 			<h:panelGroup rendered="#{bestaetigungBean.mailGesendetHinweis}">

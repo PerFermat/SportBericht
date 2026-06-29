@@ -19,138 +19,6 @@
 			window.history.replaceState(null, document.title, "#{request.contextPath}/");
 		}		
 	</h:outputScript>
-	<style>
-.verfuegbar-container {
-	width: 100%;
-	max-width: 1000px;
-	margin: 0 auto;
-}
-
-.top-spieler {
-	max-width: 450px;
-	margin: 0 auto 1rem auto;
-}
-
-.spiel-block {
-	margin-bottom: 0.4rem;
-	border-radius: 4px;
-	overflow: hidden;
-}
-
-.spiel-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 1rem;
-	padding: 0.45rem 0.6rem;
-	background: #d8d8d8;
-}
-
-.spiel-links {
-	display: flex;
-	align-items: center;
-	gap: 0.4rem;
-	font-size: 1rem;
-}
-
-.toggle-btn {
-	min-width: 1.2rem;
-	text-align: center;
-	font-weight: bold;
-	font-size: 1rem;
-	text-decoration: none;
-	color: #222;
-}
-
-.counts {
-	font-size: 1rem;
-	text-align: right;
-	line-height: 1.1;
-	cursor: default;
-}
-
-.c-ja {
-	color: #108a00;
-}
-
-.c-ja-unsicher {
-	color: #63aa31;
-}
-
-.c-nein-unsicher {
-	color: #e08282;
-}
-
-.c-nein {
-	color: #cf2f2f;
-}
-
-.c-notfall {
-	color: #222;
-}
-
-.inhalt {
-	background: #e7e7e7;
-	padding: 0.5rem 0.6rem;
-}
-
-.eingabe-zeile {
-	display: flex;
-	gap: 0.7rem;
-	flex-wrap: wrap;
-	margin-bottom: 0.4rem;
-}
-
-.verfuegbarkeit-zeile {
-	display: flex;
-	align-items: stretch;
-	gap: 0.55rem;
-	flex: 0 0 auto;
-}
-
-.verfuegbarkeit-select {
-	width: 150px !important;
-	min-width: 150px;
-	flex: 0 0 150px;
-}
-
-.verfuegbarkeit-loeschen {
-	width: 2.35rem !important;
-	height: 2.35rem !important;
-	min-width: 2.35rem;
-	padding: 0 !important;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.zusatzinfo-feld {
-	flex: 1 1 320px;
-}
-
-@media ( max-width : 640px) {
-	.zusatzinfo-feld {
-		flex-basis: 100%;
-	}
-}
-
-.eingabe-z
-.eingabe-zeile .ui-autocomplete, .eingabe-zeile .ui-inputsteuerung-feld
-	{
-	flex: 1 1 320px;
-}
-
-.eintrag-zeile {
-	padding: 0.15rem 0;
-	font-size: 0.92rem;
-}
-
-.andere-mannschaft {
-	font-size: 0.8rem;
-	color: #666;
-	margin-left: 0.35rem;
-}
-</style>
 </h:head>
 
 <h:body>
@@ -176,7 +44,7 @@
 			</p:commandButton>
 		</div>
 	</h:form>
-	<div class="verfuegbar-container">
+	<div class="container-zentriert-1000">
 		<h:form id="verfuegbarForm">
 			<p>
 				Bitte gib hier an, an welchen Spieltagen du verfügbar bist. Das

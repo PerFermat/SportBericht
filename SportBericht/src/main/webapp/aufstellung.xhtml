@@ -14,37 +14,6 @@
 		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{aufstellungBean.vereinnr}"
 		type="text/css" />
 	<h:outputStylesheet name="css/styles.css" />
-	<style>
-.tabellen-scrollbereich {
-	width: 100%;
-	max-width: 1000px;
-	margin: 0 auto;
-}
-
-.spieler-zeile {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.5rem;
-	margin-bottom: 0.5rem;
-}
-
-.spieler-name {
-	min-width: 260px;
-	font-weight: 500;
-}
-
-.spieler-verfuegbarkeit {
-	font-size: 0.8rem;
-	color: var(--farbe-text-sekundaer);
-}
-
-@media ( min-width : 992px) {
-	.spieler-kommentar {
-		margin-left: auto;
-	}
-}
-</style>
 </h:head>
 
 <h:body>
@@ -67,7 +36,7 @@
 		</div>
 	</h:form>
 
-	<div class="bereich tabellen-scrollbereich">
+	<div class="bereich tabellen-scrollbereich container-zentriert-1000">
 		<p:growl id="msgs" showDetail="true" life="3000" />
 
 		<h:panelGroup rendered="#{not empty aufstellungBean.spielInfo}">
