@@ -1,0 +1,402 @@
+<?xml version='1.0' encoding='utf-8' ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	</head>
+	<body>
+		<h1 id="sportbericht">SportBericht</h1>
+		<p>
+			<strong>Web-basiertes Verwaltungs- und Berichtssystem für Tischtennis- und Tennisvereine.</strong>
+		</p>
+		<p>SportBericht ist eine Jakarta-EE-Webanwendung, mit der Vereine ihren kompletten Spielbetrieb
+			abbilden: Spielpläne und Ergebnisse, Aufstellungen, Spielerverfügbarkeiten, Adresslisten,
+			Bildverwaltung sowie die automatische Erstellung und Veröffentlichung von Spielberichten –
+			unterstützt durch KI (ChatGPT, Claude, DeepSeek, Gemini) und mit direkter Anbindung an
+			WordPress, E-Mail, Telegram und SFTP.</p>
+		<p>Die Anwendung ist 
+			<strong>mandantenfähig</strong>: Über eine Vereinsnummer (
+			<code>vereinnr</code>) werden Daten,
+			Konfiguration, Zugangsdaten und sogar das Farbschema je Verein getrennt verwaltet.
+		</p>
+		<hr/>
+		<h2 id="inhaltsverzeichnis">Inhaltsverzeichnis</h2>
+		<ul>
+			<li>
+				<a href="#funktionen">Funktionen</a>
+			</li>
+			<li>
+				<a href="#technologie-stack">Technologie-Stack</a>
+			</li>
+			<li>
+				<a href="#architektur">Architektur</a>
+			</li>
+			<li>
+				<a href="#projektstruktur">Projektstruktur</a>
+			</li>
+			<li>
+				<a href="#voraussetzungen">Voraussetzungen</a>
+			</li>
+			<li>
+				<a href="#build--deployment">Build &amp; Deployment</a>
+			</li>
+			<li>
+				<a href="#konfiguration">Konfiguration</a>
+			</li>
+			<li>
+				<a href="#datenbank">Datenbank</a>
+			</li>
+			<li>
+				<a href="#lizenz">Lizenz</a>
+			</li>
+			<li>
+				<a href="#hinweise">Hinweise</a>
+			</li>
+		</ul>
+		<hr/>
+		<h2 id="funktionen">Funktionen</h2>
+		<h3 id="spielbetrieb">Spielbetrieb</h3>
+		<ul>
+			<li>
+				<strong>Spielplan &amp; Ergebnisse</strong> – Spielpläne und Resultate für Tischtennis und Tennis,
+				inkl. Tabellen, Bilanzen und Liga-Ansicht.
+			</li>
+			<li>
+				<strong>Gesamtspielplan</strong> – konfigurierbare Gesamtübersicht über alle Mannschaften und Runden
+				mit Betreuer-Zuteilung, Tooltips und Wochen-Gruppierung.
+			</li>
+			<li>
+				<strong>Aufstellung</strong> – Verwaltung der Mannschaftsaufstellungen inklusive Import.
+			</li>
+			<li>
+				<strong>Verfügbarkeit &amp; Bestätigung</strong> – Spieler melden ihre Verfügbarkeit pro Spiel zurück;
+				Betreuer erhalten Bestätigungslinks und Statusübersichten.
+			</li>
+		</ul>
+		<h3 id="berichte">Berichte</h3>
+		<ul>
+			<li>
+				<strong>Spielbericht-Editor</strong> – komfortabler Editor (Quill) für Spielberichte mit Bild,
+				Bildunterschrift, Überschrift und Statistik.
+			</li>
+			<li>
+				<strong>KI-Berichte</strong> – automatische Generierung von Spielberichten und Zusammenfassungen über
+				ChatGPT, Claude, DeepSeek oder Gemini; Prompts, Schreibstil und Wortanzahl je Verein
+				konfigurierbar. Generierte Texte sind nachträglich editierbar.
+			</li>
+			<li>
+				<strong>Freie Berichte &amp; Zusammenfassungen</strong> – frei gestaltbare Berichte sowie
+				KI-Zusammenfassungen einzelner Spiele oder ganzer Spieltage.
+			</li>
+			<li>
+				<strong>Historie</strong> – Änderungsverlauf von Berichten und Adressdaten mit Diff-Darstellung.
+			</li>
+		</ul>
+		<h3 id="ver-ffentlichung-kommunikation">Veröffentlichung &amp; Kommunikation</h3>
+		<ul>
+			<li>
+				<strong>WordPress</strong> – Veröffentlichung von Berichten und Medien über die WordPress-REST-API.
+			</li>
+			<li>
+				<strong>E-Mail</strong> – Versand über SMTP (Jakarta Mail); Archiv versendeter Mails.
+			</li>
+			<li>
+				<strong>Telegram</strong> – Benachrichtigungen über einen Telegram-Bot.
+			</li>
+			<li>
+				<strong>SFTP</strong> – Upload von Inhalten (z. B. Hallenbelegungsplänen) auf externe Webspaces.
+			</li>
+		</ul>
+		<h3 id="verwaltung-werkzeuge">Verwaltung &amp; Werkzeuge</h3>
+		<ul>
+			<li>
+				<strong>Adressliste</strong> – Mitgliederverwaltung mit Such-/Filterfunktion, Info-Popups,
+				Änderungshistorie und Excel-Unterstützung.
+			</li>
+			<li>
+				<strong>Bilderverwaltung</strong> – Galerie sowie Bildbearbeitung (Ausschnitt/Selektion).
+			</li>
+			<li>
+				<strong>Spielcodes / Zwischenablage</strong> – Erzeugung und Verarbeitung von Spielcodes inkl.
+				QR-/Barcode-Generierung.
+			</li>
+			<li>
+				<strong>Hallenbelegung</strong> – Einlesen von PDF-Plänen und KI-gestützte Aufbereitung.
+			</li>
+			<li>
+				<strong>Dynamisches Theming</strong> – pro Verein einstellbarer Farb-Hue über ein dynamisch
+				generiertes Stylesheet.
+			</li>
+			<li>
+				<strong>Konfiguration</strong> – umfangreiche Vereinskonfiguration über die Oberfläche, inkl.
+				HTML-Snippets und API-Zugangsdaten.
+			</li>
+		</ul>
+		<hr/>
+		<h2 id="technologie-stack">Technologie-Stack</h2>
+		<p>| Bereich            | Technologie |
+			|--------------------|-------------|
+			| Sprache / Build    | Java 17, Maven (WAR-Packaging) |
+			| Plattform          | Jakarta EE 10, CDI (Weld) |
+			| Web-Framework       | Jakarta Faces (JSF) 4.0, PrimeFaces 14 (Theme „saga") |
+			| Applikationsserver | WildFly (Undertow) |
+			| Datenbank          | MariaDB (über JDBC / WildFly-DataSource) |
+			| KI                 | OpenAI (
+			<code>openai-java</code>), Claude, DeepSeek, Gemini (via OkHttp) |
+			| Dokumente/Medien   | Apache PDFBox, OpenPDF, Apache POI, ZXing (QR/Barcode) |
+			| Integrationen      | Jakarta Mail (SMTP), JSch (SFTP), WordPress REST, Telegram Bot |
+			| Text/HTML          | CommonMark (Markdown), jsoup, OWASP HTML Sanitizer |
+			| Caching            | Caffeine |
+			| Kalender           | Jollyday + Schulferien-API |
+			| Tests              | JUnit 5, Mockito |
+			| Hilfsmittel        | Lombok |
+		</p>
+		<hr/>
+		<h2 id="architektur">Architektur</h2>
+		<p>Die Anwendung folgt einem klassischen JSF/CDI-Schichtmodell:</p>
+		<ul>
+			<li>
+				<strong>Controller (`de.bericht.controller`)</strong> – CDI-Beans (
+				<code>@Named</code>, überwiegend 
+				<code>@ViewScoped</code>),
+				die je einer XHTML-Seite zugeordnet sind (z. B. 
+				<code>SpielplanBean</code>, 
+				<code>BerichtBean</code>,
+
+				<code>VerfuegbarBean</code>, 
+				<code>AdresslisteBean</code>).
+			</li>
+			<li>
+				<strong>Service (`de.bericht.service`)</strong> – fachliche Logik und Datenzugriff: Spielpläne,
+				Ergebnisse, Tabellen, E-Mail, Datenbank, Schema-Initialisierung u. v. m. Für Tischtennis
+				und Tennis existieren jeweils spezialisierte Implementierungen.
+			</li>
+			<li>
+				<strong>Provider/Factory (`de.bericht.provider`)</strong> – Auswahl der passenden Implementierung je
+				Sportart bzw. KI-System (z. B. 
+				<code>SpielplanFactory</code>, 
+				<code>KiProviderFactory</code>).
+			</li>
+			<li>
+				<strong>Util (`de.bericht.util`)</strong> – Querschnittsfunktionen, KI-Clients, Konfigurations-Manager,
+				Caching, Bildverarbeitung, WordPress-Client.
+			</li>
+			<li>
+				<strong>Filter (`de.bericht.filter`)</strong> – 
+				<code>IndexForwardFilter</code> für Einstieg/Weiterleitung.
+			</li>
+		</ul>
+		<p>
+			<strong>Mandantenfähigkeit:</strong> Nahezu alle Daten und Einstellungen werden über die Vereinsnummer
+
+			<code>vereinnr</code> getrennt. Die Anmeldung erfolgt mit 
+			<em>Verein + Name + Passwort</em>; optional wird per
+			Cookie-Token dauerhaft angemeldet (Tabelle 
+			<code>login_token</code>). Wird der Name in der Adressliste
+			erkannt, werden zusätzliche Funktionen freigeschaltet.
+		</p>
+		<p>Das Datenbankschema wird beim Start automatisch via 
+			<code>DatabaseSchemaInitializer</code>
+			(„CREATE TABLE IF NOT EXISTS …") angelegt – eine manuelle Migration ist nicht erforderlich.
+		</p>
+		<hr/>
+		<h2 id="projektstruktur">Projektstruktur</h2>
+		<pre><code>SportBericht/
+├── pom.xml
+├── src/main/java/de/bericht/
+│   ├── controller/   # JSF-Backing-Beans (eine je Seite)
+│   ├── service/      # Geschäftslogik &amp; Datenzugriff (Tischtennis/Tennis)
+│   ├── provider/     # Factories/Provider je Sportart bzw. KI
+│   ├── util/         # KI-Clients, Config, Caching, Bild-/Textwerkzeuge
+│   └── filter/       # Servlet-Filter
+└── src/main/webapp/
+    ├── *.xhtml                 # Seiten (index, spielplan, bericht, verfuegbar, …)
+    ├── WEB-INF/                # web.xml, beans.xml, faces-config.xml
+    └── resources/
+        ├── css/styles.css      # zentrales Stylesheet (CSS-Variablen/Theme)
+        ├── js/                 # script.js
+        └── images/</code></pre>
+		<hr/>
+		<h2 id="voraussetzungen">Voraussetzungen</h2>
+		<ul>
+			<li>
+				<strong>JDK 17</strong>
+			</li>
+			<li>
+				<strong>Maven 3.8+</strong>
+			</li>
+			<li>
+				<strong>WildFly</strong> (mit Undertow; konfiguriert für Jakarta EE 10)
+			</li>
+			<li>
+				<strong>MariaDB</strong> (Datenbank + Benutzer für den Verein)
+			</li>
+		</ul>
+		<hr/>
+		<h2 id="build-deployment">Build &amp; Deployment</h2>
+		<h3 id="bauen">Bauen</h3>
+		<pre class="language-bash"><code class="language-bash">mvn clean package</code></pre>
+		<p>Erzeugt 
+			<code>target/SportBericht-6.0.war</code>.
+		</p>
+		<h3 id="deployen">Deployen</h3>
+		<p>Das WAR in WildFly deployen (z. B. nach 
+			<code>$WILDFLY_HOME/standalone/deployments/</code> kopieren
+			oder über die Management-Konsole). Anschließend ist die Anwendung erreichbar unter:
+		</p>
+		<pre><code>http://&lt;host&gt;:8080/SportBericht-6.0/</code></pre>
+		<blockquote>
+			<p>Das mitgelieferte 
+				<code>copy.sh</code> unterstützt das lokale Deployment.
+			</p>
+		</blockquote>
+		<hr/>
+		<h2 id="konfiguration">Konfiguration</h2>
+		<h3 id="datenbankanbindung">Datenbankanbindung</h3>
+		<p>Die Anwendung sucht standardmäßig eine WildFly-DataSource unter dem JNDI-Namen
+
+			<code>java:/jdbc/TischtennisDS</code>. Der Name lässt sich überschreiben:
+		</p>
+		<ul>
+			<li>System-Property 
+				<code>database.jndi</code>, oder
+			</li>
+			<li>Umgebungsvariable 
+				<code>DATABASE_JNDI</code>
+			</li>
+		</ul>
+		<p>Ist keine DataSource verfügbar, kann ein direkter JDBC-Fallback (MariaDB) genutzt werden.</p>
+		<h3 id="vereins-und-integrationskonfiguration">Vereins- und Integrationskonfiguration</h3>
+		<p>Vereinsspezifische Einstellungen liegen in der Tabelle 
+			<code>config</code> (Schlüssel/Wert je
+
+			<code>vereinnr</code>) und werden über die Oberfläche bzw. den 
+			<code>ConfigManager</code> verwaltet. Dazu zählen
+			u. a.:
+		</p>
+		<ul>
+			<li>
+				<strong>KI:</strong> 
+				<code>ki.chatgpt.api</code>, 
+				<code>ki.claudeai.api</code>, 
+				<code>ki.deepseek.api</code>, 
+				<code>ki.gemini.api</code>,
+				Modell- und Prompt-Einstellungen (
+				<code>ki.model.*</code>, 
+				<code>ki.prompt.*</code>, 
+				<code>ki.bericht.wortanzahl</code>)
+			</li>
+			<li>
+				<strong>E-Mail (SMTP):</strong> 
+				<code>mail.smtp.host</code>, 
+				<code>mail.smtp.port</code>, 
+				<code>mail.username</code>, 
+				<code>mail.passwort</code>,
+
+				<code>mail.smtp.auth</code>, 
+				<code>mail.smtp.starttls.enable</code>, Empfänger (
+				<code>mail.*.empfaenger</code>)
+			</li>
+			<li>
+				<strong>SFTP:</strong> 
+				<code>sftp.url</code>, 
+				<code>sftp.port</code>, 
+				<code>sftp.user</code>, 
+				<code>sftp.passwort</code>
+			</li>
+			<li>
+				<strong>Telegram:</strong> 
+				<code>messenger.telegram.api</code>, 
+				<code>messenger.telegram.chatid</code>
+			</li>
+			<li>
+				<strong>WordPress/Homepage:</strong> 
+				<code>homepage.verein</code>, 
+				<code>bericht.zeitung.url</code>, 
+				<code>programm.URL</code>
+			</li>
+			<li>
+				<strong>Darstellung:</strong> 
+				<code>style.farbe</code> (Farb-Hue für das dynamische Theme)
+			</li>
+			<li>
+				<strong>Administration/Freigaben:</strong> 
+				<code>admin.passwort</code>, 
+				<code>bericht.freigabe</code>, 
+				<code>config.berechtigung</code>
+			</li>
+		</ul>
+		<blockquote>
+			<p>
+				<strong>Sicherheit:</strong> API-Schlüssel und Passwörter werden in der Datenbank gehalten. Diese
+				Zugangsdaten gehören nicht ins Repository und sind pro Verein über die Konfiguration zu
+				pflegen.
+			</p>
+		</blockquote>
+		<hr/>
+		<h2 id="datenbank">Datenbank</h2>
+		<p>Das Schema wird automatisch initialisiert. Wesentliche Tabellen (Auszug):</p>
+		<p>| Tabelle | Inhalt |
+			|---------|--------|
+			| 
+			<code>config</code>, 
+			<code>config_html*</code>, 
+			<code>config_gesamtspielplan*</code> | Vereinskonfiguration, HTML-Snippets, Gesamtspielplan-Setup |
+			| 
+			<code>berichte</code>, 
+			<code>berichte_historie</code> | Spielberichte inkl. Versionshistorie |
+			| 
+			<code>adressliste</code>, 
+			<code>adressliste_historie</code> | Mitglieder-/Adressdaten mit Historie |
+			| 
+			<code>aufstellung</code>, 
+			<code>mannschaft</code> | Aufstellungen und Mannschaften |
+			| 
+			<code>spieler_verfuegbarkeit</code>, 
+			<code>spielplan_*</code> | Verfügbarkeiten, Betreuer, Spieler, Kommentare, Tabellen |
+			| 
+			<code>spielcodes</code>, 
+			<code>short_links</code> | Spielcodes und Kurzlinks |
+			| 
+			<code>Hallenbelegung</code>, 
+			<code>spiellokal</code> | Hallenbelegung und Spielstätten |
+			| 
+			<code>VersendeteMails</code>, 
+			<code>login_token</code>, 
+			<code>log_tabelle</code> | Mail-Archiv, dauerhafte Logins, Logging |
+			| 
+			<code>Vorname</code>, 
+			<code>Nachname</code>, 
+			<code>school_holidays</code>, 
+			<code>web_pages</code>, 
+			<code>stilelemente</code>, 
+			<code>doppel</code> | Stammdaten, Ferien, Web-Cache, Stil, Doppel |
+		</p>
+		<hr/>
+		<h2 id="lizenz">Lizenz</h2>
+		<p>
+			<strong>Privat / proprietär – Alle Rechte vorbehalten.</strong>
+		</p>
+		<p>Diese Software ist privates, urheberrechtlich geschütztes Eigentum. Es wird keine Lizenz zur
+			Nutzung, Vervielfältigung, Änderung oder Verbreitung gewährt. Jede Verwendung bedarf der
+			vorherigen ausdrücklichen schriftlichen Genehmigung des Rechteinhabers. Einzelheiten siehe
+
+			<a href="LICENSE">LICENSE</a>.
+		</p>
+		<hr/>
+		<h2 id="hinweise">Hinweise</h2>
+		<ul>
+			<li>Die Oberfläche und Inhalte sind in 
+				<strong>deutscher Sprache</strong>.
+			</li>
+			<li>Unterstützte Sportarten: 
+				<strong>Tischtennis</strong> und 
+				<strong>Tennis</strong> (umschaltbar je Verein über die
+				Konfiguration, siehe 
+				<code>SportartVerein</code>).
+			</li>
+			<li>Rechtliche Angaben sind in der Anwendung unter 
+				<strong>Impressum</strong> hinterlegt.
+			</li>
+		</ul>
+	</body>
+</html>
