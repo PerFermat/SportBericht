@@ -18,8 +18,9 @@
 </h:head>
 
 <h:body>
-	<div class="tabheader-area">
-		<h:outputLink value="#{adresslisteBean.vereinHomepage}" target="_blank">
+	<div class="seitenkopf seitenkopf-navigation">
+		<h:outputLink value="#{adresslisteBean.vereinHomepage}"
+			target="_blank">
 			<img src="#{adresslisteBean.bestimmenIcon}"
 				style="vertical-align: middle;" width="50" />
 		</h:outputLink>
@@ -29,9 +30,8 @@
 		</h:form>
 		<h2>Abteilungsliste – #{adresslisteBean.verein}</h2>
 		<h:form>
-			<p:commandButton
-				value="Zurück"
-				action="#{adresslisteBean.ruecksprung}"	immediate="true"
+			<p:commandButton value="Zurück"
+				action="#{adresslisteBean.ruecksprung}" immediate="true"
 				rendered="#{not empty adresslisteBean.ruecksprung}">
 				<f:param name="vereinnr" value="#{adresslisteBean.vereinnr}" />
 			</p:commandButton>
@@ -41,7 +41,7 @@
 	<h:form id="adresslisteForm">
 		<p:growl id="messages" showDetail="false" />
 
-		<div class="button-container adress-toolbar">
+		<div class="button-leiste adress-toolbar">
 			<div class="adress-toolbar-left"></div>
 			<div class="adress-toolbar-center">
 				<p:commandButton value="Exportiere in PDF"
@@ -68,7 +68,7 @@
 								style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
 								<p:selectBooleanCheckbox
 									value="#{adresslisteBean.sichtbareSpalten[spalte.key]}">
-									<p:ajax update=":adresslisteForm:tabelle" />
+									<p:ajax update=":adresslisteForm:datentabelle" />
 								</p:selectBooleanCheckbox>
 								<h:outputText value="#{spalte.label}" />
 							</div>
@@ -77,8 +77,8 @@
 				</p:overlayPanel>
 			</div>
 		</div>
-		<div class="adressliste-table-scroll">
-			<p:dataTable id="tabelle" widgetVar="adresslisteTable"
+		<div class="scroll-x">
+			<p:dataTable id="datentabelle" widgetVar="adresslisteTable"
 				value="#{adresslisteBean.eintraege}" var="eintrag"
 				filteredValue="#{adresslisteBean.gefilterteEintraege}"
 				rowKey="#{eintrag.id}" sortMode="single"
@@ -254,12 +254,13 @@
 			<p:commandButton value="Cache löschen"
 				actionListener="#{adresslisteBean.refreshAdressCache}"
 				icon="pi pi-refresh" process="@this"
-				update=":adresslisteForm:tabelle :adresslisteForm:messages" />
+				update=":adresslisteForm:datentabelle :adresslisteForm:messages" />
 		</div>
 		<h:outputScript target="body">
 		function applyAdresslisteMobileTitles() {
-			const dataTableBody = document.getElementById('adresslisteForm:tabelle_data');
-			const dataTable = document.getElementById('adresslisteForm:tabelle');
+const dataTableBody = document.getElementById('adresslisteForm:datentabelle_data');
+			const dataTable = document.getElementById('adresslisteForm:datentabelle');
+
 			if (!dataTableBody) {
 				return;
 			}
@@ -286,8 +287,7 @@
 
 		document.addEventListener('DOMContentLoaded', function() {
 			applyAdresslisteMobileTitles();
-
-			const dataTableBody = document.getElementById('adresslisteForm:tabelle_data');
+		const dataTableBody = document.getElementById('adresslisteForm:datentabelle_data');
 			if (!dataTableBody || !window.MutationObserver) {
 				return;
 			}
@@ -340,7 +340,7 @@
 					value="#{adresslisteBean.bearbeiteterEintrag.bemerkung}" rows="3"
 					placeholder="Bemerkung" style="grid-column:1 / -1;" />
 			</div>
-			<div class="button-container">
+			<div class="button-leiste">
 				<h:panelGroup rendered="#{!adresslisteBean.schreibzugriff}">
 					<p:inputText id="editOtp" placeholder="Einmalpasswort"
 						value="#{adresslisteBean.editEinmalpasswortEingabe}" />
@@ -401,7 +401,7 @@
 					value="#{adresslisteBean.neuerEintrag.bemerkung}" rows="3"
 					placeholder="Bemerkung" style="grid-column:1 / -1;" />
 			</div>
-			<div class="button-container">
+			<div class="button-leiste">
 				<h:panelGroup rendered="#{!adresslisteBean.schreibzugriff}">
 					<p:commandButton value="Passwort anfordern"
 						actionListener="#{adresslisteBean.anfordernNeuEinmalpasswort}"
@@ -471,7 +471,7 @@
 					resizeObserver.observe(tableWrapper);
 				}
 
-				var tableBody = document.getElementById('adresslisteForm:tabelle_data');
+				var tableBody = document.getElementById('adresslisteForm:datentabelle_data');
 				if (tableBody) {
 					resizeObserver.observe(tableBody);
 				}

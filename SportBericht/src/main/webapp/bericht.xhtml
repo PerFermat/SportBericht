@@ -23,7 +23,7 @@
 </h:head>
 
 <h:body>
-	<div class="tabheader-area">
+	<div class="seitenkopf seitenkopf-navigation">
 		<h:outputLink value="#{berichtBean.vereinHomepage}" target="_blank">
 			<img src="#{berichtBean.bestimmenIcon}"
 				style="vertical-align: middle;" width="50" />
@@ -46,7 +46,7 @@
 		</h:form>
 
 	</div>
-	<div class="header-area">
+	<div class="seitenkopf">
 		<p:link value="Spielbericht ansehen" target="_blank"
 			href="#{berichtBean.ergebnisLink}"
 			rendered="#{not empty berichtBean.ergebnisLink and berichtBean.ergebnisLink.startsWith('http')}" />
@@ -65,10 +65,10 @@
 
 	<!-- Formular für Bericht und Bild -->
 	<!-- Container, der Eingabefeld und Fehlerbereich sowie die jeweiligen Buttons enthält -->
-	<div class="responsive-container">
+	<div class="bereich layout-zweispaltig">
 		<div class="text-input">
 			<h:form id="berichtForm" enctype="multipart/form-data">
-				<div class="button-container">
+				<div class="button-leiste">
 					<p:commandButton value="Bericht generieren"
 						action="berichtki.xhtml" actionListener="#{berichtBean.speichern}">
 						<f:param name="vereinnr" value="#{berichtBean.vereinnr}" />
@@ -85,14 +85,14 @@
 				</div>
 
 				<!-- Linker Bereich: Texteingabefeld und Button "Bericht generieren" -->
-				<div class="text-container">
+				<div class="textbereich">
 					<h:panelGroup id="textPanel"
 						rendered="#{not empty berichtBean.inBearbeitung}">
 						<div class="responsive-container">
-							<div class="red-container">
-								<div class="text-input">
-									<h:outputText
-										value="#{berichtBean.inBearbeitung}" />
+							<div class="bereich layout-zweispaltig">
+								<div class="hinweis-fehler">
+
+									<h:outputText value="#{berichtBean.inBearbeitung}" />
 								</div>
 							</div>
 						</div>
@@ -129,14 +129,13 @@
 					<h:panelGroup rendered="#{not empty berichtBean.bildUrl}">
 						<h:graphicImage value="#{berichtBean.bildUrl}" width="300" />
 						<p:inputText id="bildUnterschrift"
-							value="#{berichtBean.bildUnterschrift}"
-							styleClass="my-custom-box"
+							value="#{berichtBean.bildUnterschrift}" styleClass="eingabebox"
 							placeholder="Bildunterschrift eingeben..." />
 					</h:panelGroup>
 
 				</div>
 				<div class="text-input">
-					<div class="button-container">
+					<div class="button-leiste">
 						<p:commandButton value="Rechtschreibung prüfen"
 							action="#{berichtBean.pruefeRechtschreibung}"
 							actionListener="#{berichtBean.speichern}"
@@ -161,20 +160,18 @@
 							<f:param name="name" value="#{berichtBean.name}" />
 						</p:commandButton>
 					</div>
-					<div class="text-container">
-
-
+					<div class="textbereich">
 						<p>
 							Gib hier bitte deinen Namen ein und speichere den Bericht ab.
 							Anschließend kann der Bericht versendet werden. <br /> Die
 							E-Mail-Adressen der Empfänger sind im Programm hinterlegt.<br />
 						</p>
 						<p:inputText id="name" value="#{berichtBean.name}"
-							styleClass="my-custom-box" placeholder="Dein Name...">
+							styleClass="eingabebox" placeholder="Dein Name...">
 						</p:inputText>
 					</div>
 					<h:panelGroup rendered="#{empty berichtBean.bildUrl}">
-						<div class="text-container">
+						<div class="textbereich">
 							<p>Bild hochladen:</p>
 							<p>Das gewählte Bild wird bei "Speichern" hochgeladen und
 								angezeigt:</p>
@@ -189,7 +186,7 @@
 					<br />
 				</div>
 
-				<div class="button-container report-action-buttons">
+				<div class="button-leiste report-action-buttons">
 					<p:commandButton value="Speichern"
 						action="#{berichtBean.speichern}"
 						update=":berichtForm, :logForm, :logPanel" />
@@ -371,7 +368,7 @@
 		<!-- Rechter Bereich: Fehleranzeige und Button "Rechtschreibung prüfen" -->
 		<div class="error-table">
 			<h:form id="errorForm" enctype="multipart/form-data">
-				<div class="button-container">
+				<div class="button-leiste">
 					<p:commandButton
 						value="#{berichtBean.spielplan ? 'Spielbericht ausblenden' : 'Spielbericht anzeigen'}"
 						action="#{berichtBean.spielplanAnzeige}"
@@ -402,11 +399,14 @@
 							<p:column headerText="Erklärung">
 								<h:outputText value="#{fehler.erklärung}" escape="false" />
 							</p:column>
-							<p:column headerText="" styleClass="col-bericht">
-								<div class="buttontab-container">
+							<p:column headerText=""
+								styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-bericht">
+								<div class="tabellen-buttonbereich">
+
 									<p:commandButton value="Übernehmen"
 										actionListener="#{berichtBean.korrektur(fehler.fehlerhaftesWort, fehler.vorschlag)}"
-										rendered="#{fehler.button}" styleClass="myButton"
+										rendered="#{fehler.button}"
+										styleClass="button-basis button-vollbreite-links"
 										update=":errorForm, :berichtForm :growl">
 									</p:commandButton>
 								</div>
@@ -440,7 +440,7 @@
 			rendered="#{not empty berichtBean.logEntries}">
 			<p:panel header="Änderungshistorie" toggleable="true"
 				collapsed="true" widgetVar="logPanelWidget">
-				<div class="button-container">
+				<div class="button-leiste">
 					<p:commandButton value="Alter Zustand widerherstellen"
 						action="historien.xhtml" process="@this :berichtForm"
 						rendered="#{berichtBean.historienTimestamps}">

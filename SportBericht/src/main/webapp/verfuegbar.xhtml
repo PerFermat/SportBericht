@@ -135,7 +135,8 @@
 }
 
 .eingabe-z
-.eingabe-zeile .ui-autocomplete, .eingabe-zeile .ui-inputfield {
+.eingabe-zeile .ui-autocomplete, .eingabe-zeile .ui-inputsteuerung-feld
+	{
 	flex: 1 1 320px;
 }
 
@@ -153,10 +154,10 @@
 </h:head>
 
 <h:body>
-	<div class="tabheader-area"></div>
+	<div class="seitenkopf seitenkopf-navigation"></div>
 
 	<h:form>
-		<div class="tabheader-area">
+		<div class="seitenkopf seitenkopf-navigation">
 			<h:outputLink value="#{verfuegbarBean.vereinHomepage}"
 				target="_blank">
 				<img src="#{verfuegbarBean.bestimmenIcon}"
@@ -191,8 +192,8 @@
 				spielen soll, sonst sage ich anderweitig zu.“
 			</p>
 			<p>
-				<a href="#{verfuegbarBean.erzeugeVerfuegbarLink}">Direkter Link zu
-					dieser Vergügbarkeitsplanung</a>
+				<a href="#{verfuegbarBean.erzeugeVerfuegbarLink}">Direkter Link
+					zu dieser Vergügbarkeitsplanung</a>
 
 			</p>
 			<div class="top-spieler">

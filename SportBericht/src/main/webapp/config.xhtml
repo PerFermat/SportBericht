@@ -23,7 +23,7 @@
 </h:head>
 
 <h:body>
-	<div class="tabheader-area">
+	<div class="seitenkopf seitenkopf-navigation">
 		<h:outputLink value="#{configBean.vereinHomepage}" target="_blank">
 			<img src="#{configBean.bestimmenIcon}"
 				style="vertical-align: middle;" width="50" />
@@ -180,7 +180,7 @@
 						</p:selectOneMenu>
 					</ui:fragment>
 					<ui:fragment rendered="#{eintrag.inhaltformatPasswort}">
-						<div class="button4-container button-container-panel-white">
+						<div class="bereich bereich-horizontal-ab-500 hintergrund-weiss">
 							<p:commandButton value="Passwort eingeben"
 								actionListener="#{configBean.openPasswortDialog(eintrag)}"
 								process="@this" immediate="true" update=":passwortDialogForm"
@@ -202,7 +202,7 @@
 
 			</p:dataTable>
 
-			<div class="button4-container report-action-buttons">
+			<div class="bereich bereich-horizontal-ab-500 report-action-buttons">
 				<p:commandButton value="Neuer Key"
 					actionListener="#{configBean.openNeuerKeyDialog}" process="@this"
 					immediate="true" update=":configDialogForm"

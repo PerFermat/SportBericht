@@ -27,7 +27,7 @@
 		<p:growl id="messages" showDetail="true" life="30000" />
 	</h:form>
 
-	<div class="tabheader-area">
+	<div class="seitenkopf seitenkopf-navigation">
 		<h:outputLink value="#{spielplanBean.vereinHomepage}" target="_blank">
 			<img src="#{spielplanBean.bestimmenIcon}"
 				style="vertical-align: middle;" width="50" />
@@ -56,34 +56,40 @@
 	</div>
 
 	<!-- Bestehende Tabelle -->
-	<div class="tabellen-container">
+	<div class="bereich tabellen-scrollbereich">
 		<h:form id="spielplanForm">
 			<p:dataTable value="#{spielplanBean.spiele}" var="spiel" border="1"
-				styleClass="tabelle">
+				styleClass="datentabelle">
 
-				<p:column headerText="Datum" styleClass="col-datum">
+				<p:column headerText="Datum"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-datum">
 					<h:outputText value="#{spiel.datum} " />
 				</p:column>
 
-				<p:column headerText="Liga" styleClass="col-liga"
+				<p:column headerText="Liga"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-liga"
 					rendered="#{empty spielplanBean.liga}">
 
 					<h:outputText value="#{spiel.liga}" />
 				</p:column>
 
-				<p:column headerText="Heimmannschaft" styleClass="col-heim">
+				<p:column headerText="Heimmannschaft"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-mannschaft">
 					<h:outputText value="#{spiel.heim}" />
 				</p:column>
 
-				<p:column headerText="Gastmannschaft" styleClass="col-gast">
+				<p:column headerText="Gastmannschaft"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-mannschaft">
 					<h:outputText value="#{spiel.gast}" />
 				</p:column>
 
-				<p:column headerText="Erg." styleClass="col-ergebnis">
+				<p:column headerText="Erg."
+					styleClass="tabellenspalte tabellenspalte-mitte schrift-responsiv spalte-ergebnis">
 					<h:outputText value="#{spiel.ergebnis}" />
 				</p:column>
 
-				<p:column headerText="" styleClass="col-bilder">
+				<p:column headerText=""
+					styleClass="tabellenspalte tabellenspalte-links spalte-bilder">
 					<!-- Anzeige von bericht.png, falls ein Bericht vorhanden ist -->
 					<br />
 					<div class="image-flex-container">
@@ -112,13 +118,15 @@
 							title="Im s'Blättle Veröffentlicht" />
 					</div>
 				</p:column>
-				<p:column headerText="Bericht" styleClass="col-bericht">
-					<div class="buttontab-container">
+				<p:column headerText="Bericht"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-bericht">
+					<div class="tabellen-buttonbereich">
+
 						<!-- Button "Bericht" wird nur angezeigt, wenn in der Ergebnis-Spalte ein Wert steht -->
 						<p:commandButton value="Bericht" action="bericht.xhtml"
 							ajax="false"
 							rendered="#{not empty spiel.ergebnis and not spielplanBean.hasFreigabe(spiel.ergebnisLink)}"
-							styleClass="myButton"
+							styleClass="button-basis schrift-responsiv  button-vollbreite-links"
 							onclick="setTimeout(function(btn){
     btn.style.opacity='0.7';
     btn.style.pointerEvents='none';
@@ -136,7 +144,7 @@
 						</p:commandButton>
 						<p:commandButton value="Veröffentlichen" action="zusammen.xhtml"
 							rendered="#{not empty spiel.ergebnis and spielplanBean.hasFreigabe(spiel.ergebnisLink)}"
-							styleClass="myButton">
+							styleClass="button-basis schrift-responsiv  button-vollbreite-links">
 							<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 							<f:param name="heim" value="#{spiel.heimEncoded}" />
 							<f:param name="gast" value="#{spiel.gastEncoded}" />
@@ -149,7 +157,7 @@
 						</p:commandButton>
 						<p:menuButton value="Spielinfo"
 							rendered="#{empty spiel.ergebnis and spielplanBean.tischtennis}"
-							styleClass="myButtonLight">
+							styleClass="button-basis button-vollbreite-links button-sekundaer">
 
 							<p:menuitem value="Aufstellung" action="aufstellung.xhtml"
 								icon="pi pi-users">
@@ -202,12 +210,13 @@
 				<br />
 				<h:outputText value="Turnier:" />
 				<p:inputText id="freierText" value="#{spielplanBean.freierText}"
-					styleClass="col-turnier" placeholder="zb. Turniername eingeben ...">
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv-gross spalte-turnier"
+					placeholder="zb. Turniername eingeben ...">
 					<p:ajax update="@form" />
 				</p:inputText>
 				<br />
 				<br />
-				<div class="button4-container button-container-panel-bg">
+				<div class="bereich bereich-horizontal-ab-500 hintergrund-panel">
 					<p:commandButton value="Setzen"
 						rendered="#{empty spielplanBean.berichtDatum or
                              empty spielplanBean.freierText }">
@@ -226,7 +235,7 @@
 						rendered="#{not empty spielplanBean.berichtDatum and
                              not empty spielplanBean.freierText and
                              not spielplanBean.hasFreigabe(spielplanBean.freierLink)}"
-						styleClass="myButtonfrei">
+						styleClass="button-basis button-vollbreite-links">
 						<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 						<f:param name="heim" value="#{spielplanBean.freierText}" />
 						<f:param name="gast" value="#{spielplanBean.berichtDatum} " />
@@ -242,7 +251,7 @@
 						rendered="#{not empty spielplanBean.berichtDatum and
                              not empty spielplanBean.freierText and
                              spielplanBean.hasFreigabe(spielplanBean.freierLink)}"
-						styleClass="myButtonfrei">
+						styleClass="button-basis button-vollbreite-links">
 						<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 						<f:param name="heim" value="#{spielplanBean.freierText}" />
 						<f:param name="gast" value="" />
@@ -258,7 +267,7 @@
 
 		</h:form>
 		<h:form id="configForm" rendered="#{spielplanBean.tischtennis}">
-			<div class="button-container report-action-buttons">
+			<div class="button-leiste report-action-buttons">
 				<p:commandButton value="Impressum" action="impressum.xhtml">
 					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />
 					<f:param name="ruecksprung" value="spielplan.xhtml" />
@@ -274,7 +283,7 @@
 					immediate="true">
 				</p:commandButton>
 			</div>
-			<div class="button-container report-action-buttons">
+			<div class="button-leiste report-action-buttons">
 				<p:commandButton value="Gesamtspielplan"
 					action="gesamtspielplan.xhtml">
 					<f:param name="vereinnr" value="#{spielplanBean.vereinnr}" />

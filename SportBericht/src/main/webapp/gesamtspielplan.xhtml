@@ -17,13 +17,14 @@
 		if (window.history &amp;&amp; window.history.replaceState) {
 			window.history.replaceState(null, document.title, "#{request.contextPath}/");
 		}		
-	</h:outputScript>		
+	</h:outputScript>
 	<h:outputStylesheet name="css/styles.css" />
 </h:head>
 
 <h:body>
-	<div class="tabheader-area">
-		<h:outputLink value="#{gesamtspielplanBean.vereinHomepage}" target="_blank">
+	<div class="seitenkopf seitenkopf-navigation">
+		<h:outputLink value="#{gesamtspielplanBean.vereinHomepage}"
+			target="_blank">
 			<img src="#{gesamtspielplanBean.bestimmenIcon}"
 				style="vertical-align: middle;" width="50" />
 		</h:outputLink>
@@ -33,28 +34,27 @@
 		</h:form>
 		<h2>Gesamtspielplan – #{gesamtspielplanBean.verein}</h2>
 		<h:form>
-			<p:commandButton
-				value="Zurück"
-				action="#{gesamtspielplanBean.ruecksprung}"	immediate="true"
+			<p:commandButton value="Zurück"
+				action="#{gesamtspielplanBean.ruecksprung}" immediate="true"
 				rendered="#{not empty gesamtspielplanBean.ruecksprung}">
 				<f:param name="vereinnr" value="#{gesamtspielplanBean.vereinnr}" />
 			</p:commandButton>
 		</h:form>
 	</div>
 
-	<h:form id="controlsForm" styleClass="controls controls-centered">
+	<h:form id="steuerungForm" styleClass="steuerung steuerung-zentriert">
 		<p:commandButton icon="pi pi-cog" styleClass="config-trigger-button"
 			title="Gesamtspielplan konfigurieren" process="@this"
 			update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
 			oncomplete="PF('gesamtspielplanConfigDialog').show();" />
-		<span class="field">Runde: <p:selectOneMenu
+		<span class="steuerung-feld">Runde: <p:selectOneMenu
 				value="#{gesamtspielplanBean.halbserie}">
 				<p:ajax listener="#{gesamtspielplanBean.ladeGesamtspielplan}"
-					update=":gesamtspielplanForm :controlsForm" process="@this" />
+					update=":gesamtspielplanForm :steuerungForm" process="@this" />
 				<f:selectItems value="#{gesamtspielplanBean.rundenNamen}" />
 			</p:selectOneMenu>
 		</span>
-		<div class="button-container">
+		<div class="button-leiste">
 			<p:commandButton value="PDF herunterladen"
 				actionListener="#{gesamtspielplanBean.prepareDownloadPdf}"
 				process="@this" immediate="true" ajax="false">
@@ -79,7 +79,7 @@
 				<span class="ui-message-warn-detail">Es sind noch keine
 					Spielplan-Daten vorhanden. Bitte zuerst die Konfiguration anlegen.</span>
 			</h:panelGroup>
-			<div class="gesamtspielplan-scroll">
+			<div class="scroll-x">
 				<table class="gesamtspielplan">
 					<thead>
 						<tr>
@@ -300,7 +300,7 @@
 								<div class="gesamt-config-runde">
 									<div class="gesamt-config-header">
 										<h:panelGroup
-											styleClass="gesamt-config-header-fields gesamt-config-runde-fields">
+											styleClass="gesamt-config-header-steuerung-felds gesamt-config-runde-steuerung-felds">
 											<p:inputText value="#{configRunde.name}" placeholder="Name"
 												styleClass="gesamt-config-runde-name" />
 											<p:datePicker value="#{configRunde.datumVon}"
@@ -335,7 +335,7 @@
 										actionListener="#{gesamtspielplanBean.toggleConfigSpalte(configSpalte)}"
 										process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
 										update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent" />
-									<h:panelGroup styleClass="gesamt-config-header-fields">
+									<h:panelGroup styleClass="gesamt-config-header-steuerung-felds">
 										<h:outputText value="Spalte #{configSpalte.spalte}"
 											styleClass="config-spalte-label" />
 										<p:inputText value="#{configSpalte.ligaAnzeige}"
@@ -420,14 +420,14 @@
 							<p:commandButton value="Temporär"
 								actionListener="#{gesamtspielplanBean.applyTempConfig}"
 								process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
-								update=":gesamtspielplanForm :controlsForm"
+								update=":gesamtspielplanForm :steuerungForm"
 								oncomplete="PF('gesamtspielplanConfigDialog').hide();"
 								styleClass="ui-button-secondary" />
 							<p:commandButton value="Einmalpasswort anfordern"
 								actionListener="#{gesamtspielplanBean.anfordernSpeicherEinmalpasswort}"
 								rendered="#{not gesamtspielplanBean.speicherFreigeschaltet}"
 								process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
-								update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent :controlsForm" />
+								update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent :steuerungForm" />
 							<p:inputText
 								value="#{gesamtspielplanBean.speicherEinmalpasswortEingabe}"
 								placeholder="Einmalpasswort"
@@ -436,12 +436,12 @@
 								actionListener="#{gesamtspielplanBean.pruefeSpeicherEinmalpasswort}"
 								rendered="#{gesamtspielplanBean.speicherEinmalpasswortAngefordert and not gesamtspielplanBean.speicherFreigeschaltet}"
 								process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
-								update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent :controlsForm" />
+								update=":gesamtspielplanForm:gesamtspielplanConfigDialogContent :steuerungForm" />
 							<p:commandButton value="Speichern"
 								rendered="#{gesamtspielplanBean.speicherFreigeschaltet}"
 								actionListener="#{gesamtspielplanBean.saveConfig}"
 								process=":gesamtspielplanForm:gesamtspielplanConfigDialogContent"
-								update=":gesamtspielplanForm :controlsForm"
+								update=":gesamtspielplanForm :steuerungForm"
 								oncomplete="PF('gesamtspielplanConfigDialog').hide();" />
 						</div>
 					</h:panelGroup>
@@ -449,10 +449,10 @@
 			</div>
 		</h:form>
 		<h:form id="configForm">
-			<div class="button4-container">
+			<div class="bereich bereich-horizontal-ab-500">
 				<p:commandButton value="Impressum" action="impressum.xhtml">
 					<f:param name="vereinnr" value="#{gesamtspielplanBean.vereinnr}" />
-					<f:param name="ruecksprung" value="gesamtspielplan.xhtml" />					
+					<f:param name="ruecksprung" value="gesamtspielplan.xhtml" />
 				</p:commandButton>
 			</div>
 		</h:form>

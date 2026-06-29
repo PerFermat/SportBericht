@@ -68,7 +68,8 @@
 
 .image-overlay-bottom {
 	bottom: 0;
-	background: linear-gradient(transparent, rgba(0, 0, 0, 1.88)); .
+	background: linear-gradient(transparent, rgba(0, 0, 0, 1.88));
+	.
 }
 
 .overlay-title {
@@ -106,7 +107,7 @@
 </h:head>
 
 <h:body>
-	<div class="tabheader-area">
+	<div class="seitenkopf seitenkopf-navigation">
 		<h:outputLink value="#{bilderBean.vereinHomepage}" target="_blank">
 			<img src="#{bilderBean.bestimmenIcon}"
 				style="vertical-align: middle;" width="50" />
@@ -117,15 +118,13 @@
 		</h:form>
 		<h2>Spieltagsbilder – #{bilderBean.verein}</h2>
 		<h:form>
-			<p:commandButton
-				value="Zurück"
-				action="#{bilderBean.ruecksprung}"	immediate="true"
-				rendered="#{not empty bilderBean.ruecksprung}">
+			<p:commandButton value="Zurück" action="#{bilderBean.ruecksprung}"
+				immediate="true" rendered="#{not empty bilderBean.ruecksprung}">
 				<f:param name="vereinnr" value="#{bilderBean.vereinnr}" />
 			</p:commandButton>
 		</h:form>
 	</div>
-	
+
 	<div class="image-page">
 		<h:form>
 			<ui:repeat value="#{bilderBean.bilderGruppen}" var="gruppe">

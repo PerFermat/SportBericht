@@ -15,7 +15,7 @@
 		type="text/css" />
 	<h:outputStylesheet name="css/styles.css" />
 	<style>
-.tabellen-container {
+.tabellen-scrollbereich {
 	width: 100%;
 	max-width: 1000px;
 	margin: 0 auto;
@@ -36,9 +36,8 @@
 
 .spieler-verfuegbarkeit {
 	font-size: 0.8rem;
-	color: #666;
+	color: var(--farbe-text-sekundaer);
 }
-
 
 @media ( min-width : 992px) {
 	.spieler-kommentar {
@@ -50,7 +49,7 @@
 
 <h:body>
 	<h:form>
-		<div class="tabheader-area">
+		<div class="seitenkopf seitenkopf-navigation">
 			<h:outputLink value="#{aufstellungBean.vereinHomepage}"
 				target="_blank">
 				<img src="#{aufstellungBean.bestimmenIcon}"
@@ -68,7 +67,7 @@
 		</div>
 	</h:form>
 
-	<div class="tabellen-container">
+	<div class="bereich tabellen-scrollbereich">
 		<p:growl id="msgs" showDetail="true" life="3000" />
 
 		<h:panelGroup rendered="#{not empty aufstellungBean.spielInfo}">
@@ -106,7 +105,9 @@
 					<p:inputTextarea value="#{aufstellungBean.spielKommentar}"
 						autoResize="false" rows="3" style="width:100%;"
 						placeholder="Zusätzliche Info:">
-						<p:ajax event="change" listener="#{aufstellungBean.speichernAutomatisch}" process="@this" update=":msgs" />
+						<p:ajax event="change"
+							listener="#{aufstellungBean.speichernAutomatisch}"
+							process="@this" update=":msgs" />
 					</p:inputTextarea>
 				</h:panelGrid>
 				<div class="spieler-zeile">
@@ -119,17 +120,21 @@
 						<div class="spieler-zeile">
 							<p:selectBooleanCheckbox
 								value="#{aufstellungBean.spielerAusgewaehlt[spieler.key]}">
-								<p:ajax event="change" listener="#{aufstellungBean.speichernAutomatisch}" process="@this" update=":msgs" />
+								<p:ajax event="change"
+									listener="#{aufstellungBean.speichernAutomatisch}"
+									process="@this" update=":msgs" />
 							</p:selectBooleanCheckbox>
 							<h:outputText styleClass="spieler-name"
 								value="#{spieler.anzeigeText}" />
 							<h:outputText styleClass="spieler-verfuegbarkeit"
 								rendered="#{not empty aufstellungBean.spielerVerfuegbarkeitHinweis(spieler.key)}"
-								value="#{aufstellungBean.spielerVerfuegbarkeitHinweis(spieler.key)}" />								
+								value="#{aufstellungBean.spielerVerfuegbarkeitHinweis(spieler.key)}" />
 							<p:inputText
 								value="#{aufstellungBean.spielerKommentare[spieler.key]}"
 								placeholder="Zusätzliche Info" styleClass="spieler-kommentar">
-								<p:ajax event="change" listener="#{aufstellungBean.speichernAutomatisch}" process="@this" update=":msgs" />
+								<p:ajax event="change"
+									listener="#{aufstellungBean.speichernAutomatisch}"
+									process="@this" update=":msgs" />
 							</p:inputText>
 						</div>
 					</ui:repeat>

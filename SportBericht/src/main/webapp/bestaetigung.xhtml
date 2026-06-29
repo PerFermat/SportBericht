@@ -23,8 +23,9 @@
 </style>
 </h:head>
 <h:body>
-	<div class="tabheader-area">
-		<h:outputLink value="#{bestaetigungBean.vereinHomepage}" target="_blank">
+	<div class="seitenkopf seitenkopf-navigation">
+		<h:outputLink value="#{bestaetigungBean.vereinHomepage}"
+			target="_blank">
 			<img src="#{bestaetigungBean.bestimmenIcon}"
 				style="vertical-align: middle;" width="50" />
 		</h:outputLink>
@@ -34,19 +35,19 @@
 		</h:form>
 		<h2>Rückmeldung zur Jugendbetreuung</h2>
 		<h:form>
-			<p:commandButton
-				value="Zurück"
-				action="#{bestaetigungBean.ruecksprung}"	immediate="true"
+			<p:commandButton value="Zurück"
+				action="#{bestaetigungBean.ruecksprung}" immediate="true"
 				rendered="#{not empty bestaetigungBean.ruecksprung}">
 				<f:param name="vereinnr" value="#{bestaetigungBean.vereinnr}" />
 			</p:commandButton>
 		</h:form>
 	</div>
 	<div class="bestaetigung-container">
-		<h:form id="bestaetigungForm" styleClass="controls"
+		<h:form id="bestaetigungForm" styleClass="steuerung"
 			rendered="#{not empty bestaetigungBean.eintrag}">
 			<h:panelGroup rendered="#{bestaetigungBean.mailGesendetHinweis}">
-				<div style="margin-bottom:10px; color:#2e7d32; font-weight:bold;">Jugendleiter wurde per Mail informiert!</div>
+				<div style="margin-bottom: 10px; color: #2e7d32; font-weight: bold;">Jugendleiter
+					wurde per Mail informiert!</div>
 			</h:panelGroup>
 			<p:panel header="Spielinformationen">
 				<p>
@@ -76,7 +77,7 @@
 					<p:inputTextarea value="#{bestaetigungBean.zusatzKommentar}"
 						rows="4" autoResize="false" style="width:100%;"
 						placeholder="Sonstiges Eingabefeld" />
-					<div class="button-container"
+					<div class="button-leiste"
 						style="margin-top: 12px; display: flex; flex-direction: column; gap: 10px;">
 						<p:commandButton value="#{bestaetigungBean.bestaetigenText}"
 							action="#{bestaetigungBean.bestaetigen}"
@@ -145,7 +146,7 @@
 			</p:panel>
 		</h:form>
 		<h:panelGroup rendered="#{empty bestaetigungBean.eintrag}">
-			<div class="controls">Ungültiger oder unbekannter UUID-Link.</div>
+			<div class="steuerung">Ungültiger oder unbekannter UUID-Link.</div>
 		</h:panelGroup>
 	</div>
 </h:body>

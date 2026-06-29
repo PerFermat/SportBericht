@@ -13,15 +13,15 @@
 		href="#{request.contextPath}/dynamic-style.css?vereinnr=#{spielCodeParserBean.vereinnr}"
 		type="text/css" />
 	<h:outputStylesheet name="css/styles.css" />
-	<h:outputScript library="js" name="script.js" target="head" />		
-		<h:outputScript target="head">
+	<h:outputScript library="js" name="script.js" target="head" />
+	<h:outputScript target="head">
 		if (window.history &amp;&amp; window.history.replaceState) {
 			window.history.replaceState(null, document.title, "#{request.contextPath}/");
 		}
 	</h:outputScript>
 </h:head>
 <h:body>
-	<div class="tabheader-area">
+	<div class="seitenkopf seitenkopf-navigation">
 		<h:outputLink value="#{spielCodeParserBean.vereinHomepage}"
 			target="_blank">
 			<img src="#{spielCodeParserBean.bestimmenIcon}"
@@ -45,12 +45,14 @@
 	</div>
 
 	<h:form enctype="multipart/form-data">
-		<div class="responsive-container">
+		<div class="bereich layout-zweispaltig">
 			<div class="text-input">
 				<p:growl id="growl" showDetail="true" />
 				<p:panel header="Import aus PDF">
-					<p:panelGrid columns="2" layout="grid" styleClass="ui-fluid" columnClasses="ui-g-3,ui-g-9">
-						<p:outputLabel for="pdfUpload" value="PDF-Datei" style="font-size:0.85rem;" />
+					<p:panelGrid columns="2" layout="grid" styleClass="ui-fluid"
+						columnClasses="ui-g-3,ui-g-9">
+						<p:outputLabel for="pdfUpload" value="PDF-Datei"
+							style="font-size:0.85rem;" />
 						<h:panelGroup id="pdf" layout="block"
 							style="display:flex; align-items:center; width:100%;">
 
@@ -65,10 +67,13 @@
 							</div>
 
 						</h:panelGroup>
-						<p:outputLabel for="dateiname" value="Ausgewählte Datei" style="font-size:0.85rem;" />						<h:outputText id="dateiname"
+						<p:outputLabel for="dateiname" value="Ausgewählte Datei"
+							style="font-size:0.85rem;" />
+						<h:outputText id="dateiname"
 							value="#{spielCodeParserBean.pdfDateiname}" />
 
-						<p:outputLabel for="mannschaft" value="Mannschaft" style="font-size:0.85rem;" />
+						<p:outputLabel for="mannschaft" value="Mannschaft"
+							style="font-size:0.85rem;" />
 						<p:autoComplete id="mannschaft" style="width:100%;"
 							value="#{spielCodeParserBean.mannschaft}"
 							completeMethod="#{spielCodeParserBean.completeMannschaft}"
@@ -77,23 +82,29 @@
 							<p:ajax event="change" update="spielcodeTabelle" />
 						</p:autoComplete>
 
-					<p:outputLabel for="liga" value="Liga" style="font-size:0.85rem;" />
-						<p:autoComplete id="liga" value="#{spielCodeParserBean.liga}" style="width:100%;"							completeMethod="#{spielCodeParserBean.completeLiga}"
+						<p:outputLabel for="liga" value="Liga" style="font-size:0.85rem;" />
+						<p:autoComplete id="liga" value="#{spielCodeParserBean.liga}"
+							style="width:100%;"
+							completeMethod="#{spielCodeParserBean.completeLiga}"
 							dropdown="true" forceSelection="false">
 							<p:ajax event="itemSelect" update="spielcodeTabelle" />
 							<p:ajax event="change" update="spielcodeTabelle" />
 						</p:autoComplete>
 						<p:outputLabel for="replaceDateTime"
-							value="Datum/Uhrzeit bei vorhandenem Spiel ersetzen" style="font-size:0.85rem;" />						<p:selectBooleanCheckbox id="replaceDateTime"
+							value="Datum/Uhrzeit bei vorhandenem Spiel ersetzen"
+							style="font-size:0.85rem;" />
+						<p:selectBooleanCheckbox id="replaceDateTime"
 							value="#{spielCodeParserBean.datumUhrzeitErsetzen}" />
 					</p:panelGrid>
 					<p:commandButton value="Importieren"
 						actionListener="#{spielCodeParserBean.importieren}" update="growl"
 						ajax="false" style="margin-top:10px; margin-left:10px" />
-					<br />						
-					<br />						
-					<p:dataTable id="spielcodeTabelle" value="#{spielCodeParserBean.gefilterteSpielcodeEintraege}"
-						var="eintrag" style="margin-top:16px" emptyMessage="Keine Spielcodes/Pins vorhanden.">
+					<br />
+					<br />
+					<p:dataTable id="spielcodeTabelle"
+						value="#{spielCodeParserBean.gefilterteSpielcodeEintraege}"
+						var="eintrag" style="margin-top:16px"
+						emptyMessage="Keine Spielcodes/Pins vorhanden.">
 						<p:column headerText="Datum">
 							<h:outputText value="#{eintrag.datum}" />
 						</p:column>

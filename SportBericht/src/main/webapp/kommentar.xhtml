@@ -23,7 +23,7 @@
 
 <h:body>
 	<h:form>
-		<div class="tabheader-area">
+		<div class="seitenkopf seitenkopf-navigation">
 			<h:outputLink value="#{kommentarBean.vereinHomepage}" target="_blank">
 				<img src="#{kommentarBean.bestimmenIcon}"
 					style="vertical-align: middle;" width="50" />
@@ -35,7 +35,7 @@
 		</div>
 	</h:form>
 	<br />
-	<div class="responsive-container">
+	<div class="bereich layout-zweispaltig">
 		<div class="text-input">
 			<h:form id="myForm">
 				<p:panelGrid columns="2" layout="grid" style="margin: 0 auto;"
@@ -69,7 +69,7 @@
 			</h:form>
 
 			<h:form id="mainForm">
-				<div class="text-container">
+				<div class="textbereich">
 					<!-- Hauptinhalt: Zwei Spalten -->
 					<h:panelGroup layout="block"
 						style="display: flex; gap: 20px; margin-top: 30px;">
@@ -86,7 +86,8 @@
 											<h:outputText value="#{cmt.content}" escape="false" />
 											<br />
 											<br />
-											<div class="button4-container button-container-panel-bg">
+											<div
+												class="bereich bereich-horizontal-ab-500 hintergrund-panel">
 												<p:commandButton value="Freigeben"
 													action="#{kommentarBean.approveComment(cmt)}"
 													update="mainForm commentsPanel  :growl" />
@@ -114,7 +115,8 @@
 											<h:outputText value="#{cmt.content}" escape="false" />
 											<br />
 											<br />
-											<div class="button4-container button-container-panel-bg">
+											<div
+												class="bereich bereich-horizontal-ab-500 hintergrund-panel">
 												<p:commandButton value="In Spam verschieben"
 													action="#{kommentarBean.markAsSpam(cmt)}"
 													update="mainForm commentsPanel  :growl"
@@ -138,7 +140,8 @@
 											<h:outputText value="#{cmt.content}" escape="false" />
 											<br />
 											<br />
-											<div class="button4-container button-container-panel-bg">
+											<div
+												class="bereich bereich-horizontal-ab-500 hintergrund-panel">
 												<p:commandButton value="Freigeben"
 													action="#{kommentarBean.approveComment(cmt)}"
 													update="mainForm commentsPanel  :growl" />
@@ -161,7 +164,8 @@
 											<h:outputText value="#{cmt.content}" escape="false" />
 											<br />
 											<br />
-											<div class="button4-container button-container-panel-bg">
+											<div
+												class="bereich bereich-horizontal-ab-500 hintergrund-panel">
 												<p:commandButton value="Freigeben"
 													action="#{kommentarBean.approveComment(cmt)}"
 													update="mainForm commentsPanel  :growl" />

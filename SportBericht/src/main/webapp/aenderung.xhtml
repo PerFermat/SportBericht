@@ -21,7 +21,7 @@
 	<h:form id="aenderungForm">
 
 		<!-- Header-Bereich zentriert -->
-		<div class="header-area">
+		<div class="seitenkopf">
 			<h2>Mit KI einen Bericht abändern</h2>
 			<p:link value="Spielbericht ansehen" target="_blank"
 				href="#{aenderungBean.ergebnisLink}"
@@ -40,8 +40,8 @@
 			<br />
 		</div>
 
-		<div class="responsive-container">
-			<div class="text-input">
+		<div class="bereich layout-zweispaltig">
+			<div class="textbereich">
 
 				<!-- Linker Bereich: Texteingabefeld und Button "Bericht generieren" -->
 				<div class="text-container">
@@ -75,18 +75,17 @@
 					<h:outputText value="#{aenderungBean.spielErgebnis}" escape="false"
 						style="display:inline; white-space:normal;" />
 				</div>
-				<div class="text-container">
+				<div class="textbereich">
 					<ui:repeat value="#{aenderungBean.kiAenderungen}" var="a"
 						varStatus="s">
 
-						<p:outputPanel styleClass="row-flex">
-
-							<h:outputText value="#{a.beschreibung}" styleClass="col desc" />
-
+						<p:outputPanel styleClass="formular-zeile">
+							<h:outputText value="#{a.beschreibung}"
+								styleClass="formular-spalte formular-label" />
 
 							<!-- ZAHL als normale Eingabe -->
 							<p:outputPanel rendered="#{a.typ eq 'Zahl'}"
-								styleClass="col input">
+								styleClass="formular-spalte formular-eingabe">
 								<p:inputNumber value="#{a.wert_zahl}" style="width:140px">
 									<f:validator validatorId="zahlValidator" />
 									<f:attribute name="kiAenderung" value="#{a}" />
@@ -96,14 +95,14 @@
 
 							<!-- TEXT -->
 							<p:outputPanel rendered="#{a.typ eq 'Text'}"
-								styleClass="col input">
+								styleClass="formular-spalte formular-eingabe">
 								<p:inputTextarea value="#{a.wert_text}"
 									placeholder="#{a.platzhalter}" rows="2" cols="50"
 									autoResize="true" style="width:100%" />
 							</p:outputPanel>
 
 							<p:outputPanel rendered="#{a.typ eq 'Auswahl'}"
-								styleClass="col input">
+								styleClass="formular-spalte formular-eingabe">
 								<p:selectOneMenu value="#{a.wert_text}" style="width:100%">
 									<f:selectItems value="#{aenderungBean[a.platzhalter]()}" />
 								</p:selectOneMenu>
@@ -117,7 +116,7 @@
 				</div>
 
 				<br />
-				<div class="button-container">
+				<div class="button-leiste">
 					<p:commandButton value="Neue Textversion generieren"
 						action="#{aenderungBean.generieren}" update="@form, :growl"
 						disabled="#{aenderungBean.berichtMannschaft eq null}">
@@ -134,11 +133,11 @@
 						<f:param name="ergebnisLink" value="#{aenderungBean.ergebnisLink}" />
 						<f:param name="uuid" value="#{aenderungBean.uuid}" />
 						<f:param name="liga" value="#{aenderungBean.liga}" />
-						<f:param name="ligaSpiel" value="#{aenderungBean.ligaSpiel}" />						
-						<f:param name="gruppeUrl" value="#{aenderungBean.gruppeUrl}" />								
+						<f:param name="ligaSpiel" value="#{aenderungBean.ligaSpiel}" />
+						<f:param name="gruppeUrl" value="#{aenderungBean.gruppeUrl}" />
 					</p:commandButton>
 				</div>
-				<div class="text-container">
+				<div class="textbereich">
 					<!-- Anzeige, wenn Ergebnislink vorhanden und mit http beginnt -->
 
 					<h4>Generierter Bericht:
@@ -180,7 +179,8 @@
 					<h:outputText value="#{aenderungBean.spielErgebnis}" escape="false"
 						style="display:inline; white-space:normal;" />
 				</div>
-				<div class="button4-container">
+				<div class="bereich bereich-horizontal-ab-500 hintergrund-sekundaer">
+
 					<!-- Speichern-Button -->
 					<p:commandButton value="Bericht übernehmen" action="bericht.xhtml"
 						actionListener="#{aenderungBean.speichern}" immediate="true"
@@ -193,8 +193,8 @@
 						<f:param name="ergebnisLink" value="#{aenderungBean.ergebnisLink}" />
 						<f:param name="uuid" value="#{aenderungBean.uuid}" />
 						<f:param name="liga" value="#{aenderungBean.liga}" />
-						<f:param name="ligaSpiel" value="#{aenderungBean.ligaSpiel}" />						
-						<f:param name="gruppeUrl" value="#{aenderungBean.gruppeUrl}" />							
+						<f:param name="ligaSpiel" value="#{aenderungBean.ligaSpiel}" />
+						<f:param name="gruppeUrl" value="#{aenderungBean.gruppeUrl}" />
 					</p:commandButton>
 
 					<!-- Zurück-Button -->
@@ -208,8 +208,8 @@
 						<f:param name="ergebnisLink" value="#{aenderungBean.ergebnisLink}" />
 						<f:param name="uuid" value="#{aenderungBean.uuid}" />
 						<f:param name="liga" value="#{aenderungBean.liga}" />
-						<f:param name="ligaSpiel" value="#{aenderungBean.ligaSpiel}" />						
-						<f:param name="gruppeUrl" value="#{aenderungBean.gruppeUrl}" />							
+						<f:param name="ligaSpiel" value="#{aenderungBean.ligaSpiel}" />
+						<f:param name="gruppeUrl" value="#{aenderungBean.gruppeUrl}" />
 					</p:commandButton>
 				</div>
 

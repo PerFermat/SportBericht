@@ -20,7 +20,7 @@
 
 <h:body>
 	<h:form>
-		<div class="tabheader-area">
+		<div class="seitenkopf seitenkopf-navigation">
 			<h:outputLink value="#{zusammenBean.vereinHomepage}" target="_blank">
 				<img src="#{zusammenBean.bestimmenIcon}"
 					style="vertical-align: middle;" width="50" />
@@ -77,33 +77,39 @@
 			</p:selectOneMenu>
 		</div>
 	</h:form>
-	<div class="tabellen-container">
+	<div class="bereich tabellen-scrollbereich">
 		<h:form id="tabForm">
 			<p:dataTable value="#{zusammenBean.spieleFreigegeben}" var="spiel"
-				border="1" styleClass="tabelle">
+				border="1" styleClass="datentabelle">
 
-				<p:column headerText="Datum" styleClass="col-datum">
+				<p:column headerText="Datum"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-datum">
 					<h:outputText value="#{spiel.datum}" />
 				</p:column>
 
-				<p:column headerText="Liga" styleClass="col-liga"
+				<p:column headerText="Liga"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-liga"
 					rendered="#{empty zusammenBean.liga}">
 					<h:outputText value="#{spiel.ligaKurz}" />
 				</p:column>
 
-				<p:column headerText="Heimmannschaft" styleClass="col-heim">
+				<p:column headerText="Heimmannschaft"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-mannschaft">
 					<h:outputText value="#{spiel.heim}" />
 				</p:column>
 
-				<p:column headerText="Gastmannschaft" styleClass="col-gast">
+				<p:column headerText="Gastmannschaft"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-mannschaft">
 					<h:outputText value="#{spiel.gast}" />
 				</p:column>
 
-				<p:column headerText="Erg." styleClass="col-ergebnis">
+				<p:column headerText="Erg."
+					styleClass="tabellenspalte tabellenspalte-mitte schrift-responsiv spalte-ergebnis">
 					<h:outputText value="#{spiel.ergebnis}" />
 				</p:column>
 
-				<p:column headerText="" styleClass="col-bilder">
+				<p:column headerText=""
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-bilder">
 					<h:graphicImage library="images" name="bericht.png"
 						rendered="#{zusammenBean.hasBericht(spiel.ergebnisLink)}"
 						style="vertical-align:middle; margin-left:5px;" width="15"
@@ -130,12 +136,13 @@
 						title="Im s'Blättle Veröffentlicht" />
 				</p:column>
 
-				<p:column headerText="Bericht" styleClass="col-bericht">
-					<div class="buttontab-container">
+				<p:column headerText="Bericht"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-bericht">
+					<div class="tabellen-buttonbereich">
 						<p:commandButton value="Veröffentlichen"
 							actionListener="#{zusammenBean.ladeIframe(spiel)}"
 							update="mainForm mainFormbutton" process="@this"
-							styleClass="myButton" />
+							styleClass="button-basis button-vollbreite-links" />
 					</div>
 				</p:column>
 
@@ -143,7 +150,7 @@
 		</h:form>
 	</div>
 	<h:form id="mainFormbutton" enctype="multipart/form-data">
-		<div class="button-container">
+		<div class="button-leiste">
 			<p:commandButton value="In Zwischenablage kopieren" type="button"
 				onclick="kopiereHtmlBericht();"
 				disabled="#{empty zusammenBean.name}" />
@@ -168,13 +175,14 @@
 			</h:outputLink>
 		</div>
 	</h:form>
-	<div class="responsive-container">
+	<div class="bereich layout-zweispaltig">
 		<!-- Linker Bereich: iframe mit veröffentlichen.xhtml -->
 		<div class="text-input">
 			<h:form id="mainForm" enctype="multipart/form-data">
 				<!-- Container, der Eingabefeld und Fehlerbereich sowie die jeweiligen Buttons enthält -->
 				<!-- Linker Bereich: Texteingabefeld und Button "Bericht generieren" -->
-				<div class="text-container">
+				<div class="textbereich">
+
 					<p:outputLabel id="bereichsText"
 						value="#{zusammenBean.berichtAnzeige}" escape="false" />
 					<h:inputHidden id="berichtHidden"
@@ -185,57 +193,53 @@
 					<p:outputLabel id="bildUnterschrift"
 						value="#{zusammenBean.bildUnterschrift}" escape="false" />
 				</div>
-				<div class="text-container">
-					<h:panelGroup id="meinInhaltsBereich"
-						rendered="#{zusammenBean.domain != null}">
-						<div class="text-container">
-							<!-- Eingabefelder für Username und Passwort -->
-							<p:panelGrid columns="2" cellpadding="5">
-								<h:outputLabel for="username" value="Username:" />
-								<h:inputText id="username" value="#{zusammenBean.username}" />
+				<div class="textbereich">
+					<!-- Eingabefelder für Username und Passwort -->
+					<p:panelGrid columns="2" cellpadding="5">
+						<h:outputLabel for="username" value="Username:" />
+						<h:inputText id="username" value="#{zusammenBean.username}" />
 
-								<h:outputLabel for="passwort" value="Passwort:" />
-								<h:inputSecret id="passwort" value="#{zusammenBean.passwort}"
-									redisplay="true" />
-							</p:panelGrid>
-							<br /> <br />
-							<!-- Login-Button: Speichert die Eingaben in der Bean, ohne zu navigieren -->
-							<p:commandButton value="Login" action="#{zusammenBean.login}"
-								update="@form" />
+						<h:outputLabel for="passwort" value="Passwort:" />
+						<h:inputSecret id="passwort" value="#{zusammenBean.passwort}"
+							redisplay="true" />
+					</p:panelGrid>
 
-							<h:outputText value="Gewünschte Kategorien auswählen: " />
-							<p:selectManyMenu value="#{zusammenBean.selectKategorie}">
-								<f:selectItem itemLabel="" itemValue="" noSelectionOption="true" />
-								<f:selectItems value="#{zusammenBean.kategorie}" />
-							</p:selectManyMenu>
-						</div>
-						<h:panelGroup id="updateMitSpielberichte"
-							rendered="#{not empty zusammenBean.ergebnisLink and not zusammenBean.ergebnisLink.startsWith('http')}">
+					<!-- Login-Button: Speichert die Eingaben in der Bean, ohne zu navigieren -->
+					<p:commandButton value="Login"
+						styleClass="button-basis button-vollbreite-links"
+						action="#{zusammenBean.login}" update="@form" />
 
-							<h:outputText
-								value="Bericht soll zusammen mit Spielberichte veröffentlicht werden: " />
-							<p:selectBooleanCheckbox value="#{zusammenBean.mitSpielberichte}">
-								<p:ajax event="change"
-									listener="#{zusammenBean.updateMitSpielberichte}"
-									update="updateMitSpielberichte" />
-							</p:selectBooleanCheckbox>
-						</h:panelGroup>
-						<p:outputPanel id="veroeffentlichtHinweis" layout="block">
-							<h:panelGroup rendered="#{zusammenBean.anzahlWordpress >= 1}">
-								<div class="red-container">
-									<div class="text-input2">
-										<h:outputText
-											value="Achtung: Bericht wurde bereits veröffentlicht" />
-										<br />
-										<h:outputLink value="#{zusammenBean.link}" target="_blank">
+					<h:outputText value="Gewünschte Kategorien auswählen: " />
+					<p:selectManyMenu value="#{zusammenBean.selectKategorie}">
+						<f:selectItem itemLabel="" itemValue="" noSelectionOption="true" />
+						<f:selectItems value="#{zusammenBean.kategorie}" />
+					</p:selectManyMenu>
+					<h:panelGroup id="updateMitSpielberichte"
+						rendered="#{not empty zusammenBean.ergebnisLink and not zusammenBean.ergebnisLink.startsWith('http')}">
+
+						<h:outputText
+							value="Bericht soll zusammen mit Spielberichte veröffentlicht werden: " />
+						<p:selectBooleanCheckbox value="#{zusammenBean.mitSpielberichte}">
+							<p:ajax event="change"
+								listener="#{zusammenBean.updateMitSpielberichte}"
+								update="updateMitSpielberichte" />
+						</p:selectBooleanCheckbox>
+					</h:panelGroup>
+					<p:outputPanel id="veroeffentlichtHinweis" layout="block">
+						<h:panelGroup rendered="#{zusammenBean.anzahlWordpress >= 1}">
+							<div class="hinweis-fehler">
+								<div class="text-input2">
+									<h:outputText
+										value="Achtung: Bericht wurde bereits veröffentlicht" />
+									<br />
+									<h:outputLink value="#{zusammenBean.link}" target="_blank">
 						Anzeige Bericht auf der Homepage
 					</h:outputLink>
-										<br />
-									</div>
+									<br />
 								</div>
-							</h:panelGroup>
-						</p:outputPanel>
-					</h:panelGroup>
+							</div>
+						</h:panelGroup>
+					</p:outputPanel>
 				</div>
 				<br />
 				<br /> Veröffentlichen auf
@@ -244,13 +248,13 @@
 				</h:outputLink>
 				<br />
 				<br />
-				<div class="button-container">
+				<div class="button-leiste">
 					<p:commandButton value="Veröffentlichen"
 						action="#{zusammenBean.veroeffentlichen}"
 						update="veroeffentlichtHinweis logPanel :growl" />
 				</div>
 				<br />
-				<div class="text-container">
+				<div class="textbereich">
 					<h:panelGroup id="logPanel"
 						rendered="#{not empty zusammenBean.logEntries}">
 						<p:panel header="Änderungshistorie" toggleable="true"

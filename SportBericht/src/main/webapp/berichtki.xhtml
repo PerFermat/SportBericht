@@ -19,7 +19,7 @@
 
 <h:body>
 
-	<div class="tabheader-area">
+	<div class="seitenkopf seitenkopf-navigation">
 		<h:outputLink value="#{berichtkiBean.vereinHomepage}" target="_blank">
 			<img src="#{berichtkiBean.bestimmenIcon}"
 				style="vertical-align: middle;" width="50" />
@@ -43,7 +43,7 @@
 
 	</div>
 	<h:form id="kiBerichtForm">
-		<div class="header-area">
+		<div class="seitenkopf">
 			<p:link value="Spielbericht ansehen" target="_blank"
 				href="#{berichtkiBean.ergebnisLink}"
 				rendered="#{not empty berichtkiBean.ergebnisLink and berichtkiBean.ergebnisLink.startsWith('http')}" />
@@ -60,17 +60,17 @@
 			</h3>
 		</div>
 
-		<div class="responsive-container">
+		<div class="bereich layout-zweispaltig">
 			<div class="text-input">
 
-				<div class="text-container">
+				<div class="textbereich">
 					<!-- Hinweise (Text abhängig vom Vorhandensein des Spielberichts) -->
 					<h:outputText value="Was soll im Bericht erwähnt werden: " />
 					<br />
 					<!-- Besondere Vorkommnisse in einem hellblauen Panel -->
 					<p:inputTextarea id="bvBericht"
 						value="#{berichtkiBean.besondereVorkommnisse}" rows="5"
-						styleClass="my-custom-box" />
+						styleClass="eingabebox" />
 					<br />
 					<p:panel header="Erweiterte Einstellungen für den Bericht:"
 						toggleable="true" collapsed="#{berichtkiBean.panelCollapsed}">
@@ -115,7 +115,8 @@
 						<br />
 						<h:outputText
 							value="Es können bis zu 3 verschiedene Stilarten ausgewählt werden (mit Strg+Linke Maustaste) " />
-						<div class="slider-container slider-container-panel-bg">
+						<div
+							class="bereich slider-bereich bereich hintergrund-sekundaer">
 
 							<p:selectManyMenu value="#{berichtkiBean.wirkung}"
 								style="display: block; width: 50%;">
@@ -141,13 +142,14 @@
 						<br />
 						<br />
 						<h:outputText value="Link Spielplan/Tabelle (optional): " />
-						<p:inputText id="tabelleUrl1" value="#{berichtkiBean.tabelleUrl}"
-							styleClass="my-custom-box" />
+						<p:inputText id="datentabelleUrl1"
+							value="#{berichtkiBean.tabelleUrl}" styleClass="eingabebox" />
+
 						<br />
 						<br />
 						<h:outputText value="Link Bilanzen (optional): " />
 						<p:inputText id="bilanzUrl1" value="#{berichtkiBean.bilanzUrl}"
-							styleClass="my-custom-box" />
+							styleClass="eingabebox" />
 						<br />
 						<br />
 					</p:panel>
@@ -170,17 +172,18 @@
 						<br />
 						<p:inputTextarea id="freiPrompt"
 							value="#{berichtkiBean.jahresrueckblickPrompt}" rows="10"
-							styleClass="my-custom-box" />
+							styleClass="eingabebox" />
 						<br />
 						<br />
 						<h:outputText value="Link Spielplan/Tabelle (optional): " />
-						<p:inputText id="tabelleUrl" value="#{berichtkiBean.tabelleUrl}"
-							styleClass="my-custom-box" />
+						<p:inputText id="datentabelleUrl"
+							value="#{berichtkiBean.datentabelleUrl}" styleClass="eingabebox" />
+
 						<br />
 						<br />
 						<h:outputText value="Link Bilanzen (optional): " />
 						<p:inputText id="bilanzUrl" value="#{berichtkiBean.bilanzUrl}"
-							styleClass="my-custom-box" />
+							styleClass="eingabebox" />
 						<br />
 						<br />
 					</p:panel>
@@ -196,13 +199,13 @@
 						<br />
 						<p:inputTextarea id="zusammenfassenPrompt"
 							value="#{berichtkiBean.zusammenfassenPrompt}" rows="10"
-							styleClass="my-custom-box" />
+							styleClass="eingabebox" />
 						<br />
 						<br />
 						<h:outputText
 							value="Folgende Berichte zusammenfassen (mit Strg+Linke Maustaste) " />
 						<div
-							class="slider-container slider-container-panel-bg bericht-layout">
+							class="bereich slider-bereich bereich slider-bereich-panel-bg bericht-layout">
 
 							<!-- LINKS -->
 							<div class="bericht-menu">
@@ -348,7 +351,7 @@ Empfohlen:   <br />
 					</p:panel>
 				</div>
 				<br />
-				<div class="button-container">
+				<div class="button-leiste">
 					<p:commandButton value="Bericht generieren"
 						action="#{berichtkiBean.generieren}" update="@form, :growl"
 						disabled="#{berichtkiBean.berichtMannschaft eq null}">
@@ -373,7 +376,7 @@ Empfohlen:   <br />
 				<br />
 				<ui:repeat value="#{berichtkiBean.berichtText}" var="spiel"
 					varStatus="status">
-					<div class="text-container">
+					<div class="textbereich">
 						<h:panelGroup id="berichtTitel">
 							<h4>Generierter Bericht: #{spiel.variante}</h4>
 						</h:panelGroup>
@@ -385,7 +388,8 @@ Empfohlen:   <br />
 							autoResize="false" />
 						<br />
 
-						<div class="button4-container button-container-panel-gray">
+						<div
+							class="bereich bereich-horizontal-ab-500 hintergrund-sekundaer">
 							<!-- Speichern-Button -->
 							<p:commandButton value="Bericht übernehmen"
 								action="bericht.xhtml"

@@ -18,14 +18,15 @@
 
 <h:body>
 	<h:form>
-		<div class="tabheader-area">
+		<div class="seitenkopf seitenkopf-navigation">
 			<h:outputLink value="#{zusammenGesamtBean.vereinHomepage}"
 				target="_blank">
 				<img src="#{zusammenGesamtBean.bestimmenIcon}"
 					style="vertical-align: middle;" width="50" />
 			</h:outputLink>
 			<h2>Veröffentlichen #{zusammenGesamtBean.liga}</h2>
-			<p:commandButton value="Zurück" action="#{zusammenGesamtBean.ruecksprung}" immediate="true" >
+			<p:commandButton value="Zurück"
+				action="#{zusammenGesamtBean.ruecksprung}" immediate="true">
 				<f:param name="vereinnr" value="#{zusammenGesamtBean.vereinnr}" />
 				<f:param name="liga" value="#{zusammenGesamtBean.liga}" />
 				<f:param name="gruppeUrl" value="#{zusammenGesamtBean.gruppeUrl}" />
@@ -56,11 +57,14 @@
 		</div>
 	</h:form>
 	<!-- Bestehende Tabelle -->
-	<div class="tabellen-container">
+	<div class="bereich tabellen-scrollbereich">
 		<h:form id="liste">
 			<p:dataTable value="#{zusammenGesamtBean.spieleFreigegeben}"
-				var="spiel" border="1" styleClass="tabelle">
-				<p:column styleClass="col-bilder" style="text-align: center;">
+				var="spiel" border="1" styleClass="datentabelle">
+				<p:column
+					styleClass="tabellenspalte tabellenspalte-links spalte-bilder"
+					style="text-align: center;">
+
 					<p:commandButton icon="pi pi-arrow-up"
 						title="Nach oben verschieben"
 						actionListener="#{zusammenGesamtBean.moveUp(spiel)}"
@@ -73,26 +77,33 @@
 						update="@form" rendered="#{!zusammenGesamtBean.isLast(spiel)}"
 						styleClass="p-button-sm p-button-text" />
 				</p:column>
-				<p:column headerText="Datum" styleClass="col-datum">
+				<p:column headerText="Datum"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-datum">
 					<h:outputText value="#{spiel.datum} " />
 				</p:column>
 
-				<p:column headerText="Liga" styleClass="col-liga" rendered="#{empty zusammenGesamtBean.liga}">
+				<p:column headerText="Liga"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-liga"
+					rendered="#{empty zusammenGesamtBean.liga}">
 					<h:outputText value="#{spiel.ligaKurz}" />
 				</p:column>
 
-				<p:column headerText="Heimmannschaft" styleClass="col-heim">
+				<p:column headerText="Heimmannschaft"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-mannschaft">
 					<h:outputText value="#{spiel.heim}" />
 				</p:column>
 
-				<p:column headerText="Gastmannschaft" styleClass="col-gast">
+				<p:column headerText="Gastmannschaft"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-mannschaft">
 					<h:outputText value="#{spiel.gast}" />
 				</p:column>
 
-				<p:column headerText="Erg." styleClass="col-ergebnis">
+				<p:column headerText="Erg."
+					styleClass="tabellenspalte tabellenspalte-mitte schrift-responsiv spalte-ergebnis">
 					<h:outputText value="#{spiel.ergebnis}" />
 				</p:column>
-				<p:column headerText="Bild" styleClass="col-datum">
+				<p:column headerText="Bild"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-bilder">					
 					<h:panelGroup layout="block"
 						style="position: relative; display: inline-block;"
 						rendered="#{spiel.bildUrl!=null}">
@@ -102,7 +113,7 @@
 
 						<!-- Download-Button -->
 						<p:commandButton icon="pi pi-download" title="Bild herunterladen"
-							styleClass="dark-mode-download-button"
+							styleClass="button-bild-download"
 							actionListener="#{zusammenGesamtBean.prepareDownloadBild(spiel.ergebnisLink, spiel)}"
 							ajax="false">
 							<p:fileDownload value="#{zusammenGesamtBean.downloadBild}" />
@@ -110,7 +121,8 @@
 
 					</h:panelGroup>
 				</p:column>
-				<p:column headerText="" styleClass="col-bilder">
+				<p:column headerText=""
+					styleClass="tabellenspalte tabellenspalte-links spalte-bilder">
 					<!-- Anzeige von bericht.png, falls ein Bericht vorhanden ist -->
 					<h:graphicImage library="images" name="bericht.png"
 						rendered="#{zusammenGesamtBean.hasBericht(spiel.ergebnisLink)}"
@@ -132,7 +144,8 @@
 						style="vertical-align:middle; margin-left:10px;" width="15"
 						title="Veröffentlicht" />
 				</p:column>
-				<p:column headerText="Auswählen" styleClass="col-bericht">
+				<p:column headerText="Auswählen"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-bericht">
 					<p:selectBooleanCheckbox value="#{spiel.wahl}">
 						<p:ajax process="@this" />
 					</p:selectBooleanCheckbox>
@@ -141,17 +154,17 @@
 			</p:dataTable>
 		</h:form>
 		<h:form id="meinFormular">
-			<div class="button-container">
+			<div class="button-leiste">
 				<p:commandButton value="Berichte zusammenfassen"
 					action="#{zusammenGesamtBean.berichtupd}" update="@form" />
 			</div>
-			<div class="responsive-container">
+			<div class="bereich layout-zweispaltig">
 				<div class="text-input">
-					<div class="button-container">
+					<div class="button-leiste">
 						<p:commandButton value="In Zwischenablage kopieren" type="button"
 							onclick="kopiereHtmlBerichtZusammen();" />
 					</div>
-					<div class="text-container">
+					<div class="textbereich">
 						<h:inputText id="ueberschrift"
 							value="#{zusammenGesamtBean.ueberschrift}"
 							style="font-size: 1.5em;">
@@ -165,7 +178,7 @@
 						<h:inputHidden id="berichtHidden"
 							value="#{zusammenGesamtBean.berichteUeberschrift}" />
 					</div>
-					<div class="text-container">
+					<div class="textbereich">
 
 						<!-- Eingabefelder für Username und Passwort -->
 						<p:panelGrid columns="2" cellpadding="5">
@@ -178,10 +191,9 @@
 						</p:panelGrid>
 
 						<!-- Login-Button: Speichert die Eingaben in der Bean, ohne zu navigieren -->
-						<p:commandButton value="Login"
+						<p:commandButton value="Login" styleClass="button-basis button-vollbreite-links"
 							action="#{zusammenGesamtBean.login}" update="@form" />
 
-						<br /> <br />
 						<h:outputText value="Gewünschte Kategorien auswählen: " />
 						<p:selectManyMenu value="#{zusammenGesamtBean.selectKategorie}">
 							<f:selectItem itemLabel="" itemValue="" noSelectionOption="true" />
@@ -193,7 +205,7 @@
    						 #{zusammenGesamtBean.domain}
 					</h:outputLink>
 					<br />
-					<div class="button-container">
+					<div class="button-leiste">
 						<p:commandButton value="Veröffentlichen"
 							action="#{zusammenGesamtBean.veroeffentlichen}"
 							update="@form :growl" />

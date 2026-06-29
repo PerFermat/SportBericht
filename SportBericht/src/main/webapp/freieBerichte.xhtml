@@ -18,12 +18,12 @@
 		if (window.history &amp;&amp; window.history.replaceState) {
 			window.history.replaceState(null, document.title, "#{request.contextPath}/");
 		}
-	</h:outputScript>	
+	</h:outputScript>
 	<link rel="icon" type="image/ico" href="resources/images/favicon.ico" />
 </h:head>
 
 <h:body>
-	<div class="tabheader-area">
+	<div class="seitenkopf seitenkopf-navigation">
 		<h:outputLink value="#{freieBerichteBean.vereinHomepage}"
 			target="_blank">
 			<img src="#{spielplanBean.bestimmenIcon}"
@@ -36,15 +36,16 @@
 
 		<h2>Freie Berichte</h2>
 		<h:form>
-			<div class="button-container">
+
+			<div class="button-leiste">
 				<p:commandButton value="Veröffentlichen"
 					action="zusammenGesamt.xhtml">
 					<f:param name="vereinnr" value="#{freieBerichteBean.vereinnr}" />
 					<f:param name="gruppeUrl" value="#{freieBerichteBean.gruppeUrl}" />
 					<f:param name="frei" value="Ja" />
 				</p:commandButton>
-				<p:commandButton value="Zurück" action="liga.xhtml"
-					immediate="true" rendered="#{freieBerichteBean.tennis}">
+				<p:commandButton value="Zurück" action="liga.xhtml" immediate="true"
+					rendered="#{freieBerichteBean.tennis}">
 					<f:param name="vereinnr" value="#{freieBerichteBean.vereinnr}" />
 				</p:commandButton>
 				<p:commandButton value="Zurück" action="spielplan.xhtml"
@@ -57,26 +58,31 @@
 	</div>
 
 	<!-- Bestehende Tabelle -->
-	<div class="tabellen-container">
-		<h:form id="tabelleForm">
-			<p:dataTable id="tabelle" value="#{freieBerichteBean.spiele}"
-				var="spiel" border="1" styleClass="tabelle">
-				<p:column headerText="Löschen" styleClass="col-bericht">
-					<p:commandButton value="Löschen" styleClass="myButton"
+	<div class="bereich tabellen-scrollbereich">
+		<h:form id="datentabelleForm">
+			<p:dataTable id="datentabelle" value="#{freieBerichteBean.spiele}"
+				var="spiel" border="1" styleClass="datentabelle">
+				<p:column headerText="Löschen"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-bericht">
+					<p:commandButton value="Löschen"
+						styleClass="button-basis button-vollbreite-links"
 						action="#{freieBerichteBean.loeschen(spiel.ergebnisLink)}"
-						update="tabelleForm:tabelle" process="@this">
+						update="datentabelleForm:datentabelle" process="@this">
+
 					</p:commandButton>
 				</p:column>
 
-				<p:column headerText="Datum" styleClass="col-datum">
+				<p:column headerText="Datum"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-datum">
 					<h:outputText value="#{spiel.datum} " />
 				</p:column>
 
 				<p:column headerText="Name des Freien Berichts"
-					styleClass="col-heim">
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-mannschaft">
 					<h:outputText value="#{spiel.heim}" />
 				</p:column>
-				<p:column headerText="" styleClass="col-bilder">
+				<p:column headerText=""
+					styleClass="tabellenspalte tabellenspalte-links spalte-bilder">
 					<!-- Anzeige von bericht.png, falls ein Bericht vorhanden ist -->
 					<br />
 					<h:graphicImage library="images" name="bericht.png"
@@ -103,12 +109,14 @@
 						style="vertical-align:middle; margin-left:10px;" width="15"
 						title="Im s'Blättle Veröffentlicht" />
 				</p:column>
-				<p:column headerText="Bericht" styleClass="col-bericht">
-					<div class="buttontab-container">
+				<p:column headerText="Bericht"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-bericht">
+					<div class="tabellen-buttonbereich">
+
 						<!-- Button "Bericht" wird nur angezeigt, wenn in der Ergebnis-Spalte ein Wert steht -->
 						<p:commandButton value="Bericht" action="bericht.xhtml"
 							rendered="#{not freieBerichteBean.hasFreigabe(spiel.ergebnisLink)}"
-							styleClass="myButton">
+							styleClass="button-basis button-vollbreite-links">
 							<f:param name="vereinnr" value="#{freieBerichteBean.vereinnr}" />
 							<f:param name="heim" value="#{spiel.heim}" />
 							<f:param name="gast" value="#{spiel.gast}" />
@@ -116,11 +124,11 @@
 							<f:param name="ergebnis" value="#{spiel.ergebnis}" />
 							<f:param name="ergebnisLink" value="#{spiel.ergebnisLink}" />
 							<f:param name="liga" value="#{spiel.liga}" />
-							<f:param name="gruppeUrl" value="#{freieBerichteBean.gruppeUrl}" />							
+							<f:param name="gruppeUrl" value="#{freieBerichteBean.gruppeUrl}" />
 						</p:commandButton>
 						<p:commandButton value="Veröffentlichen" action="zusammen.xhtml"
 							rendered="#{freieBerichteBean.hasFreigabe(spiel.ergebnisLink)}"
-							styleClass="myButton">
+							styleClass="button-basis button-vollbreite-links">
 							<f:param name="vereinnr" value="#{freieBerichteBean.vereinnr}" />
 							<f:param name="heim" value="#{spiel.heim}" />
 							<f:param name="gast" value="#{spiel.gast}" />
@@ -151,7 +159,8 @@
 				<br />
 				<h:outputText value="Turnier:" />
 				<p:inputText id="freierText" value="#{freieBerichteBean.freierText}"
-					styleClass="col-turnier" placeholder="zb. Turniername eingeben ...">
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv-gross spalte-turnier"
+					placeholder="zb. Turniername eingeben ...">
 					<p:ajax update="@form" />
 				</p:inputText>
 				<br />
@@ -165,7 +174,7 @@
 					rendered="#{not empty freieBerichteBean.berichtDatum and
                              not empty freieBerichteBean.freierText and
                              not freieBerichteBean.hasFreigabe(freieBerichteBean.freierLink)}"
-					styleClass="myButtonfrei">
+					styleClass="button-basis button-vollbreite-links">
 					<f:param name="vereinnr" value="#{freieBerichteBean.vereinnr}" />
 					<f:param name="heim" value="#{freieBerichteBean.freierText}" />
 					<f:param name="gast" value="#{freieBerichteBean.berichtDatum} " />
@@ -179,7 +188,7 @@
 					rendered="#{not empty freieBerichteBean.berichtDatum and
                              not empty freieBerichteBean.freierText and
                              freieBerichteBean.hasFreigabe(freieBerichteBean.freierLink)}"
-					styleClass="myButtonfrei">
+					styleClass="button-basis button-vollbreite-links">
 					<f:param name="vereinnr" value="#{freieBerichteBean.vereinnr}" />
 					<f:param name="heim" value="#{freieBerichteBean.freierText}" />
 					<f:param name="gast" value="" />

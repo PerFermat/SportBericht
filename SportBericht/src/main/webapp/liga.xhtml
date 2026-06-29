@@ -23,7 +23,7 @@
 </h:head>
 
 <h:body>
-	<div class="tabheader-area">
+	<div class="seitenkopf seitenkopf-navigation">
 		<h:outputLink value="#{ligaBean.vereinHomepage}" target="_blank">
 			<img src="#{ligaBean.bestimmenIcon}" style="vertical-align: middle;"
 				width="50" />
@@ -45,36 +45,43 @@
 	</div>
 
 	<!-- Bestehende Tabelle -->
-	<div class="tabellen-container">
+	<div class="bereich tabellen-scrollbereich">
 		<h:form>
 			<p:dataTable value="#{ligaBean.ligen}" var="liga" border="1"
-				styleClass="tabelle">
+				styleClass="datentabelle">
 
-				<p:column headerText="Runde" styleClass="col-heim">
+				<p:column headerText="Runde"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-mannschaft">
 					<h:outputText value="#{liga.runde} " />
 				</p:column>
 
-				<p:column headerText="Mannschaftsführer" styleClass="col-heim">
+				<p:column headerText="Mannschaftsführer"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-mannschaft">
 					<h:outputText value="#{liga.mannschaftsführer}" />
 				</p:column>
 
-				<p:column headerText="Gruppe" styleClass="col-heim">
+				<p:column headerText="Gruppe"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-mannschaft">
 					<h:outputText value="#{liga.liga}" />
 				</p:column>
 
-				<p:column headerText="Rang" styleClass="col-ergebnis">
+				<p:column headerText="Rang"
+					styleClass="tabellenspalte tabellenspalte-mitte schrift-responsiv spalte-ergebnis">
 					<h:outputText value="#{liga.rang}" />
 				</p:column>
 
-				<p:column headerText="Punkte" styleClass="col-ergebnis">
+				<p:column headerText="Punkte"
+					styleClass="tabellenspalte tabellenspalte-mitte schrift-responsiv spalte-ergebnis">
 					<h:outputText value="#{liga.punkte}" />
 				</p:column>
 
-				<p:column headerText="Bericht" styleClass="col-bericht">
-					<div class="buttontab-container">
+				<p:column headerText="Bericht"
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-bericht">
+					<div class="tabellen-buttonbereich">
+
 						<!-- Button "Bericht" wird nur angezeigt, wenn in der Ergebnis-Spalte ein Wert steht -->
 						<p:commandButton value="Auswählen" action="spielplan.xhtml"
-							styleClass="myButton">
+							styleClass="button-basis button-vollbreite-links">
 							<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
 							<f:param name="gruppeUrl" value="#{liga.gruppeUrl}" />
 							<f:param name="liga" value="#{liga.liga}" />
@@ -87,7 +94,7 @@
 		<!-- Neue feste Zeile über der Tabelle -->
 
 		<h:form id="configForm">
-			<div class="button-container">
+			<div class="button-leiste">
 				<p:commandButton value="Config ändern" action="config.xhtml">
 					<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
 				</p:commandButton>
@@ -98,15 +105,15 @@
 				<br />
 				<p:commandButton value="Abmelden"
 					action="#{ligaBean.cookieLoeschenUndZumLogin}" ajax="false"
-					immediate="true" >						
+					immediate="true">
 				</p:commandButton>
-				<br />				
+				<br />
 				<p:commandButton value="Impressum" action="impressum.xhtml">
 					<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
 					<f:param name="ruecksprung" value="liga.xhtml" />
 				</p:commandButton>
 			</div>
-			<div class="button-container">
+			<div class="button-leiste">
 				<p:commandButton value="Gesamtspielplan"
 					action="gesamtspielplan.xhtml">
 					<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
@@ -119,7 +126,8 @@
 					<f:param name="ruecksprung" value="liga.xhtml" />
 				</p:commandButton>
 				<br />
-				<p:commandButton value="FTP-PDFs" action="ftp.xhtml"  rendered="#{ligaBean.ftp}" >
+				<p:commandButton value="FTP-PDFs" action="ftp.xhtml"
+					rendered="#{ligaBean.ftp}">
 					<f:param name="vereinnr" value="#{ligaBean.vereinnr}" />
 					<f:param name="ruecksprung" value="liga.xhtml" />
 				</p:commandButton>
@@ -134,7 +142,7 @@
 					<f:param name="ruecksprung" value="liga.xhtml" />
 				</p:commandButton>
 				<br />
-			</div>			
+			</div>
 		</h:form>
 	</div>
 </h:body>

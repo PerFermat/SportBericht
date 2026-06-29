@@ -116,7 +116,6 @@ public class BerichtBean implements Serializable {
 		ladeBerichtInformationen();
 		ladeBerichtStatus();
 		ladeIgnorierteWoerter();
-
 	}
 
 	private void ladeIgnorierteWoerter() {

@@ -71,7 +71,11 @@ ftpBean
 
 
 
+
+
 .parserAusgabeCss
+
+
 
 
 
@@ -99,7 +103,7 @@ ftpBean
 </h:head>
 
 <h:body>
-	<div class="tabheader-area">
+	<div class="seitenkopf seitenkopf-navigation">
 		<h:outputLink value="#{ftpBean.vereinHomepage}" target="_blank">
 			<img src="#{ftpBean.bestimmenIcon}" style="vertical-align: middle;"
 				width="50" />
@@ -116,7 +120,7 @@ ftpBean
 			</p:commandButton>
 		</h:form>
 	</div>
-	<div class="responsive-container ftp-split-scroll">
+	<div class="bereich layout-zweispaltig ftp-split-scroll">
 		<div class="text-input">
 			<h:form id="ftpForm" enctype="multipart/form-data">
 				<p:messages id="messages" showDetail="true" closable="true" />
@@ -154,7 +158,7 @@ ftpBean
 							rendered="#{not ftpBean.hallenThemaAusgewaehlt and ftpBean.adminFreigabe}" />
 					</div>
 					<div class="text-input">
-						<div class="text-container">
+						<div class="textbereich">
 							<p:tabView id="ausgabeTabs">
 								<p:tab title="E-Mail schreiben"
 									rendered="#{ftpBean.hallenThemaAusgewaehlt}">
