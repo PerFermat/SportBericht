@@ -23,6 +23,7 @@ Konfiguration, Zugangsdaten und sogar das Farbschema je Verein getrennt verwalte
 - [Build & Deployment](#build--deployment)
 - [Konfiguration](#konfiguration)
 - [Datenbank](#datenbank)
+- [Lizenz](#lizenz)
 - [Hinweise](#hinweise)
 
 ---
@@ -217,6 +218,17 @@ Das Schema wird automatisch initialisiert. Wesentliche Tabellen (Auszug):
 | `Hallenbelegung`, `spiellokal` | Hallenbelegung und Spielstätten |
 | `VersendeteMails`, `login_token`, `log_tabelle` | Mail-Archiv, dauerhafte Logins, Logging |
 | `Vorname`, `Nachname`, `school_holidays`, `web_pages`, `stilelemente`, `doppel` | Stammdaten, Ferien, Web-Cache, Stil, Doppel |
+
+---
+
+## Lizenz
+
+**Privat / proprietär – Alle Rechte vorbehalten.**
+
+Diese Software ist privates, urheberrechtlich geschütztes Eigentum. Es wird keine Lizenz zur
+Nutzung, Vervielfältigung, Änderung oder Verbreitung gewährt. Jede Verwendung bedarf der
+vorherigen ausdrücklichen schriftlichen Genehmigung des Rechteinhabers. Einzelheiten siehe
+[LICENSE](LICENSE).
 
 ---
 
