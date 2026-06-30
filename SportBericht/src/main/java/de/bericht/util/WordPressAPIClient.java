@@ -113,10 +113,10 @@ public class WordPressAPIClient {
 				// - kein "align":"center" mehr im JSON
 				// - figure-Klasse enthält "aligncenter size-large"
 				String imageBlock = "<!-- wp:image {\"id\":" + media.getMediaId()
-						+ ",\"sizeSlug\":\"large\",\"linkDestination\":\"none\"} -->"
-						+ "<figure class=\"wp-block-image size-large aligncenter\">" + "<img src=\""
-						+ escapeHtml(media.getUrl()) + "\"" + altText + " />" + figcaption
-						+ "</figure><!-- /wp:image -->";
+						+ ",\"sizeSlug\":\"full\",\"linkDestination\":\"none\"} -->"
+						+ "<figure class=\"wp-block-image size-full aligncenter\">" + "<img src=\""
+						+ escapeHtml(media.getUrl()) + "\"" + altText + " style=\"width:100%;height:auto;\" />"
+						+ figcaption + "</figure><!-- /wp:image -->";
 
 				inhalt = inhalt.replace("[BILD" + i + "]", imageBlock);
 				inhalt = inhalt.replace("[UNTERSCHRIFT" + i + "]", escapeHtml(bild.getBildUnterschrift()));
@@ -145,7 +145,6 @@ public class WordPressAPIClient {
 		String url = this.domain + "/wp-json/wp/v2/posts";
 		WordpressBeitragsbildOption bildVariante = WordpressBeitragsbildOption
 				.fromConfig(ConfigManager.getWordpressValue(vereinnr, name, "beitragsbild"));
-
 
 		String escapedUeberschrift = ueberschrift.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
 		String escapedInhalt = BerichtHelper.convertQuillClassesToInlineStyles(inhalt);
