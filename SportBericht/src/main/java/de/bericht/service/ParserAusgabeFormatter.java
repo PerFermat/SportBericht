@@ -26,7 +26,7 @@ public final class ParserAusgabeFormatter {
 
 	private static final List<SuchbegriffFarbe> SUCHBEGRIFFE_FARBEN = List.of(
 
-			new SuchbegriffFarbe("Halle", "Mo,Fr", "halle", SuchbegriffCss.HALLE,
+			new SuchbegriffFarbe("Halle", "Mo,Fr", "halle", SuchbegriffCss.ROT,
 					List.of(TerminStatus.TERMINOK, TerminStatus.TERMINFEHLT, TerminStatus.NICHT_RELEVANT,
 							TerminStatus.UEBERPRUEFE)),
 
@@ -34,23 +34,23 @@ public final class ParserAusgabeFormatter {
 					List.of(TerminStatus.TERMINOK, TerminStatus.TERMINFEHLT, TerminStatus.NICHT_RELEVANT,
 							TerminStatus.UEBERPRUEFE)),
 
-			new SuchbegriffFarbe("Tischtennis", "Mo,Fr", "tischtennis", SuchbegriffCss.TISCHTENNIS,
+			new SuchbegriffFarbe("Tischtennis", "Mo,Fr", "tischtennis", SuchbegriffCss.GRUEN,
 					List.of(TerminStatus.TERMINOK, TerminStatus.TERMINFEHLT, TerminStatus.NICHT_RELEVANT,
 							TerminStatus.UEBERPRUEFE)),
 
-			new SuchbegriffFarbe("TT-", "Mo,Fr", "tischtennis", SuchbegriffCss.TISCHTENNIS,
+			new SuchbegriffFarbe("TT-", "Mo,Fr", "tischtennis", SuchbegriffCss.GRUEN,
 					List.of(TerminStatus.TERMINOK, TerminStatus.TERMINFEHLT, TerminStatus.NICHT_RELEVANT,
 							TerminStatus.UEBERPRUEFE)),
 
-			new SuchbegriffFarbe("Tischtennis", "Di,Mi,Do,Sa,So", "tischtennis", SuchbegriffCss.TISCHTENNIS,
+			new SuchbegriffFarbe("Tischtennis", "Di,Mi,Do,Sa,So", "tischtennis", SuchbegriffCss.GRUEN,
 					List.of(TerminStatus.TERMINOK, TerminStatus.TERMINFEHLT, TerminStatus.HALLE_FREIGEBEN,
 							TerminStatus.NICHT_RELEVANT, TerminStatus.UEBERPRUEFE)),
 
-			new SuchbegriffFarbe("TT-", "Di,Mi,Do,Sa,So", "tischtennis", SuchbegriffCss.TISCHTENNIS,
+			new SuchbegriffFarbe("TT-", "Di,Mi,Do,Sa,So", "tischtennis", SuchbegriffCss.GRUEN,
 					List.of(TerminStatus.TERMINOK, TerminStatus.TERMINFEHLT, TerminStatus.HALLE_FREIGEBEN,
 							TerminStatus.NICHT_RELEVANT, TerminStatus.UEBERPRUEFE)),
 
-			new SuchbegriffFarbe("Heimspiel", "heimspiel", "heimspiel", SuchbegriffCss.HEIMSPIEL,
+			new SuchbegriffFarbe("Heimspiel", "heimspiel", "heimspiel", SuchbegriffCss.BLAU,
 					List.of(TerminStatus.SPIELTAG_OK, TerminStatus.SPIELTAG_KRITISCH, TerminStatus.HALLE_FREIGEBEN,
 							TerminStatus.NICHT_RELEVANT, TerminStatus.UEBERPRUEFE)),
 
@@ -58,8 +58,7 @@ public final class ParserAusgabeFormatter {
 					List.of(TerminStatus.TERMINOK, TerminStatus.TERMINFEHLT, TerminStatus.NICHT_RELEVANT,
 							TerminStatus.UEBERPRUEFE)),
 
-			new SuchbegriffFarbe("Manuell", "manuell", "manuell", SuchbegriffCss.MANUELL,
-					List.of(TerminStatus.values())));
+			new SuchbegriffFarbe("Manuell", "manuell", "manuell", SuchbegriffCss.GRAU, List.of(TerminStatus.values())));
 
 	public static boolean sucheBegriff(String text, String wochentag) {
 

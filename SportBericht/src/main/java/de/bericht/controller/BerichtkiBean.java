@@ -53,6 +53,10 @@ import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItem;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import jakarta.enterprise.concurrent.ManagedExecutorService;
+import javax.naming.InitialContext;
+
+import org.primefaces.PrimeFaces;
 
 @Named
 @ViewScoped
@@ -105,6 +109,23 @@ public class BerichtkiBean implements Serializable {
 	private int berichtgroesse = 150; // Standardwert
 	private DatabaseService dbService = new DatabaseService();
 	OpenAIModelFetcher modelle;
+
+	/** Asynchrone KI-Generierung: läuft die Generierung gerade im Hintergrund? */
+	private volatile boolean generierungLaeuft = false;
+	/** Ergebnis liegt vor, wurde aber noch nicht in der Oberfläche angezeigt. */
+	private volatile boolean generierungFertig = false;
+	/** Im Hintergrund-Thread gesammelte Meldungen, die der Poll später als Growl anzeigt. */
+	private final List<FacesMessage> hintergrundMeldungen = Collections.synchronizedList(new ArrayList<>());
+	/** Managed Executor (transient, weil nicht serialisierbar) – per JNDI nachgeladen. */
+	private transient ManagedExecutorService executor;
+
+	/** Während der Generierung angezeigter Tipp (rotiert alle 15 s zufällig). */
+	private String aktuellerTipp = "";
+	/** Zeitpunkt (ms) des letzten Tipp-Wechsels. */
+	private long tippWechselZeit = 0;
+	/** Zwischenspeicher der aus der DB geladenen Tipps. */
+	private transient List<String> tipps;
+	private static final long TIPP_INTERVALL_MS = 15000;
 
 	public BerichtkiBean() {
 		Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
@@ -217,21 +238,54 @@ public class BerichtkiBean implements Serializable {
 	public void generieren() {
 		if (wirkungen.isEmpty()) {
 
-			FacesContext.getCurrentInstance().addMessage(null,
+			addMsg(
 					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Kein Schreibstil ausgewählt"));
 			oeffnePanel();
 			return;
 		}
 		if (wirkungen.size() > 3) {
 
-			FacesContext.getCurrentInstance().addMessage(null,
+			addMsg(
 					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Zu viele Schreibstile ausgewählt"));
 			oeffnePanel();
 			return;
 		}
 
-		Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
-		String prompt = params.get("prompt");
+		if (generierungLaeuft) {
+			return; // Läuft bereits – Doppelklick ignorieren
+		}
+
+		// prompt-Parameter im Request-Thread lesen (im Hintergrund-Thread ist kein FacesContext verfügbar)
+		final String prompt = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap()
+				.get("prompt");
+
+		ManagedExecutorService mes = getExecutor();
+		if (mes == null) {
+			addMsg(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
+					"Hintergrund-Ausführung nicht verfügbar (ManagedExecutorService)."));
+			return;
+		}
+
+		// Ausgewählte Stilarten sichern und die Auswahl zurücksetzen, damit der User bei einem
+		// zweiten Versuch bewusst neue Stilarten auswählen muss (die Validierung oben greift dann).
+		final List<String> wirkungenKopie = new ArrayList<>(this.wirkungen);
+		this.wirkungen = new ArrayList<>();
+
+		// Bereits erstellte Berichte NICHT löschen – sie bleiben während der Generierung sichtbar.
+		hintergrundMeldungen.clear();
+		generierungFertig = false;
+		generierungLaeuft = true;
+		rotiereTipp(); // ersten Tipp sofort anzeigen
+		mes.execute(() -> generiereImHintergrund(prompt, wirkungenKopie));
+	}
+
+	/**
+	 * Führt die eigentliche (lange) KI-Generierung im Hintergrund aus. Läuft NICHT im
+	 * Request-Thread – daher kein FacesContext; Meldungen werden gesammelt und später vom
+	 * Status-Poll ({@link #pruefeGenerierung()}) als Growl angezeigt.
+	 */
+	private void generiereImHintergrund(String prompt, List<String> wirkungen) {
+		try {
 		SpielergebnisProvider provider = null;
 		if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 			try {
@@ -239,10 +293,10 @@ public class BerichtkiBean implements Serializable {
 						ergebnisLink, namensSpeicher);
 				// namensSpeicher.fuelleNamensspeicher(vereinnr, provider, namensSpeicher);
 
-				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
+				addMsg( new FacesMessage(FacesMessage.SEVERITY_INFO,
 						"Erfolgreich", "Spielbericht -> Json - Erfolgreich"));
 			} catch (Exception e) {
-				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+				addMsg( new FacesMessage(FacesMessage.SEVERITY_ERROR,
 						"Fehler", "Spielbericht konnte nicht gelesen werden " + e.getMessage()));
 			}
 		}
@@ -260,13 +314,13 @@ public class BerichtkiBean implements Serializable {
 				ObjectMapper objectMapper = new ObjectMapper();
 				jsonSpielplan = objectMapper.writeValueAsString(mappedList);
 				ObjectMapper mapper = new ObjectMapper();
-				FacesContext.getCurrentInstance().addMessage(null,
+				addMsg(
 						new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Spielplan -> Json - Erfolgreich"));
 				if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 					besondereSonder = "* Berücksichtige im Bericht die kommenden Spiele. \n" + besondereSonder;
 				}
 			} catch (Exception e) {
-				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+				addMsg( new FacesMessage(FacesMessage.SEVERITY_ERROR,
 						"Fehler", "Spielplan konnte nicht gelesen werden " + e.getMessage()));
 			}
 		}
@@ -283,14 +337,14 @@ public class BerichtkiBean implements Serializable {
 				ObjectMapper objectMapper = new ObjectMapper();
 				jsonBilanz = objectMapper.writeValueAsString(bil);
 				ObjectMapper mapper = new ObjectMapper();
-				FacesContext.getCurrentInstance().addMessage(null,
+				addMsg(
 						new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Bilanzen -> Json - Erfolgreich"));
 				if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 					besondereSonder = "* Berücksichtige im Bericht aussergewöhnlich gute Bilanzen. \n"
 							+ besondereSonder;
 				}
 			} catch (Exception e) {
-				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+				addMsg( new FacesMessage(FacesMessage.SEVERITY_ERROR,
 						"Fehler", "Bilanzen konnte nicht gelesen werden " + e.getMessage()));
 			}
 		}
@@ -302,14 +356,14 @@ public class BerichtkiBean implements Serializable {
 				ObjectMapper objectMapper = new ObjectMapper();
 				jsonTabelle = objectMapper.writeValueAsString(tab);
 				ObjectMapper mapper = new ObjectMapper();
-				FacesContext.getCurrentInstance().addMessage(null,
+				addMsg(
 						new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Tabelle -> Json - Erfolgreich"));
 				if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 					besondereSonder = "* Berücksichtige im Bericht die Tabellenposition und die Position der kommenden Gegner. "
 							+ besondereSonder;
 				}
 			} catch (Exception e) {
-				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+				addMsg( new FacesMessage(FacesMessage.SEVERITY_ERROR,
 						"Fehler", "Tabelle konnte nicht gelesen werden " + e.getMessage()));
 			}
 		}
@@ -319,7 +373,7 @@ public class BerichtkiBean implements Serializable {
 			try {
 				json = prettyJson("Spielbericht", provider.summaryToJson());
 			} catch (Exception e) {
-				FacesContext.getCurrentInstance().addMessage(null,
+				addMsg(
 						new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Parsen Spielplan " + e.getMessage()));
 			}
 		} else {
@@ -360,7 +414,7 @@ public class BerichtkiBean implements Serializable {
 		try {
 			stilrichtung = "```json\n" + stil.stilvariationen(vereinnr, wirkungen) + "\n```";
 		} catch (Exception e) {
-			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
+			addMsg( new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
 					"Stilvariationen to Json " + e.getMessage()));
 		}
 
@@ -412,25 +466,35 @@ public class BerichtkiBean implements Serializable {
 				antworten = "Keine KI-Generierung mehr Möglich. Zu viele Anfragen für diesen Bericht oder es wurde an die KI keine Frage gestellt";
 				dbService.saveLogData(vereinnr, ergebnisLink, "KI", "KI-Bericht erfolglos", "", frage);
 			}
-			FacesContext.getCurrentInstance().addMessage(null,
+			addMsg(
 					new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Aufruf ChatGPT "));
 		} catch (Exception e) {
 			antworten = fehlerRohtext("Fehler beim Aufruf ChatGPT", antworten, e);
-			FacesContext.getCurrentInstance().addMessage(null,
+			addMsg(
 					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Aufruf ChatGPT " + e.getMessage()));
 		}
 		// Antworten abrufen und ausgeben
 
+		// Neue Berichte an die bereits vorhandenen anhängen (alte bleiben sichtbar).
+		// Über eine neue Liste + Referenzwechsel, damit der parallele Poll keine
+		// halb-aktualisierte Liste sieht.
+		List<Spielbericht> neu = new ArrayList<>(this.berichtText);
 		if (namensSpeicher == null) {
-			this.berichtText.addAll(parsenSpielberichte(antworten));
+			neu.addAll(parsenSpielberichte(antworten));
 			ersetzungen = "";
 		} else {
 			// Antworten abrufen und ausgeben
-			this.berichtText.addAll(parsenSpielberichte(namensSpeicher.rueckuebersetzen(antworten)));
+			neu.addAll(parsenSpielberichte(namensSpeicher.rueckuebersetzen(antworten)));
+			ersetzungen = namensSpeicher.zeigeAlle();
 		}
-		ersetzungen = namensSpeicher.zeigeAlle();
-		wirkungen.clear();
-
+		this.berichtText = neu;
+		} catch (Exception e) {
+			hintergrundMeldungen.add(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
+					"KI-Generierung fehlgeschlagen: " + (e.getMessage() == null ? e.toString() : e.getMessage())));
+		} finally {
+			generierungFertig = true;
+			generierungLaeuft = false;
+		}
 	}
 
 	public static String prettyJson(String ueberschrift, String eingabe) {
@@ -669,6 +733,77 @@ public class BerichtkiBean implements Serializable {
 
 	public void updBearbeitung() {
 		dbService.verarbeiteEintrag(vereinnr, name, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
+	}
+
+	/**
+	 * Fügt eine Meldung thread-sicher hinzu: im Request-Thread direkt an den FacesContext,
+	 * im Hintergrund-Thread (kein FacesContext) gesammelt für die spätere Anzeige per Poll.
+	 */
+	private void addMsg(FacesMessage message) {
+		FacesContext ctx = FacesContext.getCurrentInstance();
+		if (ctx != null) {
+			ctx.addMessage(null, message);
+		} else {
+			hintergrundMeldungen.add(message);
+		}
+	}
+
+	/** Lazy-Lookup des ManagedExecutorService (transient wegen Serializable). */
+	private ManagedExecutorService getExecutor() {
+		if (executor == null) {
+			try {
+				executor = (ManagedExecutorService) new InitialContext()
+						.lookup("java:comp/DefaultManagedExecutorService");
+			} catch (Exception e) {
+				System.err.println("ManagedExecutorService nicht gefunden: " + e.getMessage());
+				return null;
+			}
+		}
+		return executor;
+	}
+
+	/**
+	 * Status-Poll: prüft, ob die Hintergrund-Generierung fertig ist. Wenn ja, werden die
+	 * gesammelten Meldungen als Growl übernommen und dem Client per Callback-Param signalisiert,
+	 * dass der Poll gestoppt werden kann.
+	 */
+	public void pruefeGenerierung() {
+		// Tipp alle 15 Sekunden wechseln, solange noch generiert wird
+		if (generierungLaeuft && System.currentTimeMillis() - tippWechselZeit >= TIPP_INTERVALL_MS) {
+			rotiereTipp();
+		}
+		boolean fertig = !generierungLaeuft && generierungFertig;
+		if (fertig) {
+			FacesContext ctx = FacesContext.getCurrentInstance();
+			synchronized (hintergrundMeldungen) {
+				for (FacesMessage m : hintergrundMeldungen) {
+					ctx.addMessage(null, m);
+				}
+				hintergrundMeldungen.clear();
+			}
+			generierungFertig = false; // konsumiert
+		}
+		PrimeFaces.current().ajax().addCallbackParam("fertig", fertig);
+	}
+
+	public boolean isGenerierungLaeuft() {
+		return generierungLaeuft;
+	}
+
+	/** Wählt einen zufälligen Tipp aus der Datenbank (lädt die Liste bei Bedarf). */
+	private void rotiereTipp() {
+		if (tipps == null) {
+			tipps = dbService.listeTipps();
+		}
+		if (tipps == null || tipps.isEmpty()) {
+			return;
+		}
+		aktuellerTipp = tipps.get((int) (Math.random() * tipps.size()));
+		tippWechselZeit = System.currentTimeMillis();
+	}
+
+	public String getAktuellerTipp() {
+		return aktuellerTipp;
 	}
 
 	public String getWirkungBeispiel() {

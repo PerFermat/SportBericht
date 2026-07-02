@@ -801,6 +801,22 @@ public class DatabaseService {
 
 	}
 
+	/** Liefert alle aktiven Tipps (für die Anzeige während der KI-Generierung). */
+	public List<String> listeTipps() {
+		String sql = "SELECT text FROM tipps WHERE aktiv = 1";
+		List<String> tipps = new ArrayList<>();
+		try (Connection conn = openConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				tipps.add(rs.getString("text"));
+			}
+			rs.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return tipps;
+	}
+
 	public void deleteBericht(String vereinnr, String ergebnisLink) {
 		String sql = "Delete FROM berichte where vereinnr = ? and ergebnisLink = ? ";
 

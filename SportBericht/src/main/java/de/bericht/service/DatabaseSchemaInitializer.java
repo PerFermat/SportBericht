@@ -45,6 +45,7 @@ public final class DatabaseSchemaInitializer {
 					stmt.execute(sql);
 				}
 				createMissingIndexes(conn);
+				seedTipps(conn);
 				INITIALIZED.set(true);
 			} catch (SQLException e) {
 				throw new IllegalStateException("Fehler beim Initialisieren des Datenbankschemas", e);
@@ -118,6 +119,7 @@ public final class DatabaseSchemaInitializer {
 
 	private static List<String> createStatements() {
 		return List.of(
+				"CREATE TABLE IF NOT EXISTS tipps (id INT NOT NULL AUTO_INCREMENT, text VARCHAR(500) NOT NULL, aktiv TINYINT(1) NOT NULL DEFAULT 1, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 				"CREATE TABLE IF NOT EXISTS Nachname (Name VARCHAR(600) NOT NULL, PRIMARY KEY (Name)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
 				"CREATE TABLE IF NOT EXISTS Vorname (Name VARCHAR(600) NOT NULL, Geschlecht CHAR(1) DEFAULT NULL, PRIMARY KEY (Name)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
 				"CREATE TABLE IF NOT EXISTS adressliste (id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(100) NOT NULL, vorname VARCHAR(100) NOT NULL, geburtstag DATE DEFAULT NULL, strasse VARCHAR(150) DEFAULT NULL, plz VARCHAR(10) DEFAULT NULL, wohnort VARCHAR(150) DEFAULT NULL, telefon_privat VARCHAR(150) DEFAULT NULL, telefon_gesch VARCHAR(150) DEFAULT NULL, telefon_mobil VARCHAR(150) DEFAULT NULL, email_privat VARCHAR(150) DEFAULT NULL, email_gesch VARCHAR(150) DEFAULT NULL, bemerkung TEXT DEFAULT NULL, erstellt_am TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP, aktualisiert_am TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, vereinnr VARCHAR(10) DEFAULT NULL, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
@@ -169,6 +171,79 @@ public final class DatabaseSchemaInitializer {
 				"ALTER TABLE berichte_historie ADD COLUMN IF NOT EXISTS ergebnis VARCHAR(100) DEFAULT NULL",
 				"ALTER TABLE berichte_historie MODIFY COLUMN timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
 				"ALTER TABLE config_gesamtspielplan_mannschaft ADD COLUMN IF NOT EXISTS spieler TEXT DEFAULT NULL");
+	}
+
+	/**
+	 * Befüllt die Tabelle {@code tipps} einmalig mit Standard-Tipps, falls sie noch
+	 * leer ist. Vom Nutzer bearbeitete/gelöschte Tipps werden dadurch nicht
+	 * überschrieben.
+	 */
+	private static void seedTipps(Connection conn) throws SQLException {
+		try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM tipps")) {
+			if (rs.next() && rs.getInt(1) > 0) {
+				return; // bereits befüllt
+			}
+		}
+
+		StringBuilder sql = new StringBuilder("INSERT INTO tipps (text) VALUES ");
+		List<String> tipps = standardTipps();
+		for (int i = 0; i < tipps.size(); i++) {
+			if (i > 0) {
+				sql.append(", ");
+			}
+			sql.append("('").append(tipps.get(i).replace("'", "''")).append("')");
+		}
+
+		try (Statement stmt = conn.createStatement()) {
+			stmt.executeUpdate(sql.toString());
+		}
+	}
+
+	/**
+	 * Standard-Tipps, die das gesamte Programm betreffen (werden nur beim ersten
+	 * Start geseedet).
+	 */
+	private static List<String> standardTipps() {
+		return List.of(
+				"Probiere verschiedene Schreibstile aus – du findest sie unter \"Erweiterte Einstellungen für den Bericht\".",
+				"Füge besondere Bemerkungen hinzu, um die Berichte persönlicher zu machen.",
+				"Du kannst bis zu 3 Stilarten gleichzeitig auswählen und die Ergebnisse vergleichen.",
+				"Eine höhere Temperatur macht die Berichte kreativer, eine niedrigere sachlicher.",
+				"Über die Berichtgröße steuerst du, wie lang der generierte Text wird.",
+				"Lade passende Bilder hoch – ein gutes Foto macht jeden Bericht attraktiver.",
+				"Pflege deine Adresse regelmäßig, damit alle Kontaktdaten aktuell bleiben.",
+				"In der Adressliste zeigt dir das Info-Symbol schnell alle Details eines Mitglieds.",
+				"Trage die Verfügbarkeit der Spieler ein, um die Aufstellung leichter zu planen.",
+				"Über Bestätigungslinks melden Jugendbetreuer schnell zurück, ob sie einen Termin übernehmen.",
+				"Der Gesamtspielplan zeigt dir alle Mannschaften und Runden auf einen Blick.",
+				"Schaue im Gesamtspielplan nach, wann du mit der betreuer der Jugend dran bist.",
+				"In der Historie siehst du alle Änderungen an einem Bericht und kannst alte widerherstellen.",
+				"Über die Zwischenablage kopierst du SpielCodes mit einem einzigen Klick.",
+				"Versendete Mails werden archiviert – du findest sie jederzeit wieder.",
+				"Formuliere die besonderen Vorkommnisse konkret, dann greift die KI sie besser auf.",
+				"Ein aussagekräftiger Titel macht deinen Bericht in der Zeitung ansprechender.",
+				"Kontrolliere die Tabellenposition – die KI kann sie im Bericht berücksichtigen.",
+				"Binde den Spielplan ein, dann kann die KI die kommenden Gegner erwähnen.",
+				"Besonders gute Bilanzen kann die KI hervorheben, wenn du sie mitlieferst.",
+				"Wähle das passende KI-Modell je nach gewünschter Qualität und Geschwindigkeit.",
+				"Prüfe den generierten Text immer noch einmal, bevor du ihn übernimmst.",
+				"Du kannst mehrere Berichte zu einer Zusammenfassung kombinieren.",
+				"Für einen Jahresrückblick lassen sich mehrere Berichte gemeinsam auswerten.",
+				"Speichere einen Bericht erst, wenn du mit dem Stil zufrieden bist.",
+				"Nutze die freien Berichte für Texte, die nicht zu einem einzelnen Spiel gehören.",
+				"Kommentare zu Spielen helfen, wichtige Details festzuhalten.",
+				"Die Verfügbarkeitsübersicht im Gesamtspielplan zeigt dir sofort, wie viele Spieler zugesagt haben.",
+				"Ein persönlicher Ton in den Bemerkungen macht den Bericht lebendiger.",
+				"Vergleiche mehrere Stilvarianten und wähle die beste für die Veröffentlichung.",
+				"Nutze die erweiterten Einstellungen, um Kreativität und Sachlichkeit auszubalancieren.",
+				"Kürzere Berichte eignen sich gut für die Zeitung, längere für die Homepage.",
+				"Beschneide die Bilder vor dem Upload, damit sie auch online scharf bleiben.",
+				"Wenn ein Bericht nicht passt, starte einfach einen neuen Versuch mit anderem Stil.",
+				"Die KI arbeitet am besten mit klaren und konkreten Vorgaben.",
+				"Wenn du ein Bericht selber schreibst oder abänderst, verwende die Rechtschreibkorrektur",
+				"Verwende 'Bericht mit KI verbessern', die Ki macht Vorschläge für die Verbesserung des Berichts.",
+				"Verwende 'Bericht mit KI ändern', um bestimmte Aspekte eines Berichts abzuändern.",
+				"Gib der KI Kontext: je mehr passende Daten du einbindest, desto treffender der Bericht.");
 	}
 
 	private static void createMissingIndexes(Connection conn) throws SQLException {

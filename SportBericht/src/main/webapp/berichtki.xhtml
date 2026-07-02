@@ -345,6 +345,7 @@ Empfohlen:   <br />
 						<br />
 						<p:commandButton value="Nur KI-Prompt erzeugen"
 							action="#{berichtkiBean.generieren}" update="@form , :growl"
+							oncomplete="PF('genPoll').start()"
 							disabled="#{berichtkiBean.berichtMannschaft eq null}">
 							<f:param name="prompt" value="true" />
 						</p:commandButton>
@@ -354,6 +355,7 @@ Empfohlen:   <br />
 				<div class="button-leiste">
 					<p:commandButton value="Bericht generieren"
 						action="#{berichtkiBean.generieren}" update="@form, :growl"
+						oncomplete="PF('genPoll').start()"
 						disabled="#{berichtkiBean.berichtMannschaft eq null}">
 						<f:param name="prompt" value="false" />
 					</p:commandButton>
@@ -374,6 +376,17 @@ Empfohlen:   <br />
 				</div>
 
 				<br />
+				<p:outputPanel id="ergebnisBereich">
+				<h:panelGroup layout="block"
+					rendered="#{berichtkiBean.generierungLaeuft}"
+					styleClass="ki-generierung-hinweis">
+					<i class="pi pi-spin pi-spinner" />&#160; Bericht wird generiert … bitte warten.
+					<h:panelGroup layout="block" styleClass="ki-tipp"
+						rendered="#{not empty berichtkiBean.aktuellerTipp}">
+						<i class="pi pi-lightbulb" />&#160;
+						<h:outputText value="#{berichtkiBean.aktuellerTipp}" />
+					</h:panelGroup>
+				</h:panelGroup>
 				<ui:repeat value="#{berichtkiBean.berichtText}" var="spiel"
 					varStatus="status">
 					<div class="textbereich">
@@ -431,6 +444,7 @@ Empfohlen:   <br />
 						</div>
 					</div>
 				</ui:repeat>
+				</p:outputPanel>
 			</div>
 			<div class="error-table">
 
@@ -455,6 +469,12 @@ Empfohlen:   <br />
 			</div>
 		</div>
 
+		<!-- Status-Poll für die asynchrone KI-Generierung: aktualisiert das
+		     Ergebnis + Growl, sobald die Hintergrund-Generierung fertig ist. -->
+		<p:poll widgetVar="genPoll" interval="3" autoStart="false"
+			listener="#{berichtkiBean.pruefeGenerierung}"
+			update="ergebnisBereich :growl"
+			oncomplete="if (args &amp;&amp; args.fertig) PF('genPoll').stop()" />
 	</h:form>
 	<h:form prependId="false">
 		<p:growl id="growl" showDetail="true" life="6000" />
