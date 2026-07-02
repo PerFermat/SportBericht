@@ -266,17 +266,22 @@ public class BerichtkiBean implements Serializable {
 			return;
 		}
 
-		// Ausgewählte Stilarten sichern und die Auswahl zurücksetzen, damit der User bei einem
-		// zweiten Versuch bewusst neue Stilarten auswählen muss (die Validierung oben greift dann).
-		final List<String> wirkungenKopie = new ArrayList<>(this.wirkungen);
+		hintergrundMeldungen.clear();
+
+		// Prompt + Namensersetzungen SOFORT (synchron) aufbauen, damit die rechte Spalte
+		// ("Die KI wurde mit folgender Anweisung gefüttert" + "Verwendete Namensersetzungen")
+		// bereits vor dem KI-Aufruf gefüllt ist. Das übernimmt der @form-Update des Buttons.
+		final String besondere = bauePrompt(this.wirkungen);
+
+		// Ausgewählte Stilarten zurücksetzen, damit der User bei einem zweiten Versuch
+		// bewusst neue Stilarten auswählen muss (die Validierung oben greift dann).
 		this.wirkungen = new ArrayList<>();
 
 		// Bereits erstellte Berichte NICHT löschen – sie bleiben während der Generierung sichtbar.
-		hintergrundMeldungen.clear();
 		generierungFertig = false;
 		generierungLaeuft = true;
 		rotiereTipp(); // ersten Tipp sofort anzeigen
-		mes.execute(() -> generiereImHintergrund(prompt, wirkungenKopie));
+		mes.execute(() -> generiereImHintergrund(prompt, besondere));
 	}
 
 	/**
@@ -284,8 +289,12 @@ public class BerichtkiBean implements Serializable {
 	 * Request-Thread – daher kein FacesContext; Meldungen werden gesammelt und später vom
 	 * Status-Poll ({@link #pruefeGenerierung()}) als Growl angezeigt.
 	 */
-	private void generiereImHintergrund(String prompt, List<String> wirkungen) {
-		try {
+	/**
+	 * Baut synchron (im Request-Thread) den Prompt und die Namensersetzungen auf, damit die
+	 * rechte Spalte sofort gefüllt werden kann. Liefert den Text der besonderen Vorkommnisse
+	 * zurück, der anschließend für das Logging des KI-Aufrufs benötigt wird.
+	 */
+	private String bauePrompt(List<String> wirkungen) {
 		SpielergebnisProvider provider = null;
 		if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 			try {
@@ -435,6 +444,17 @@ public class BerichtkiBean implements Serializable {
 					besondere, json, stilrichtung, wirkungen.size());
 		}
 		anzahlKi = dbService.anzahlKI(vereinnr, ergebnisLink, "generiert");
+		// Namensersetzungen stehen nach dem Prompt-Aufbau fest → sofort für die Anzeige setzen.
+		this.ersetzungen = (namensSpeicher == null) ? "" : namensSpeicher.zeigeAlle();
+		return besondere;
+	}
+
+	/**
+	 * Führt nur den (langen) KI-Aufruf und das Parsing im Hintergrund aus. Der Prompt wurde
+	 * zuvor synchron in {@link #bauePrompt(java.util.List)} erstellt.
+	 */
+	private void generiereImHintergrund(String prompt, String besondere) {
+		try {
 		String antworten = "";
 		try {
 			if (anzahlKi <= 5 && !this.frage.isEmpty() && "false".equals(prompt)) {
