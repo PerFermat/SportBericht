@@ -343,20 +343,23 @@ Empfohlen:   <br />
 						<h:outputText id="presenceOutput"
 							value="#{berichtkiBean.presencePenalty}" />
 						<br />
-						<p:commandButton value="Nur KI-Prompt erzeugen"
-							action="#{berichtkiBean.generieren}" update="@form , :growl"
-							oncomplete="PF('genPoll').start()"
-							disabled="#{berichtkiBean.berichtMannschaft eq null}">
-							<f:param name="prompt" value="true" />
-						</p:commandButton>
+						<h:panelGroup layout="block" id="promptButtonWrap">
+							<p:commandButton value="Nur KI-Prompt erzeugen"
+								action="#{berichtkiBean.generieren}" update="@form , :growl"
+								oncomplete="PF('genPoll').start()"
+								disabled="#{berichtkiBean.generierungLaeuft or berichtkiBean.berichtMannschaft eq null}">
+								<f:param name="prompt" value="true" />
+							</p:commandButton>
+						</h:panelGroup>
 					</p:panel>
 				</div>
 				<br />
-				<div class="button-leiste">
-					<p:commandButton value="Bericht generieren"
+				<h:panelGroup layout="block" id="generierenLeiste" styleClass="button-leiste">
+					<p:commandButton
+						value="#{berichtkiBean.generierungLaeuft ? 'Bericht wird generiert …' : 'Bericht generieren'}"
 						action="#{berichtkiBean.generieren}" update="@form, :growl"
 						oncomplete="PF('genPoll').start()"
-						disabled="#{berichtkiBean.berichtMannschaft eq null}">
+						disabled="#{berichtkiBean.generierungLaeuft or berichtkiBean.berichtMannschaft eq null}">
 						<f:param name="prompt" value="false" />
 					</p:commandButton>
 					<!-- Zurück-Button -->
@@ -373,7 +376,7 @@ Empfohlen:   <br />
 						<f:param name="ligaSpiel" value="#{berichtkiBean.ligaSpiel}" />
 						<f:param name="gruppeUrl" value="#{berichtkiBean.gruppeUrl}" />
 					</p:commandButton>
-				</div>
+				</h:panelGroup>
 
 				<br />
 				<p:outputPanel id="ergebnisBereich">
@@ -473,7 +476,7 @@ Empfohlen:   <br />
 		     Ergebnis + Growl, sobald die Hintergrund-Generierung fertig ist. -->
 		<p:poll widgetVar="genPoll" interval="3" autoStart="false"
 			listener="#{berichtkiBean.pruefeGenerierung}"
-			update="ergebnisBereich :growl"
+			update="ergebnisBereich generierenLeiste promptButtonWrap :growl"
 			oncomplete="if (args &amp;&amp; args.fertig) PF('genPoll').stop()" />
 	</h:form>
 	<h:form prependId="false">

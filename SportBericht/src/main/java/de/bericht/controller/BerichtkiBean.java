@@ -42,12 +42,14 @@ import de.bericht.service.Spiel;
 import de.bericht.service.Tabelle;
 import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
+import de.bericht.util.LoginCookieDaten;
 import de.bericht.util.NamensSpeicher;
 import de.bericht.util.OpenAIModelFetcher;
 import de.bericht.util.SpielMapped;
 import de.bericht.util.Spielbericht;
 import de.bericht.util.StilGenerator;
 import de.bericht.util.enums.HeimGastArt;
+import de.bericht.util.enums.KiSystem;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItem;
@@ -126,6 +128,11 @@ public class BerichtkiBean implements Serializable {
 	/** Zwischenspeicher der aus der DB geladenen Tipps. */
 	private transient List<String> tipps;
 	private static final long TIPP_INTERVALL_MS = 15000;
+
+	/** Aktueller Login ist ein Admin (darf das 5er-Limit überschreiten). */
+	private boolean istAdmin = false;
+	/** Gewähltes Modell ist Gemini UND Gemini läuft kostenlos → nicht zählen, Limit aus. */
+	private boolean geminiKostenlos = false;
 
 	public BerichtkiBean() {
 		Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
@@ -267,6 +274,13 @@ public class BerichtkiBean implements Serializable {
 		}
 
 		hintergrundMeldungen.clear();
+
+		// Limit-Ausnahmen bestimmen (Request-Thread): Admin darf unbegrenzt; bei kostenlosem
+		// Gemini wird nicht gezählt und das Limit gilt für niemanden.
+		istAdmin = new LoginCookieDaten().isAdmin();
+		boolean geminiModell = KiSystem.fromModel(selectedModel) == KiSystem.GEMINI;
+		geminiKostenlos = geminiModell
+				&& !"Ja".equalsIgnoreCase(ConfigManager.getConfigValue(vereinnr, "ki.gemini.premium"));
 
 		// Prompt + Namensersetzungen SOFORT (synchron) aufbauen, damit die rechte Spalte
 		// ("Die KI wurde mit folgender Anweisung gefüttert" + "Verwendete Namensersetzungen")
@@ -457,7 +471,7 @@ public class BerichtkiBean implements Serializable {
 		try {
 		String antworten = "";
 		try {
-			if (anzahlKi <= 5 && !this.frage.isEmpty() && "false".equals(prompt)) {
+			if ((istAdmin || geminiKostenlos || anzahlKi <= 5) && !this.frage.isEmpty() && "false".equals(prompt)) {
 
 				JSONObject schema = new JSONObject().put("type", "object")
 						.put("properties", new JSONObject().put("Varianten",
@@ -480,7 +494,9 @@ public class BerichtkiBean implements Serializable {
 						frequencyPenalty, presencePenalty, schema);
 
 				antworten = ki.getResponse();
-				dbService.saveLogData(vereinnr, ergebnisLink, "KI", "KI-Bericht generiert", "", besondere);
+				// Kostenloses Gemini wird NICHT gezählt (abweichende aktion, die anzahlKI ignoriert).
+				String aktion = geminiKostenlos ? "KI-Bericht generiert-kostenlos" : "KI-Bericht generiert";
+				dbService.saveLogData(vereinnr, ergebnisLink, "KI", aktion, "", besondere);
 				anzahlKi = dbService.anzahlKI(vereinnr, ergebnisLink, "generiert");
 			} else {
 				antworten = "Keine KI-Generierung mehr Möglich. Zu viele Anfragen für diesen Bericht oder es wurde an die KI keine Frage gestellt";

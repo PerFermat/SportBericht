@@ -118,4 +118,9 @@ public class LoginCookieDaten implements Serializable {
 		return token != null && !token.isBlank();
 	}
 
+	/** true, wenn der aktuelle Login mit dem Admin-Passwort erfolgt ist. */
+	public boolean isAdmin() {
+		return "ADMIN".equalsIgnoreCase(passwortArt);
+	}
+
 }
