@@ -799,5 +799,38 @@
   </table>
 </section>
 
+<script>
+  // Sprungmarken (Inhaltsverzeichnis / Querverweise) funktionieren auch, wenn das
+  // Handbuch in ein iframe (gleiche Domain) eingebettet ist und keine eigene
+  // Scrollleiste hat – dann wird die umgebende Seite an die richtige Stelle gescrollt.
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+    if (!a) return;
+    var id = a.getAttribute('href').slice(1);
+    if (!id) return;
+    var ziel = document.getElementById(id);
+    if (!ziel) return;
+
+    // Standalone (kein iframe): normales Verhalten
+    if (window.parent === window) return;
+
+    var frame;
+    try { frame = window.frameElement; } catch (err) { return; } // andere Domain -> Standard
+    if (!frame) return;
+
+    // Hat das iframe eine eigene Scrollleiste (feste Höhe)? Dann normal scrollen lassen.
+    if (document.documentElement.scrollHeight > window.innerHeight + 5) return;
+
+    e.preventDefault();
+    try {
+      var parentY = window.parent.pageYOffset || window.parent.document.documentElement.scrollTop || 0;
+      var y = frame.getBoundingClientRect().top + parentY + ziel.getBoundingClientRect().top - 20;
+      window.parent.scrollTo({ top: y, behavior: 'smooth' });
+    } catch (err) {
+      ziel.scrollIntoView();
+    }
+  });
+</script>
+
 </body>
 </html>
