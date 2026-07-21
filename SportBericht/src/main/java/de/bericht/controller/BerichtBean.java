@@ -248,6 +248,11 @@ public class BerichtBean implements Serializable {
 		// Datumsmuster TT.MM.JJJJ
 		String datumRegex = "^\\d{2}\\.\\d{2}\\.\\d{4}.*";
 
+		if (ergebnisLink == null || ergebnisLink.isBlank()) {
+			// Kein ergebnisLink im Request (z. B. paramloser Postback) → nicht abstürzen
+			return;
+		}
+
 		if (ergebnisLink.startsWith("https") || ergebnisLink.matches(datumRegex)) {
 			// alles ok, nichts ändern
 		} else {

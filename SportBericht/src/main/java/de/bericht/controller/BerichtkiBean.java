@@ -13,10 +13,13 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.naming.InitialContext;
+
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.primefaces.PrimeFaces;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -50,15 +53,12 @@ import de.bericht.util.Spielbericht;
 import de.bericht.util.StilGenerator;
 import de.bericht.util.enums.HeimGastArt;
 import de.bericht.util.enums.KiSystem;
+import jakarta.enterprise.concurrent.ManagedExecutorService;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItem;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
-import jakarta.enterprise.concurrent.ManagedExecutorService;
-import javax.naming.InitialContext;
-
-import org.primefaces.PrimeFaces;
 
 @Named
 @ViewScoped
@@ -116,9 +116,15 @@ public class BerichtkiBean implements Serializable {
 	private volatile boolean generierungLaeuft = false;
 	/** Ergebnis liegt vor, wurde aber noch nicht in der Oberfläche angezeigt. */
 	private volatile boolean generierungFertig = false;
-	/** Im Hintergrund-Thread gesammelte Meldungen, die der Poll später als Growl anzeigt. */
+	/**
+	 * Im Hintergrund-Thread gesammelte Meldungen, die der Poll später als Growl
+	 * anzeigt.
+	 */
 	private final List<FacesMessage> hintergrundMeldungen = Collections.synchronizedList(new ArrayList<>());
-	/** Managed Executor (transient, weil nicht serialisierbar) – per JNDI nachgeladen. */
+	/**
+	 * Managed Executor (transient, weil nicht serialisierbar) – per JNDI
+	 * nachgeladen.
+	 */
 	private transient ManagedExecutorService executor;
 
 	/** Während der Generierung angezeigter Tipp (rotiert alle 15 s zufällig). */
@@ -131,7 +137,10 @@ public class BerichtkiBean implements Serializable {
 
 	/** Aktueller Login ist ein Admin (darf das 5er-Limit überschreiten). */
 	private boolean istAdmin = false;
-	/** Gewähltes Modell ist Gemini UND Gemini läuft kostenlos → nicht zählen, Limit aus. */
+	/**
+	 * Gewähltes Modell ist Gemini UND Gemini läuft kostenlos → nicht zählen, Limit
+	 * aus.
+	 */
 	private boolean geminiKostenlos = false;
 
 	public BerichtkiBean() {
@@ -245,15 +254,13 @@ public class BerichtkiBean implements Serializable {
 	public void generieren() {
 		if (wirkungen.isEmpty()) {
 
-			addMsg(
-					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Kein Schreibstil ausgewählt"));
+			addMsg(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Kein Schreibstil ausgewählt"));
 			oeffnePanel();
 			return;
 		}
 		if (wirkungen.size() > 3) {
 
-			addMsg(
-					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Zu viele Schreibstile ausgewählt"));
+			addMsg(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Zu viele Schreibstile ausgewählt"));
 			oeffnePanel();
 			return;
 		}
@@ -262,7 +269,8 @@ public class BerichtkiBean implements Serializable {
 			return; // Läuft bereits – Doppelklick ignorieren
 		}
 
-		// prompt-Parameter im Request-Thread lesen (im Hintergrund-Thread ist kein FacesContext verfügbar)
+		// prompt-Parameter im Request-Thread lesen (im Hintergrund-Thread ist kein
+		// FacesContext verfügbar)
 		final String prompt = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap()
 				.get("prompt");
 
@@ -275,23 +283,28 @@ public class BerichtkiBean implements Serializable {
 
 		hintergrundMeldungen.clear();
 
-		// Limit-Ausnahmen bestimmen (Request-Thread): Admin darf unbegrenzt; bei kostenlosem
+		// Limit-Ausnahmen bestimmen (Request-Thread): Admin darf unbegrenzt; bei
+		// kostenlosem
 		// Gemini wird nicht gezählt und das Limit gilt für niemanden.
 		istAdmin = new LoginCookieDaten().isAdmin();
 		boolean geminiModell = KiSystem.fromModel(selectedModel) == KiSystem.GEMINI;
 		geminiKostenlos = geminiModell
 				&& !"Ja".equalsIgnoreCase(ConfigManager.getConfigValue(vereinnr, "ki.gemini.premium"));
 
-		// Prompt + Namensersetzungen SOFORT (synchron) aufbauen, damit die rechte Spalte
-		// ("Die KI wurde mit folgender Anweisung gefüttert" + "Verwendete Namensersetzungen")
-		// bereits vor dem KI-Aufruf gefüllt ist. Das übernimmt der @form-Update des Buttons.
+		// Prompt + Namensersetzungen SOFORT (synchron) aufbauen, damit die rechte
+		// Spalte
+		// ("Die KI wurde mit folgender Anweisung gefüttert" + "Verwendete
+		// Namensersetzungen")
+		// bereits vor dem KI-Aufruf gefüllt ist. Das übernimmt der @form-Update des
+		// Buttons.
 		final String besondere = bauePrompt(this.wirkungen);
 
 		// Ausgewählte Stilarten zurücksetzen, damit der User bei einem zweiten Versuch
 		// bewusst neue Stilarten auswählen muss (die Validierung oben greift dann).
 		this.wirkungen = new ArrayList<>();
 
-		// Bereits erstellte Berichte NICHT löschen – sie bleiben während der Generierung sichtbar.
+		// Bereits erstellte Berichte NICHT löschen – sie bleiben während der
+		// Generierung sichtbar.
 		generierungFertig = false;
 		generierungLaeuft = true;
 		rotiereTipp(); // ersten Tipp sofort anzeigen
@@ -299,14 +312,15 @@ public class BerichtkiBean implements Serializable {
 	}
 
 	/**
-	 * Führt die eigentliche (lange) KI-Generierung im Hintergrund aus. Läuft NICHT im
-	 * Request-Thread – daher kein FacesContext; Meldungen werden gesammelt und später vom
-	 * Status-Poll ({@link #pruefeGenerierung()}) als Growl angezeigt.
+	 * Führt die eigentliche (lange) KI-Generierung im Hintergrund aus. Läuft NICHT
+	 * im Request-Thread – daher kein FacesContext; Meldungen werden gesammelt und
+	 * später vom Status-Poll ({@link #pruefeGenerierung()}) als Growl angezeigt.
 	 */
 	/**
-	 * Baut synchron (im Request-Thread) den Prompt und die Namensersetzungen auf, damit die
-	 * rechte Spalte sofort gefüllt werden kann. Liefert den Text der besonderen Vorkommnisse
-	 * zurück, der anschließend für das Logging des KI-Aufrufs benötigt wird.
+	 * Baut synchron (im Request-Thread) den Prompt und die Namensersetzungen auf,
+	 * damit die rechte Spalte sofort gefüllt werden kann. Liefert den Text der
+	 * besonderen Vorkommnisse zurück, der anschließend für das Logging des
+	 * KI-Aufrufs benötigt wird.
 	 */
 	private String bauePrompt(List<String> wirkungen) {
 		SpielergebnisProvider provider = null;
@@ -316,11 +330,11 @@ public class BerichtkiBean implements Serializable {
 						ergebnisLink, namensSpeicher);
 				// namensSpeicher.fuelleNamensspeicher(vereinnr, provider, namensSpeicher);
 
-				addMsg( new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"Erfolgreich", "Spielbericht -> Json - Erfolgreich"));
+				addMsg(new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich",
+						"Spielbericht -> Json - Erfolgreich"));
 			} catch (Exception e) {
-				addMsg( new FacesMessage(FacesMessage.SEVERITY_ERROR,
-						"Fehler", "Spielbericht konnte nicht gelesen werden " + e.getMessage()));
+				addMsg(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
+						"Spielbericht konnte nicht gelesen werden " + e.getMessage()));
 			}
 		}
 
@@ -337,14 +351,13 @@ public class BerichtkiBean implements Serializable {
 				ObjectMapper objectMapper = new ObjectMapper();
 				jsonSpielplan = objectMapper.writeValueAsString(mappedList);
 				ObjectMapper mapper = new ObjectMapper();
-				addMsg(
-						new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Spielplan -> Json - Erfolgreich"));
+				addMsg(new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Spielplan -> Json - Erfolgreich"));
 				if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 					besondereSonder = "* Berücksichtige im Bericht die kommenden Spiele. \n" + besondereSonder;
 				}
 			} catch (Exception e) {
-				addMsg( new FacesMessage(FacesMessage.SEVERITY_ERROR,
-						"Fehler", "Spielplan konnte nicht gelesen werden " + e.getMessage()));
+				addMsg(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
+						"Spielplan konnte nicht gelesen werden " + e.getMessage()));
 			}
 		}
 
@@ -360,15 +373,14 @@ public class BerichtkiBean implements Serializable {
 				ObjectMapper objectMapper = new ObjectMapper();
 				jsonBilanz = objectMapper.writeValueAsString(bil);
 				ObjectMapper mapper = new ObjectMapper();
-				addMsg(
-						new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Bilanzen -> Json - Erfolgreich"));
+				addMsg(new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Bilanzen -> Json - Erfolgreich"));
 				if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 					besondereSonder = "* Berücksichtige im Bericht aussergewöhnlich gute Bilanzen. \n"
 							+ besondereSonder;
 				}
 			} catch (Exception e) {
-				addMsg( new FacesMessage(FacesMessage.SEVERITY_ERROR,
-						"Fehler", "Bilanzen konnte nicht gelesen werden " + e.getMessage()));
+				addMsg(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
+						"Bilanzen konnte nicht gelesen werden " + e.getMessage()));
 			}
 		}
 		String jsonTabelle = "";
@@ -379,15 +391,14 @@ public class BerichtkiBean implements Serializable {
 				ObjectMapper objectMapper = new ObjectMapper();
 				jsonTabelle = objectMapper.writeValueAsString(tab);
 				ObjectMapper mapper = new ObjectMapper();
-				addMsg(
-						new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Tabelle -> Json - Erfolgreich"));
+				addMsg(new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Tabelle -> Json - Erfolgreich"));
 				if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 					besondereSonder = "* Berücksichtige im Bericht die Tabellenposition und die Position der kommenden Gegner. "
 							+ besondereSonder;
 				}
 			} catch (Exception e) {
-				addMsg( new FacesMessage(FacesMessage.SEVERITY_ERROR,
-						"Fehler", "Tabelle konnte nicht gelesen werden " + e.getMessage()));
+				addMsg(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
+						"Tabelle konnte nicht gelesen werden " + e.getMessage()));
 			}
 		}
 
@@ -396,8 +407,7 @@ public class BerichtkiBean implements Serializable {
 			try {
 				json = prettyJson("Spielbericht", provider.summaryToJson());
 			} catch (Exception e) {
-				addMsg(
-						new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Parsen Spielplan " + e.getMessage()));
+				addMsg(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Parsen Spielplan " + e.getMessage()));
 			}
 		} else {
 			json = "";
@@ -437,7 +447,7 @@ public class BerichtkiBean implements Serializable {
 		try {
 			stilrichtung = "```json\n" + stil.stilvariationen(vereinnr, wirkungen) + "\n```";
 		} catch (Exception e) {
-			addMsg( new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
+			addMsg(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
 					"Stilvariationen to Json " + e.getMessage()));
 		}
 
@@ -458,72 +468,73 @@ public class BerichtkiBean implements Serializable {
 					besondere, json, stilrichtung, wirkungen.size());
 		}
 		anzahlKi = dbService.anzahlKI(vereinnr, ergebnisLink, "generiert");
-		// Namensersetzungen stehen nach dem Prompt-Aufbau fest → sofort für die Anzeige setzen.
+		// Namensersetzungen stehen nach dem Prompt-Aufbau fest → sofort für die Anzeige
+		// setzen.
 		this.ersetzungen = (namensSpeicher == null) ? "" : namensSpeicher.zeigeAlle();
 		return besondere;
 	}
 
 	/**
-	 * Führt nur den (langen) KI-Aufruf und das Parsing im Hintergrund aus. Der Prompt wurde
-	 * zuvor synchron in {@link #bauePrompt(java.util.List)} erstellt.
+	 * Führt nur den (langen) KI-Aufruf und das Parsing im Hintergrund aus. Der
+	 * Prompt wurde zuvor synchron in {@link #bauePrompt(java.util.List)} erstellt.
 	 */
 	private void generiereImHintergrund(String prompt, String besondere) {
 		try {
-		String antworten = "";
-		try {
-			if ((istAdmin || geminiKostenlos || anzahlKi <= 5) && !this.frage.isEmpty() && "false".equals(prompt)) {
+			String antworten = "";
+			try {
+				if ((istAdmin || geminiKostenlos || anzahlKi <= 5) && !this.frage.isEmpty() && "false".equals(prompt)) {
 
-				JSONObject schema = new JSONObject().put("type", "object")
-						.put("properties", new JSONObject().put("Varianten",
-								new JSONObject().put("type", "array").put("minItems", 1).put("maxItems", 3).put("items",
-										new JSONObject().put("type", "object").put("properties", new JSONObject()
-												.put("Variante",
-														new JSONObject().put("type", "string").put("description",
-																"Genau der Wert aus dem Feld 'variante' im Prompt"))
-												.put("Stilversion",
-														new JSONObject().put("type", "string").put("description",
-																"Kombination aller Stilattribute als ein String"))
-												.put("Text",
-														new JSONObject().put("type", "string").put("description",
-																"Der generierte Text")))
-												.put("required",
-														new JSONArray().put("Variante").put("Stilversion")
-																.put("Text")))))
-						.put("required", new JSONArray().put("Varianten"));
-				KiProvider ki = KiProviderFactory.create(vereinnr, frage, selectedModel, selectedThinking, temperatur,
-						frequencyPenalty, presencePenalty, schema);
+					JSONObject schema = new JSONObject().put("type", "object")
+							.put("properties", new JSONObject().put("Varianten",
+									new JSONObject().put("type", "array").put("minItems", 1).put("maxItems", 3).put(
+											"items",
+											new JSONObject().put("type", "object").put("properties", new JSONObject()
+													.put("Variante",
+															new JSONObject().put("type", "string").put("description",
+																	"Genau der Wert aus dem Feld 'variante' im Prompt"))
+													.put("Stilversion",
+															new JSONObject().put("type", "string").put("description",
+																	"Kombination aller Stilattribute als ein String"))
+													.put("Text",
+															new JSONObject().put("type", "string").put("description",
+																	"Der generierte Text")))
+													.put("required",
+															new JSONArray().put("Variante").put("Stilversion")
+																	.put("Text")))))
+							.put("required", new JSONArray().put("Varianten"));
+					KiProvider ki = KiProviderFactory.create(vereinnr, frage, selectedModel, selectedThinking,
+							temperatur, frequencyPenalty, presencePenalty, schema);
 
-				antworten = ki.getResponse();
-				// Kostenloses Gemini wird NICHT gezählt (abweichende aktion, die anzahlKI ignoriert).
-				String aktion = geminiKostenlos ? "KI-Bericht generiert-kostenlos" : "KI-Bericht generiert";
-				dbService.saveLogData(vereinnr, ergebnisLink, "KI", aktion, "", besondere);
-				anzahlKi = dbService.anzahlKI(vereinnr, ergebnisLink, "generiert");
-			} else {
-				antworten = "Keine KI-Generierung mehr Möglich. Zu viele Anfragen für diesen Bericht oder es wurde an die KI keine Frage gestellt";
-				dbService.saveLogData(vereinnr, ergebnisLink, "KI", "KI-Bericht erfolglos", "", frage);
+					antworten = ki.getResponse();
+					// Kostenloses Gemini wird NICHT gezählt (abweichende aktion, die anzahlKI
+					// ignoriert).
+					String aktion = geminiKostenlos ? "KI-Bericht generiert-kostenlos" : "KI-Bericht generiert";
+					dbService.saveLogData(vereinnr, ergebnisLink, "KI", aktion, "", besondere);
+					anzahlKi = dbService.anzahlKI(vereinnr, ergebnisLink, "generiert");
+				} else {
+					antworten = "Keine KI-Generierung mehr Möglich. Zu viele Anfragen für diesen Bericht oder es wurde an die KI keine Frage gestellt";
+					dbService.saveLogData(vereinnr, ergebnisLink, "KI", "KI-Bericht erfolglos", "", frage);
+				}
+				addMsg(new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Aufruf ChatGPT "));
+			} catch (Exception e) {
+				antworten = fehlerRohtext("Fehler beim Aufruf ChatGPT", antworten, e);
+				addMsg(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Aufruf ChatGPT " + e.getMessage()));
 			}
-			addMsg(
-					new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "Aufruf ChatGPT "));
-		} catch (Exception e) {
-			antworten = fehlerRohtext("Fehler beim Aufruf ChatGPT", antworten, e);
-			addMsg(
-					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Aufruf ChatGPT " + e.getMessage()));
-		}
-		// Antworten abrufen und ausgeben
-
-		// Neue Berichte an die bereits vorhandenen anhängen (alte bleiben sichtbar).
-		// Über eine neue Liste + Referenzwechsel, damit der parallele Poll keine
-		// halb-aktualisierte Liste sieht.
-		List<Spielbericht> neu = new ArrayList<>(this.berichtText);
-		if (namensSpeicher == null) {
-			neu.addAll(parsenSpielberichte(antworten));
-			ersetzungen = "";
-		} else {
 			// Antworten abrufen und ausgeben
-			neu.addAll(parsenSpielberichte(namensSpeicher.rueckuebersetzen(antworten)));
-			ersetzungen = namensSpeicher.zeigeAlle();
-		}
-		this.berichtText = neu;
+
+			// Neue Berichte an die bereits vorhandenen anhängen (alte bleiben sichtbar).
+			// Über eine neue Liste + Referenzwechsel, damit der parallele Poll keine
+			// halb-aktualisierte Liste sieht.
+			List<Spielbericht> neu = new ArrayList<>(this.berichtText);
+			if (namensSpeicher == null) {
+				neu.addAll(parsenSpielberichte(antworten));
+				ersetzungen = "";
+			} else {
+				// Antworten abrufen und ausgeben
+				neu.addAll(parsenSpielberichte(namensSpeicher.rueckuebersetzen(antworten)));
+				ersetzungen = namensSpeicher.zeigeAlle();
+			}
+			this.berichtText = neu;
 		} catch (Exception e) {
 			hintergrundMeldungen.add(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
 					"KI-Generierung fehlgeschlagen: " + (e.getMessage() == null ? e.toString() : e.getMessage())));
@@ -772,8 +783,9 @@ public class BerichtkiBean implements Serializable {
 	}
 
 	/**
-	 * Fügt eine Meldung thread-sicher hinzu: im Request-Thread direkt an den FacesContext,
-	 * im Hintergrund-Thread (kein FacesContext) gesammelt für die spätere Anzeige per Poll.
+	 * Fügt eine Meldung thread-sicher hinzu: im Request-Thread direkt an den
+	 * FacesContext, im Hintergrund-Thread (kein FacesContext) gesammelt für die
+	 * spätere Anzeige per Poll.
 	 */
 	private void addMsg(FacesMessage message) {
 		FacesContext ctx = FacesContext.getCurrentInstance();
@@ -799,9 +811,9 @@ public class BerichtkiBean implements Serializable {
 	}
 
 	/**
-	 * Status-Poll: prüft, ob die Hintergrund-Generierung fertig ist. Wenn ja, werden die
-	 * gesammelten Meldungen als Growl übernommen und dem Client per Callback-Param signalisiert,
-	 * dass der Poll gestoppt werden kann.
+	 * Status-Poll: prüft, ob die Hintergrund-Generierung fertig ist. Wenn ja,
+	 * werden die gesammelten Meldungen als Growl übernommen und dem Client per
+	 * Callback-Param signalisiert, dass der Poll gestoppt werden kann.
 	 */
 	public void pruefeGenerierung() {
 		// Tipp alle 15 Sekunden wechseln, solange noch generiert wird
@@ -826,7 +838,9 @@ public class BerichtkiBean implements Serializable {
 		return generierungLaeuft;
 	}
 
-	/** Wählt einen zufälligen Tipp aus der Datenbank (lädt die Liste bei Bedarf). */
+	/**
+	 * Wählt einen zufälligen Tipp aus der Datenbank (lädt die Liste bei Bedarf).
+	 */
 	private void rotiereTipp() {
 		if (tipps == null) {
 			tipps = dbService.listeTipps();

@@ -115,6 +115,7 @@
 
 						<!-- Button "Bericht" wird nur angezeigt, wenn in der Ergebnis-Spalte ein Wert steht -->
 						<p:commandButton value="Bericht" action="bericht.xhtml"
+							ajax="false"
 							rendered="#{not freieBerichteBean.hasFreigabe(spiel.ergebnisLink)}"
 							styleClass="button-basis button-vollbreite-links">
 							<f:param name="vereinnr" value="#{freieBerichteBean.vereinnr}" />
@@ -171,6 +172,7 @@
 					<p:ajax update="@form" />
 				</p:commandButton>
 				<p:commandButton value="Bericht" action="bericht.xhtml"
+					ajax="false"
 					rendered="#{not empty freieBerichteBean.berichtDatum and
                              not empty freieBerichteBean.freierText and
                              not freieBerichteBean.hasFreigabe(freieBerichteBean.freierLink)}"
