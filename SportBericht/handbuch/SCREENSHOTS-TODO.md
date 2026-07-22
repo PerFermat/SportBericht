@@ -2,7 +2,7 @@
 
 Bitte die folgenden Bildschirmfotos erstellen und die jeweils gleichnamige Platzhalter-Datei
 im Verzeichnis `handbuch/screenshots/` ersetzen (Format PNG, Breite ca. 1000–1400 px).
-Danach das PDF neu erzeugen: `cd handbuch && weasyprint anwenderhandbuch.html anwenderhandbuch.pdf`
+Danach das PDF neu erzeugen: `cd handbuch && ./pdf-erzeugen.sh`
 
 | Abb. | Dateiname | Was fotografieren |
 |------|-----------|-------------------|
@@ -27,26 +27,27 @@ Danach das PDF neu erzeugen: `cd handbuch && weasyprint anwenderhandbuch.html an
 | 19 | `13-ki-varianten.png` | Generierte Text-Varianten mit „Bericht übernehmen" |
 | 20 | `14-ki-rechte-spalte.png` | Rechte Spalte: Anweisung an die KI und Namensersetzungen |
 | 21 | `15-freie-berichte.png` | Freie Berichte / Zusammenfassung (Überschrift frei wählbar) |
-| 22 | `16-aufstellung.png` | Aufstellung planen (Spielerliste, Doppelaufstellung, Zusätzliche Info) |
-| 23 | `20-gesamtspielplan.png` | Gesamtspielplan mit Betreuer-Zuordnung und Verfügbarkeiten (Initialen, Mouse-Over) |
-| 24 | `35-gesamtspielplan-konfigurieren.png` | Persönlichen Gesamtspielplan zusammenstellen (mit PDF-/Excel-Download) |
-| 25 | `41-verfuegbarkeit-eintragen.png` | Verfügbarkeit eintragen (Name wählen, Status setzen, Zusatzinfo) |
-| 26 | `18-verfuegbarkeit.png` | Optische Darstellung der Rückmeldungen (farbige Zähler) |
-| 27 | `39-betreuer-mail.png` | Automatische E-Mail an den Betreuer (Spielcode/Pin, Ort, Gegner, Aufstellung) |
-| 28 | `19-bestaetigung.png` | Bestätigungsseite (über Button in der Mail erreichbar) |
-| 29 | `40-bestaetigung-absage.png` | Absagen, Ersatzbetreuer eintragen, Spiele tauschen |
-| 30 | `21-adressliste.png` | Adressliste (Mitgliederübersicht mit Suche) |
-| 31 | `22-adressliste-info.png` | Adressliste: Info-Popup / eigene Daten ändern (Einmalpasswort) |
-| 32 | `23-bilder.png` | Bildergalerie (Bilder herunterladen, z. B. für Diashow) |
-| 33 | `26-zwischenablage.png` | Zwischenablage mit Spielcode, Pin und QR-Code |
-| 34 | `27-historie.png` | Änderungshistorie mit farblichem Vergleich |
-| 35 | `28-versendete-mails.png` | Versendete Mails (Archiv) |
-| 36 | `29-impressum.png` | Impressum des Entwicklers |
-| 37 | `36-config-seite.png` | Konfigurationsseite (Sicherheitsfreigabe, Einträge, Werkzeug-Buttons) |
-| 38 | `37-config-iframes.png` | Konfiguration der iFrame-Internetseiten (configHtml) |
-| 39 | `38-spielcode-importieren.png` | Spielcodes importieren (Import-/Parser-Seite) |
-| 40 | `17-aufstellung-import.png` | Aufstellung importieren |
+| 22 | `43-veroeffentlichung-einzel.png` | Veröffentlichung Einzelberichte (Statusliste, Vorschau, Homepage/Zeitung) |
+| 23 | `44-veroeffentlichung-sammel.png` | Veröffentlichung Sammelberichte (Auswahl, Reihenfolge, zusammenfassen) |
+| 24 | `16-aufstellung.png` | Aufstellung planen (Spielerliste, Doppelaufstellung, Zusätzliche Info) |
+| 25 | `20-gesamtspielplan.png` | Gesamtspielplan mit Betreuer-Zuordnung und Verfügbarkeiten (Initialen, Mouse-Over) |
+| 26 | `35-gesamtspielplan-konfigurieren.png` | Persönlichen Gesamtspielplan zusammenstellen (mit PDF-/Excel-Download) |
+| 27 | `41-verfuegbarkeit-eintragen.png` | Verfügbarkeit eintragen (Name wählen, Status setzen, Zusatzinfo) |
+| 28 | `18-verfuegbarkeit.png` | Optische Darstellung der Rückmeldungen (farbige Zähler) |
+| 29 | `39-betreuer-mail.png` | Automatische E-Mail an den Betreuer (Spielcode/Pin, Ort, Gegner, Aufstellung) |
+| 30 | `19-bestaetigung.png` | Bestätigungsseite (über Button in der Mail erreichbar) |
+| 31 | `40-bestaetigung-absage.png` | Absagen, Ersatzbetreuer eintragen, Spiele tauschen |
+| 32 | `21-adressliste.png` | Adressliste (Mitgliederübersicht mit Suche) |
+| 33 | `22-adressliste-info.png` | Adressliste: Info-Popup / eigene Daten ändern (Einmalpasswort) |
+| 34 | `23-bilder.png` | Bildergalerie (Bilder herunterladen, z. B. für Diashow) |
+| 35 | `26-zwischenablage.png` | Zwischenablage mit Spielcode, Pin und QR-Code |
+| 36 | `27-historie.png` | Änderungshistorie mit farblichem Vergleich |
+| 37 | `28-versendete-mails.png` | Versendete Mails (Archiv) |
+| 38 | `29-impressum.png` | Impressum des Entwicklers |
+| 39 | `36-config-seite.png` | Konfigurationsseite (Sicherheitsfreigabe, Einträge, Werkzeug-Buttons) |
+| 40 | `37-config-iframes.png` | Konfiguration der iFrame-Internetseiten (configHtml) |
+| 41 | `38-spielcode-importieren.png` | Spielcodes importieren (Import-/Parser-Seite) |
+| 42 | `17-aufstellung-import.png` | Aufstellung importieren |
 
-Entfernt (nicht mehr verwendet): `25-spielcodes.png`, `42-verfuegbarkeit-gesamtspielplan.png`.
-Bereits von dir hinterlegt: `39-betreuer-mail.png`, `40-bestaetigung-absage.png`.
+Neu hinzugekommen: `43-veroeffentlichung-einzel.png`, `44-veroeffentlichung-sammel.png`.
 Hinweis: Bilder werden im Handbuch bewusst auf ca. 50 % Breite (zentriert) dargestellt.
