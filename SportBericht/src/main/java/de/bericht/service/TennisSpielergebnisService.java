@@ -71,8 +71,9 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 		if (!einzel.isEmpty()) {
 			sb.append("<strong>Einzel:</strong><br>");
 			for (TennisEinzelErgebnis e : einzel) {
-				String spieler = berichtIstHeim ? e.getHeimSpieler().getName() : e.getGastSpieler().getName();
-				if (spieler.toLowerCase().contains("nachgenannt")) {
+				TennisSpielerInfo bs = berichtIstHeim ? e.getHeimSpieler() : e.getGastSpieler();
+				String spieler = (bs == null || bs.getName() == null) ? "" : bs.getName();
+				if (nichtAngetreten(spieler)) {
 					continue;
 				}
 				sb.append(spieler).append("\t ").append(berichtIstHeim ? e.getSatz1() : dreheErgebnis(e.getSatz1()))
@@ -89,7 +90,7 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 			sb.append("<strong>Doppel:</strong><br>");
 			for (TennisDoppelErgebnis d : doppel) {
 				String paarung = berichtIstHeim ? d.getHeimPaarungMitNachnamen() : d.getGastPaarungMitNachnamen();
-				if (paarung.toLowerCase().contains("nachgenannt")) {
+				if (nichtAngetreten(berichtIstHeim ? d.getHeimPaarung() : d.getGastPaarung())) {
 					continue;
 				}
 
@@ -104,6 +105,19 @@ public class TennisSpielergebnisService extends AbstractSpielergebnisService {
 		}
 
 		return sb.toString();
+	}
+
+	/**
+	 * true, wenn die Bericht-Seite bei dieser Paarung nicht angetreten ist – d. h. der
+	 * Name/die Paarung leer ist oder „nachgenannt" enthält (nicht stattgefunden / Personalmangel).
+	 * Arbeitet auf dem vollen Namen; „/"-Trenner werden ignoriert (leere Doppel = „///").
+	 */
+	static boolean nichtAngetreten(String nameOderPaarung) {
+		if (nameOderPaarung == null) {
+			return true;
+		}
+		String t = nameOderPaarung.replace("/", " ").trim();
+		return t.isEmpty() || t.toLowerCase().contains("nachgenannt");
 	}
 
 	private TennisMatchSummary parseSummary(String berichtMannschaft, Document doc) {

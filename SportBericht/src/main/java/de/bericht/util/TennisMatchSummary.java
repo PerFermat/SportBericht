@@ -75,6 +75,10 @@ public class TennisMatchSummary extends MatchSummary {
 		boolean berichtIstHeim = isBerichtMannschaftIstHeim();
 		for (SpielDetail detail : getSpiele()) {
 			if (detail instanceof TennisEinzelErgebnis e) {
+				TennisSpielerInfo bericht = berichtIstHeim ? e.getHeimSpieler() : e.getGastSpieler();
+				if (nichtAngetreten(bericht == null ? null : bericht.getName())) {
+					continue; // eigene Seite nicht angetreten -> ignorieren
+				}
 				list.add(TennisEinzelJson.from(e, berichtIstHeim));
 			}
 		}
@@ -91,10 +95,25 @@ public class TennisMatchSummary extends MatchSummary {
 		boolean berichtIstHeim = isBerichtMannschaftIstHeim();
 		for (SpielDetail detail : getSpiele()) {
 			if (detail instanceof TennisDoppelErgebnis d) {
+				if (nichtAngetreten(berichtIstHeim ? d.getHeimPaarung() : d.getGastPaarung())) {
+					continue; // eigene Seite nicht angetreten -> ignorieren
+				}
 				list.add(TennisDoppelJson.from(d, berichtIstHeim));
 			}
 		}
 		return list;
+	}
+
+	/**
+	 * true, wenn die Bericht-Seite bei dieser Paarung nicht angetreten ist (Name/Paarung leer
+	 * oder „nachgenannt"). „/"-Trenner werden ignoriert (leere Doppel-Paarung = „///").
+	 */
+	private static boolean nichtAngetreten(String nameOderPaarung) {
+		if (nameOderPaarung == null) {
+			return true;
+		}
+		String t = nameOderPaarung.replace("/", " ").trim();
+		return t.isEmpty() || t.toLowerCase().contains("nachgenannt");
 	}
 
 	public void setGesamtSaetze(String gesamtSaetze) {

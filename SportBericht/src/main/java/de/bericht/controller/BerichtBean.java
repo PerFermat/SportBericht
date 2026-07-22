@@ -244,7 +244,9 @@ public class BerichtBean implements Serializable {
 				|| this.ligaSpiel.equals("null")) {
 			this.ligaSpiel = this.liga;
 		}
-
+		System.out.println(liga);
+		System.out.println(ligaSpiel);
+		System.out.println(gruppeUrl);
 		// Datumsmuster TT.MM.JJJJ
 		String datumRegex = "^\\d{2}\\.\\d{2}\\.\\d{4}.*";
 

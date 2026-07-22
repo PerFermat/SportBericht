@@ -153,6 +153,7 @@ public class BerichtkiBean implements Serializable {
 		this.ergebnis = params.get("ergebnis");
 		this.ergebnisLink = params.get("ergebnisLink");
 		this.gruppeUrl = params.get("gruppeUrl");
+		System.out.println("KI" + gruppeUrl);
 		this.name = params.get("name");
 		this.tabelleUrl = gruppeUrl;
 		this.besondereVorkommnisse = params.get("besondereVorkommnisse");
@@ -1420,6 +1421,14 @@ public class BerichtkiBean implements Serializable {
 
 	public void setLigaSpiel(String ligaSpiel) {
 		this.ligaSpiel = ligaSpiel;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }
