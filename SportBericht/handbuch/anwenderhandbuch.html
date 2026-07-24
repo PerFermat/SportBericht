@@ -121,9 +121,37 @@
   figure { page-break-inside: avoid; }
   .titelseite { page-break-after: always; }
   .toc { page-break-after: always; }
+
+  /* Titelbild */
+  .titelbild { text-align: center; }
+  .titelbild img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+  @media screen {
+    .titelbild img { max-width: 900px; margin: 0 auto 1.5rem; border-radius: 8px; }
+  }
+  @page titel { size: A4; margin: 0; }
+  @media print {
+    .titelbild { page: titel; page-break-after: always; }
+    .titelbild img { width: 210mm; height: 297mm; object-fit: cover; margin: 0; border-radius: 0; }
+  }
+
+  /* Bilder anklickbar -> Lightbox (nur Bildschirm) */
+  @media screen {
+    figure img, .titelbild img { cursor: zoom-in; }
+    .lightbox { display: none; position: absolute; left: 0; width: 100%;
+      background: rgba(0,0,0,0.85); z-index: 9999; align-items: center;
+      justify-content: center; padding: 20px; cursor: zoom-out; box-sizing: border-box; }
+    .lightbox.open { display: flex; }
+    .lightbox img { max-width: 96%; max-height: 96%; height: auto; width: auto;
+      box-shadow: 0 0 30px rgba(0,0,0,.6); border-radius: 6px; background: #fff; }
+  }
+  @media print { .lightbox { display: none !important; } }
 </style>
 </head>
 <body>
+
+<div class="titelbild">
+  <img src="screenshots/00-Titelseite.png" alt="Titelseite" />
+</div>
 
 <header class="titelseite">
   <div class="logo">SB</div>
@@ -818,6 +846,7 @@
   <table class="liste">
     <thead><tr><th>Abb.</th><th>Datei</th><th>Was fotografieren</th></tr></thead>
     <tbody>
+      <tr><td>–</td><td><code>00-Titelseite.png</code></td><td>Titelbild (im PDF ganzseitig als erste Seite, in der HTML groß vor dem Titel)</td></tr>
       <tr><td>1</td><td><code>01-anmeldung.png</code></td><td>Anmeldeseite: Verein, Name, Passwort, „Angemeldet bleiben"</td></tr>
       <tr><td>2</td><td><code>02-anmeldung-namenspruefung.png</code></td><td>Anmeldung mit erkanntem Namen (grünes Häkchen) und Tooltip</td></tr>
       <tr><td>3</td><td><code>03-startseite.png</code></td><td>Start-/Übersichtsseite direkt nach der Anmeldung</td></tr>
@@ -864,7 +893,48 @@
   </table>
 </section>
 
+<div id="lightbox" class="lightbox" aria-hidden="true"><img alt="Vergrößerte Ansicht" /></div>
+
 <script>
+  // Bilder anklickbar: vergrößerte Darstellung als Overlay. Funktioniert auch im
+  // (gleiche-Domain-)iframe, indem das Overlay über den aktuell sichtbaren Bereich gelegt wird.
+  (function () {
+    var lb = document.getElementById('lightbox');
+    var lbImg = lb ? lb.querySelector('img') : null;
+    if (!lb || !lbImg) return;
+
+    function sichtbaresBand() {
+      if (window.parent !== window) {
+        try {
+          var frame = window.frameElement;
+          if (frame) {
+            var pV = window.parent.pageYOffset || window.parent.document.documentElement.scrollTop || 0;
+            var vh = window.parent.innerHeight || window.innerHeight;
+            var frameTop = frame.getBoundingClientRect().top + pV;
+            return { top: Math.max(0, pV - frameTop), height: vh };
+          }
+        } catch (err) { /* andere Domain -> Fallback */ }
+      }
+      return { top: window.pageYOffset, height: window.innerHeight };
+    }
+
+    document.addEventListener('click', function (e) {
+      var img = e.target.closest ? e.target.closest('figure img, .titelbild img') : null;
+      if (img) {
+        lbImg.src = img.getAttribute('src');
+        var band = sichtbaresBand();
+        lb.style.top = band.top + 'px';
+        lb.style.height = band.height + 'px';
+        lb.classList.add('open');
+        return;
+      }
+      if (lb.classList.contains('open') && e.target.closest && e.target.closest('#lightbox')) {
+        lb.classList.remove('open');
+        lbImg.removeAttribute('src');
+      }
+    });
+  })();
+
   // Sprungmarken (Inhaltsverzeichnis / Querverweise) funktionieren auch, wenn das
   // Handbuch in ein iframe (gleiche Domain) eingebettet ist und keine eigene
   // Scrollleiste hat – dann wird die umgebende Seite an die richtige Stelle gescrollt.

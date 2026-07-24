@@ -6,6 +6,7 @@ Danach das PDF neu erzeugen: `cd handbuch && ./pdf-erzeugen.sh`
 
 | Abb. | Dateiname | Was fotografieren |
 |------|-----------|-------------------|
+| – | `00-Titelseite.png` | Titelbild (PDF: ganzseitig als erste Seite; HTML: groß vor dem Titel) |
 | 1 | `01-anmeldung.png` | Anmeldeseite: Verein, Name, Passwort, „Angemeldet bleiben" |
 | 2 | `02-anmeldung-namenspruefung.png` | Anmeldung mit erkanntem Namen (grünes Häkchen) und Tooltip |
 | 3 | `03-startseite.png` | Start-/Übersichtsseite direkt nach der Anmeldung |
