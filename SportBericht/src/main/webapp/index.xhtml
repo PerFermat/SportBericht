@@ -94,15 +94,26 @@
 					style="margin-left: 8px; width: 100%;" />
 			</div>
 
-			<p:commandButton id="anmeldenBtn" value="Anmelden"
-				action="#{indexBean.anmelden}" update="@form" ajax="false"
-				style="width:100%;"
-				onclick="setTimeout(function(){ 
+			<div >
+				<p:commandButton id="anmeldenBtn" value="Anmelden" 
+					action="#{indexBean.anmelden}" update="@form" ajax="false"
+					style="width:100%;"
+					onclick="setTimeout(function(){ 
         var btn = document.getElementById('loginForm:anmeldenBtn');
         btn.style.opacity='0.7';
         btn.style.pointerEvents='none';
         btn.querySelector('span.ui-button-text').textContent='Bitte warten...';
     }, 0);" />
+			</div>
+			<br />
+			<div>
+				<h:form>
+					<p:linkButton value="Handbuch"
+						href="https://tt-hattenhofen.de/handbuch/anwenderhandbuch.html#anmeldung"
+						target="_blank"
+						style="width:100%;" />
+				</h:form>
+			</div>
 			<!-- Info-Box -->
 			<div
 				style="margin-top: 20px; padding: 12px; background: #d9edf7; border: 1px solid #bce8f1; border-radius: 8px; color: #31708f; font-size: 0.9em;">
@@ -118,10 +129,10 @@
 					<f:param name="ruecksprung" value="index.xhtml" />
 					<f:param name="faces-redirect" value="true" />
 				</p:button>
-
 				<p:commandButton value="Passwort vergessen" icon="pi pi-envelope"
 					actionListener="#{indexBean.zeigePasswortVergessen}"
 					process="@this" update="@form" styleClass="ui-button-link" />
+	
 			</div>
 
 			<h:panelGroup rendered="#{indexBean.passwortVergessenSichtbar}">

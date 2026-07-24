@@ -385,4 +385,12 @@ public class HistorienBean implements Serializable {
 		this.ligaSpiel = ligaSpiel;
 	}
 
+	public String getBestimmenIcon() {
+		return ConfigManager.getConfigValue(vereinnr, "style.icon");
+	}
+
+	public String getVereinHomepage() {
+		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
+	}
+
 }

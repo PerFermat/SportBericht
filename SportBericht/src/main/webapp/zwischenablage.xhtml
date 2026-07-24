@@ -2,8 +2,8 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:h="http://xmlns.jcp.org/jsf/html"
-	xmlns:p="http://primefaces.org/ui"	
-	xmlns:f="http://xmlns.jcp.org/jsf/core"	
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
 	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
 <h:head>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0"
@@ -18,19 +18,20 @@
 
 <h:body>
 	<div class="seitenkopf seitenkopf-navigation">
-		<h:outputLink value="#{zwischenablageBean.vereinHomepage}" target="_blank">
+		<h:outputLink value="#{zwischenablageBean.vereinHomepage}"
+			target="_blank">
 			<img src="#{zwischenablageBean.bestimmenIcon}"
 				style="vertical-align: middle;" width="50" />
 		</h:outputLink>
 		<h:form>
-			<p:commandButton type="button" value="Handbuch"
-				onclick="window.open('https://tt-hattenhofen.de/anwenderhandbuch-berichtssystem-tischtennis/', '_blank');" />
+			<p:linkButton value="Handbuch"
+				href="https://tt-hattenhofen.de/handbuch/anwenderhandbuch.html#spielcodes"
+				target="_blank" />
 		</h:form>
 		<h2>Spielcodes – #{zwischenablageBean.verein}</h2>
 		<h:form>
-			<p:commandButton
-				value="Zurück"
-				action="#{zwischenablageBean.ruecksprung}"	immediate="true"
+			<p:commandButton value="Zurück"
+				action="#{zwischenablageBean.ruecksprung}" immediate="true"
 				rendered="#{not empty zwischenablageBean.ruecksprung}">
 				<f:param name="vereinnr" value="#{zwischenablageBean.vereinnr}" />
 			</p:commandButton>
@@ -59,14 +60,16 @@
 					<p class="zwischenablage-copy-row">
 						<strong>Spielcode:</strong>
 					</p>
-					<h:panelGroup rendered="#{not empty zwischenablageBean.spiel.spielCode}"
+					<h:panelGroup
+						rendered="#{not empty zwischenablageBean.spiel.spielCode}"
 						layout="block" styleClass="zwischenablage-copy-value"
 						title="Zum Kopieren klicken"
 						pt:data-original="#{zwischenablageBean.spiel.spielCode}"
 						pt:onclick="copyZwischenablageValue(this);">
 						<h:outputText value="#{zwischenablageBean.spiel.spielCode}" />
 					</h:panelGroup>
-					<h:outputText rendered="#{empty zwischenablageBean.spiel.spielCode}"
+					<h:outputText
+						rendered="#{empty zwischenablageBean.spiel.spielCode}"
 						styleClass="zwischenablage-copy-value zwischenablage-copy-value-static"
 						value="-" />
 
@@ -89,13 +92,15 @@
 			<div class="zwischenablage-image-wrap">
 				<a href="https://ttde-apps.liga.nu/nuliga/nuscore-tt/welcome"
 					target="_blank" rel="noopener noreferrer"> <h:graphicImage
-						library="images" name="nuscore.png" alt="nuScore" styleClass="zwischenablage-image" />
+						library="images" name="nuscore.png" alt="nuScore"
+						styleClass="zwischenablage-image" />
 				</a>
 			</div>
 		</h:panelGroup>
 
 		<h:panelGroup rendered="#{not zwischenablageBean.spielGefunden}">
-			<div class="zwischenablage-box">Kein Spiel zum angegebenen Key gefunden.</div>
+			<div class="zwischenablage-box">Kein Spiel zum angegebenen Key
+				gefunden.</div>
 		</h:panelGroup>
 	</div>
 

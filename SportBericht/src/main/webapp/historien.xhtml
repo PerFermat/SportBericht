@@ -19,32 +19,42 @@
 </h:head>
 
 <h:body>
-	<div class="seitenkopf">
+	<div class="seitenkopf seitenkopf-navigation">
+		<h:outputLink value="#{historienBean.vereinHomepage}" target="_blank">
+			<img src="#{historienBean.bestimmenIcon}"
+				style="vertical-align: middle;" width="50" />
+		</h:outputLink>
+		<h:form>
+			<p:linkButton value="Handbuch"
+				href="https://tt-hattenhofen.de/handbuch/anwenderhandbuch.html#historie"
+				target="_blank" />
+		</h:form>
 		<h2>Historische zustände Widerherstellen</h2>
-		<p:link value="Spielbericht ansehen" target="_blank"
-			href="#{historienBean.ergebnisLink}"
-			rendered="#{not empty historienBean.ergebnisLink and historienBean.ergebnisLink.startsWith('http')}" />
+		<h:form>
+			<p:commandButton value="Zurück" action="#{historienBean.zurueckAction}"
+				actionListener="#{historienBean.zurueck}" immediate="true"
+				rendered="#{not empty historienBean.ergebnisLink and historienBean.ergebnisLink.startsWith('http')}">
+				<f:param name="vereinnr" value="#{historienBean.vereinnr}" />
+				<f:param name="liga" value="#{historienBean.liga}" />
+				<f:param name="gruppeUrl" value="#{historienBean.gruppeUrl}" />
+			</p:commandButton>
+			<p:commandButton value="Zurück" action="freieBerichte.xhtml"
+				actionListener="#{historienBean.zurueck}" immediate="true"
+				rendered="#{not empty historienBean.ergebnisLink and not historienBean.ergebnisLink.startsWith('http')}">
+				<f:param name="vereinnr" value="#{historienBean.vereinnr}" />
+				<f:param name="gruppeUrl" value="#{historienBean.gruppeUrl}" />
+			</p:commandButton>
+		</h:form>
 
-		<h3>
-			<h:outputText value="#{historienBean.liga}" />
-			<h:outputText value=": " />
-			<h:outputText value="#{historienBean.heim}" />
-			<h:outputText value=" - " />
-			<h:outputText value="#{historienBean.gast}" />
-			<h:outputText value=" (" />
-			<h:outputText value="#{historienBean.datum}" />
-			<h:outputText value=") " />
-			<h:outputText value="#{historienBean.ergebnis}" />
-		</h3>
 	</div>
 
 	<h:panelGroup id="textPanel"
-		rendered="#{not empty berichtBean.inBearbeitung}">
+		rendered="#{not empty historienBean.inBearbeitung}">
 		<div class="bereich layout-zweispaltig">
 			<div class="hinweis-fehler">
 
 				<div class="text-input">
-					<h:outputText value="#{berichtBean.inBearbeitung}" />
+					<h:outputText value="#{historienBean.inBearbeitung}" />
 				</div>
 			</div>
 		</div>

@@ -24,6 +24,9 @@
 				<img src="#{zusammenGesamtBean.bestimmenIcon}"
 					style="vertical-align: middle;" width="50" />
 			</h:outputLink>
+			<p:linkButton value="Handbuch"
+				href="https://tt-hattenhofen.de/handbuch/anwenderhandbuch.html#veroeffentlichung"
+				target="_blank" />
 			<h2>Veröffentlichen #{zusammenGesamtBean.liga}</h2>
 			<p:commandButton value="Zurück"
 				action="#{zusammenGesamtBean.ruecksprung}" immediate="true">
@@ -103,7 +106,7 @@
 					<h:outputText value="#{spiel.ergebnis}" />
 				</p:column>
 				<p:column headerText="Bild"
-					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-bilder">					
+					styleClass="tabellenspalte tabellenspalte-links schrift-responsiv spalte-bilder">
 					<h:panelGroup layout="block"
 						style="position: relative; display: inline-block;"
 						rendered="#{spiel.bildUrl!=null}">
@@ -191,7 +194,8 @@
 						</p:panelGrid>
 
 						<!-- Login-Button: Speichert die Eingaben in der Bean, ohne zu navigieren -->
-						<p:commandButton value="Login" styleClass="button-basis button-vollbreite-links"
+						<p:commandButton value="Login"
+							styleClass="button-basis button-vollbreite-links"
 							action="#{zusammenGesamtBean.login}" update="@form" />
 
 						<h:outputText value="Gewünschte Kategorien auswählen: " />
