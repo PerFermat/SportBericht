@@ -597,18 +597,54 @@ public class GesamtspielplanBean implements Serializable {
 	}
 
 	public List<SpielerRueckmeldung> getZugesagtSpieler() {
+
+		zugesagtSpieler.sort(Comparator.comparing(SpielerRueckmeldung::getRang, this::compareRang));
+
 		return zugesagtSpieler;
 	}
 
+	private int compareRang(String links, String rechts) {
+		if (links == null) {
+			return rechts == null ? 0 : 1;
+		}
+		if (rechts == null) {
+			return -1;
+		}
+		String[] l = links.split("\\.");
+		String[] r = rechts.split("\\.");
+		int max = Math.max(l.length, r.length);
+		for (int i = 0; i < max; i++) {
+			int li = i < l.length ? parseTeil(l[i]) : 0;
+			int ri = i < r.length ? parseTeil(r[i]) : 0;
+			if (li != ri) {
+				return Integer.compare(li, ri);
+			}
+		}
+		return links.compareTo(rechts);
+	}
+
+	private int parseTeil(String teil) {
+		try {
+			return Integer.parseInt(teil);
+		} catch (NumberFormatException ex) {
+			return Integer.MAX_VALUE;
+		}
+	}
+
 	public List<SpielerRueckmeldung> getZusatzZugesagtSpieler() {
+		zusatzZugesagtSpieler.sort(Comparator.comparing(SpielerRueckmeldung::getRang, this::compareRang));
+
 		return zusatzZugesagtSpieler;
 	}
 
 	public List<SpielerRueckmeldung> getAbgesagtSpieler() {
+		offeneSpieler.sort(Comparator.comparing(SpielerRueckmeldung::getRang, this::compareRang));
 		return abgesagtSpieler;
 	}
 
 	public List<SpielerRueckmeldung> getOffeneSpieler() {
+		offeneSpieler.sort(Comparator.comparing(SpielerRueckmeldung::getRang, this::compareRang));
+		;
 		return offeneSpieler;
 	}
 

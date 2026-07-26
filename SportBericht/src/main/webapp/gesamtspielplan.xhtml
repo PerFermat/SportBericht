@@ -215,7 +215,7 @@
 							<ui:repeat value="#{gesamtspielplanBean.zugesagtSpieler}"
 								var="spieler">
 								<div class="verf-row">
-									<strong>#{spieler.name}</strong><span class="verf-status">
+									<strong>#{spieler.name}</strong> <span class="verf-rang">(#{spieler.rang})</span> <span class="verf-status">
 										– #{spieler.verfuegbarkeit}</span>
 									<h:panelGroup rendered="#{not empty spieler.kommentar}">
 										<span class="verf-comment-inline"> –
@@ -232,7 +232,7 @@
 							<ui:repeat value="#{gesamtspielplanBean.abgesagtSpieler}"
 								var="spieler">
 								<div class="verf-row">
-									<strong>#{spieler.name}</strong><span class="verf-status">
+									<strong>#{spieler.name}</strong> <span class="verf-rang">(#{spieler.rang})</span> <span class="verf-status">
 										– #{spieler.verfuegbarkeit}</span>
 									<h:panelGroup rendered="#{not empty spieler.kommentar}">
 										<span class="verf-comment-inline"> –
