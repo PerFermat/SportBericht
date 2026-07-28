@@ -1,16 +1,11 @@
 package de.bericht.controller;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.Serializable;
+import java.util.Base64;
 import java.util.Map;
-
-import javax.imageio.ImageIO;
 
 import de.bericht.service.DatabaseService;
 import de.bericht.util.ConfigManager;
-import de.bericht.util.ImageProcessor;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
@@ -28,18 +23,15 @@ public class ImageBean extends HttpServlet implements Serializable {
 	private String ergebnis;
 	private String berichtText;
 	private String ergebnisLink;
-	private String cropX = "0"; // String
-	private String cropY = "0"; // String
-	private String cropWidth = "0"; // String
-	private String cropHeight = "0"; // String
-	private byte[] processedImage;
 	private String imagePath;
 	private String liga;
 	private String ligaSpiel;
 	private String uuid;
 	private String name;
-	private DatabaseService dbService = new DatabaseService();
 	private String gruppeUrl;
+	/** Vom Browser geliefertes, bereits zugeschnittenes + gefiltertes JPEG (Data-URI). */
+	private String editedImageBase64;
+	private DatabaseService dbService = new DatabaseService();
 
 	@Override
 	@PostConstruct
@@ -57,21 +49,64 @@ public class ImageBean extends HttpServlet implements Serializable {
 		this.uuid = params.get("uuid");
 		this.name = params.get("name");
 		this.gruppeUrl = params.get("gruppeUrl");
-		imagePath = "data:image/jpg;base64," + java.util.Base64.getEncoder().encodeToString(loadImageFromDatabase());
+		imagePath = "data:image/jpg;base64," + Base64.getEncoder().encodeToString(loadImageFromDatabase());
+	}
 
-		try {
-			// Byte-Array in ein BufferedImage umwandeln
-			byte[] originalImage = loadImageFromDatabase();
+	private byte[] loadImageFromDatabase() {
+		return dbService.loadBerichtData(vereinnr, ergebnisLink).getBild();
+	}
 
-			ByteArrayInputStream bis = new ByteArrayInputStream(originalImage);
-			BufferedImage image = ImageIO.read(bis);
+	public String getImagePath() {
+		return imagePath;
+	}
 
-			// Bildgröße abrufen
-			this.cropWidth = String.valueOf(image.getWidth());
-			this.cropHeight = String.valueOf(image.getHeight());
-		} catch (IOException e) {
-			e.printStackTrace();
+	public String getEditedImageBase64() {
+		return editedImageBase64;
+	}
+
+	public void setEditedImageBase64(String editedImageBase64) {
+		this.editedImageBase64 = editedImageBase64;
+	}
+
+	/**
+	 * Speichert das im Browser zugeschnittene/gefilterte Bild (Base64) und entfernt
+	 * die Bearbeitungssperre. Navigation erfolgt über den Button-action.
+	 */
+	public void speichern() {
+		if (editedImageBase64 != null && editedImageBase64.contains(",")) {
+			try {
+				String base64Data = editedImageBase64.split(",")[1]; // Data-URI-Präfix entfernen
+				byte[] bytes = Base64.getDecoder().decode(base64Data);
+				dbService.saveBerichtData(vereinnr, ergebnisLink, bytes);
+			} catch (RuntimeException e) {
+				e.printStackTrace();
+			}
 		}
+		dbService.deleteUUID(vereinnr, ergebnisLink, uuid);
+	}
+
+	public void updBearbeitung() {
+		dbService.verarbeiteEintrag(vereinnr, name, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
+	}
+
+	public void zurueck() {
+		dbService.deleteUUID(vereinnr, ergebnisLink, uuid);
+	}
+
+	public String getBestimmenIcon() {
+		return ConfigManager.getConfigValue(vereinnr, "style.icon");
+	}
+
+	public String getVereinHomepage() {
+		return ConfigManager.getConfigValue(vereinnr, "homepage.verein");
+	}
+
+	public boolean isTennis() {
+		return ConfigManager.isTennis(vereinnr);
+	}
+
+	public boolean isTischtennis() {
+		return ConfigManager.isTischtennis(vereinnr);
 	}
 
 	public String getErgebnisLink() {
@@ -80,68 +115,6 @@ public class ImageBean extends HttpServlet implements Serializable {
 
 	public void setErgebnisLink(String ergebnisLink) {
 		this.ergebnisLink = ergebnisLink;
-	}
-
-	public String getCropX() {
-		return cropX;
-	}
-
-	public void setCropX(String cropX) {
-		this.cropX = cropX;
-	}
-
-	public String getCropY() {
-		return cropY;
-	}
-
-	public void setCropY(String cropY) {
-		this.cropY = cropY;
-	}
-
-	public String getCropWidth() {
-		return cropWidth;
-	}
-
-	public void setCropWidth(String cropWidth) {
-		this.cropWidth = cropWidth;
-	}
-
-	public String getCropHeight() {
-		return cropHeight;
-	}
-
-	public void setCropHeight(String cropHeight) {
-		this.cropHeight = cropHeight;
-	}
-
-	public String getImagePath() {
-		return imagePath;
-	}
-
-	public void coordinateSelected() {
-		// Diese Methode ist optional,
-		// aber praktisch wenn du nach
-		// jeder Auswahl sofort reagierst (z.B. Logging, live Feedback)
-		System.out.println("Koordinaten aktualisiert: " + cropX + "," + cropY + "," + cropWidth + ", " + cropHeight);
-	}
-
-	public void cropImage() {
-		try {
-			int x = Integer.parseInt(cropX);
-			int y = Integer.parseInt(cropY);
-			int width = Integer.parseInt(cropWidth);
-			int height = Integer.parseInt(cropHeight);
-			byte[] originalImage = loadImageFromDatabase();
-			processedImage = ImageProcessor.processImage(originalImage, x, y, width, height);
-			dbService.saveBerichtData(vereinnr, ergebnisLink, processedImage);
-			imagePath = "data:image/jpg;base64," + java.util.Base64.getEncoder().encodeToString(processedImage);
-		} catch (NumberFormatException | IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private byte[] loadImageFromDatabase() {
-		return dbService.loadBerichtData(vereinnr, ergebnisLink).getBild();
 	}
 
 	public String getHeim() {
@@ -192,11 +165,6 @@ public class ImageBean extends HttpServlet implements Serializable {
 		this.liga = liga;
 	}
 
-	public void updateCropValues(String startX, String startY, String width, String height) {
-		System.out.println("Crop-Werte aktualisiert: X=" + startX + ", Y=" + startY + ", Breite=" + cropWidth
-				+ ", Höhe=" + cropHeight);
-	}
-
 	public String getUuid() {
 		return uuid;
 	}
@@ -205,29 +173,12 @@ public class ImageBean extends HttpServlet implements Serializable {
 		this.uuid = uuid;
 	}
 
-	public void updBearbeitung() {
-		dbService.verarbeiteEintrag(vereinnr, name, ergebnisLink, uuid); // Fügt einen neuen Eintrag hinzu
-	}
-
-	// Diese Methode wird durch den "Speichern"-Button aufgerufen.
-	public void zurueck() {
-		dbService.deleteUUID(vereinnr, ergebnisLink, uuid);
-	}
-
 	public String getVereinnr() {
 		return vereinnr;
 	}
 
 	public void setVereinnr(String vereinnr) {
 		this.vereinnr = vereinnr;
-	}
-
-	public boolean isTennis() {
-		return ConfigManager.isTennis(vereinnr);
-	}
-
-	public boolean isTischtennis() {
-		return ConfigManager.isTischtennis(vereinnr);
 	}
 
 	public String getGruppeUrl() {
@@ -246,4 +197,11 @@ public class ImageBean extends HttpServlet implements Serializable {
 		this.ligaSpiel = ligaSpiel;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 }

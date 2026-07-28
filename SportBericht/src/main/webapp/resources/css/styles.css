@@ -538,11 +538,70 @@ body {
 	display: inline-block;
 }
 
-#selectionRectangle {
-	position: absolute;
-	border: 2px solid var(--red);
-	pointer-events: none;
-	display: none;
+/* ===== Bildbearbeitung (bildBearbeiten.xhtml) ===== */
+.bild-editor-hinweis {
+	max-width: 900px;
+	margin: 0 auto 12px auto;
+}
+
+/* An Bildschirm angepasster, zoombarer Zuschneidebereich. Cropper.js baut sein
+   Layout in diesen Container; die --img-filter-Variable liefert die Live-Vorschau
+   für Helligkeit/Kontrast/Sättigung. */
+.bild-editor-container {
+	max-width: 100%;
+	margin: 0 auto;
+}
+
+.bild-editor-container > img {
+	display: block;
+	max-width: 100%;
+	/* max-height sorgt dafür, dass das Bild in den sichtbaren Bereich passt. */
+	max-height: 70vh;
+}
+
+.bild-editor-container .cropper-canvas img,
+.bild-editor-container .cropper-view-box img {
+	filter: var(--img-filter, none);
+}
+
+.bild-editor-toolbar {
+	max-width: 900px;
+	margin: 0 auto 10px auto;
+}
+
+/* Aktiver „Bild verschieben"-Modus deutlich hervorheben. */
+.bild-editor-toolbar .button-basis.aktiv {
+	background: var(--button-active-bg-color);
+}
+
+.bild-editor-regler {
+	max-width: 900px;
+	margin: 16px auto;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.bild-editor-regler .slider-eintrag {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.bild-editor-regler .slider-eintrag label {
+	flex: 0 0 90px;
+	font-weight: bold;
+}
+
+.bild-editor-regler .slider-eintrag input[type="range"] {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.bild-editor-regler .regler-wert {
+	flex: 0 0 60px;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
 }
 
 .leftCol {

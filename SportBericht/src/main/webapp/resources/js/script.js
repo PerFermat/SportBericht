@@ -15,91 +15,6 @@ function updatePreview(previewClass, value) {
     }
 }
 
-let isDragging = false;
-let startX, startY;
-
-function startSelection(event) {
-	const rect = event.target.getBoundingClientRect();
-	startX = event.clientX - rect.left;
-	startY = event.clientY - rect.top;
-	isDragging = true;
-
-	const selectionBox = document.getElementById("selectionRectangle");
-	selectionBox.style.left = startX + "px";
-	selectionBox.style.top = startY + "px";
-	selectionBox.style.width = "0px";
-	selectionBox.style.height = "0px";
-	selectionBox.style.display = "block";
-}
-
-function duringSelection(event) {
-	if (!isDragging)
-		return;
-
-	const rect = event.target.getBoundingClientRect();
-	const currentX = event.clientX - rect.left;
-	const currentY = event.clientY - rect.top;
-
-	const selectionBox = document.getElementById("selectionRectangle");
-
-	const x = Math.min(currentX, startX);
-	const y = Math.min(currentY, startY);
-	const width = Math.abs(currentX - startX);
-	const height = Math.abs(currentY - startY);
-
-	selectionBox.style.left = x + "px";
-	selectionBox.style.top = y + "px";
-	selectionBox.style.width = width + "px";
-	selectionBox.style.height = height + "px";
-}
-
-function endSelection(event) {
-	if (!isDragging)
-		return;
-	isDragging = false;
-
-	const rect = event.target.getBoundingClientRect();
-	const endX = event.clientX - rect.left;
-	const endY = event.clientY - rect.top;
-
-	const cropX = Math.min(startX, endX);
-	const cropY = Math.min(startY, endY);
-	const cropWidth = Math.abs(endX - startX);
-	const cropHeight = Math.abs(endY - startY);
-
-	// Werte in Hidden Input (für Managed Bean)
-	document.getElementById("myForm:cropXHidden").value = Math
-			.round(cropX);
-	document.getElementById("myForm:cropYHidden").value = Math
-			.round(cropY);
-	document.getElementById("myForm:cropWidthHidden").value = Math
-			.round(cropWidth);
-	document.getElementById("myForm:cropHeightHidden").value = Math
-			.round(cropHeight);
-
-	// Werte aktualisieren, sichtbar für User
-	document.getElementById("myForm:cropXOutput").innerHTML = Math
-			.round(cropX);
-	document.getElementById("myForm:cropYOutput").innerHTML = Math
-			.round(cropY);
-	document.getElementById("myForm:cropWidthOutput").innerHTML = Math
-			.round(cropWidth);
-	document.getElementById("myForm:cropHeightOutput").innerHTML = Math
-			.round(cropHeight);
-
-	// sichtbar lassen, nicht verstecken!
-	const selectionBox = document.getElementById("selectionRectangle");
-	selectionBox.style.left = cropX + "px";
-	selectionBox.style.top = cropY + "px";
-	selectionBox.style.width = cropWidth + "px";
-	selectionBox.style.height = cropHeight + "px";
-	selectionBox.style.display = "block"; // bleibt dauerhaft sichtbar!
-
-	// JSF Remote Command aufrufen (Server-Seite aktualisiert)
-	sendCoordinatesToServer();
-}
-
-
 function resizeImage(input) {
 	if (input.files && input.files[0]) {
 		var file = input.files[0];
@@ -168,10 +83,20 @@ var observer = new MutationObserver(function() {
 	sendHeight();
 });
 
-observer.observe(document.body, {
-	childList: true,
-	subtree: true
-});
+// document.body kann im <head> noch null sein -> erst nach DOM-Aufbau beobachten.
+function starteHoehenBeobachter() {
+	if (document.body) {
+		observer.observe(document.body, {
+			childList: true,
+			subtree: true
+		});
+	}
+}
+if (document.body) {
+	starteHoehenBeobachter();
+} else {
+	document.addEventListener('DOMContentLoaded', starteHoehenBeobachter);
+}
 
 // Bei PrimeFaces AJAX-Aktualisierungen erneut Höhe senden
 if (window.PrimeFaces) {

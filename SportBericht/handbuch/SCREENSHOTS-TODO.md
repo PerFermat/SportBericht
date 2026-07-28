@@ -14,7 +14,7 @@ Danach das PDF neu erzeugen: `cd handbuch && ./pdf-erzeugen.sh`
 | 5 | `05-liga-tabelle.png` | Tennis: Liga-Auswahl und Tabelle (Beispiel: Bad Boll, rotes Farbschema) |
 | 6 | `06-bericht-uebersicht.png` | Bericht-Seite eines Spiels (Editor + Buttons + „in Bearbeitung") |
 | 7 | `07-bericht-editor.png` | Editor: Überschrift (vorbelegt), Textfeld mit Werkzeugleiste, Bild, Buttons |
-| 8 | `24-bild-bearbeiten.png` | Bild zuschneiden direkt beim Bericht |
+| 8 | `24-bild-bearbeiten.png` | **NEU aufnehmen** – überarbeitete Bildbearbeitung: Zuschneiderahmen (Cropper) + Regler für Helligkeit/Kontrast/Sättigung, Buttons „Speichern & zurück"/„Abbrechen" |
 | 9 | `30-rechtschreibung-pruefen.png` | Tabelle „Gefundene Fehler" nach Rechtschreibprüfung (ohne „Übernehmen") |
 | 10 | `31-ki-verbessern.png` | KI-Verbesserung: Vorschläge mit „Übernehmen" |
 | 11 | `32-ki-aendern-optionen.png` | Seite „Bericht mit KI ändern" mit den Optionsfeldern |
