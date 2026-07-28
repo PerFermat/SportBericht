@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,6 +29,9 @@ import de.bericht.util.BerichtHelper;
 import de.bericht.util.ConfigManager;
 import de.bericht.util.Spielbericht;
 import de.bericht.util.StilGenerator;
+import javax.naming.InitialContext;
+import org.primefaces.PrimeFaces;
+import jakarta.enterprise.concurrent.ManagedExecutorService;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
@@ -59,6 +63,15 @@ public class AenderungBean implements Serializable {
 	private int anzahlKi;
 	private String frageAusgabe;
 	private String gruppeUrl;
+
+	/** Asynchrone KI-Änderung ("Neue Textversion generieren"): läuft sie gerade? */
+	private volatile boolean aenderungLaeuft = false;
+	/** Ergebnis liegt vor, wurde aber noch nicht in der Oberfläche angezeigt. */
+	private volatile boolean aenderungFertig = false;
+	/** Im Hintergrund-Thread gesammelte Meldungen, die der Poll als Growl anzeigt. */
+	private final List<FacesMessage> aenderungMeldungen = Collections.synchronizedList(new ArrayList<>());
+	/** Managed Executor (transient, weil nicht serialisierbar) – per JNDI nachgeladen. */
+	private transient ManagedExecutorService executor;
 
 	public AenderungBean() {
 		Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
@@ -499,7 +512,6 @@ public class AenderungBean implements Serializable {
 	 * `KiAenderung`-Optionen und setzt `berichtTextNeu`.
 	 */
 	public void generieren() {
-		String antwort = null;
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("Verändere den Orginaltext wie folgt:");
@@ -548,45 +560,123 @@ public class AenderungBean implements Serializable {
 		frageAusgabe = frage;
 		this.anzahlKi = dbService.anzahlKI(vereinnr, ergebnisLink, "geändert");
 
-		try {
-			if (anzahlKi <= 5 && !frage.isEmpty()) {
-				JSONObject schema = new JSONObject().put("type", "object")
-						.put("properties", new JSONObject().put("Varianten",
-								new JSONObject().put("type", "array").put("minItems", 1).put("maxItems", 3).put("items",
-										new JSONObject().put("type", "object").put("properties", new JSONObject()
-												.put("Variante",
-														new JSONObject().put("type", "string").put("description",
-																"Genau der Wert aus dem Feld 'variante' im Prompt"))
-												.put("Stilversion",
-														new JSONObject().put("type", "string").put("description",
-																"Kombination aller Stilattribute als ein String"))
-												.put("Erklaerung", new JSONObject().put("type", "string").put(
-														"description",
-														"Kurze Erklärung der vorgenommenen Änderungen oder des Stils"))
-												.put("Text",
-														new JSONObject().put("type", "string").put("description",
-																"Der neu generierte Berichtstext"))
-												.put("Ueberschrift",
-														new JSONObject().put("type", "string").put("description",
-																"Die neue Überschrift")))
-												.put("required",
-														new JSONArray().put("Variante").put("Stilversion")
-																.put("Erklaerung").put("Bericht")))))
-						.put("required", new JSONArray().put("Varianten"));
+		if (anzahlKi <= 5 && !frage.isEmpty()) {
+			if (aenderungLaeuft) {
+				return; // Läuft bereits – Doppelklick ignorieren
+			}
+			JSONObject schema = new JSONObject().put("type", "object")
+					.put("properties", new JSONObject().put("Varianten",
+							new JSONObject().put("type", "array").put("minItems", 1).put("maxItems", 3).put("items",
+									new JSONObject().put("type", "object").put("properties", new JSONObject()
+											.put("Variante",
+													new JSONObject().put("type", "string").put("description",
+															"Genau der Wert aus dem Feld 'variante' im Prompt"))
+											.put("Stilversion",
+													new JSONObject().put("type", "string").put("description",
+															"Kombination aller Stilattribute als ein String"))
+											.put("Erklaerung", new JSONObject().put("type", "string").put(
+													"description",
+													"Kurze Erklärung der vorgenommenen Änderungen oder des Stils"))
+											.put("Text",
+													new JSONObject().put("type", "string").put("description",
+															"Der neu generierte Berichtstext"))
+											.put("Ueberschrift",
+													new JSONObject().put("type", "string").put("description",
+															"Die neue Überschrift")))
+											.put("required",
+													new JSONArray().put("Variante").put("Stilversion")
+															.put("Erklaerung").put("Bericht")))))
+					.put("required", new JSONArray().put("Varianten"));
 
-				KiProvider ki = KiProviderFactory.create(vereinnr, frage,
-						ConfigManager.getConfigValue(vereinnr, "ki.model.korrektur"), "none", 0.5, 0.5, 0.5, schema);
-
-				antwort = ki.getResponse();
-				dbService.saveLogData(vereinnr, ergebnisLink, "KI", "KI-Bericht geändert", "", frage);
-				anzahlKi = dbService.anzahlKI(vereinnr, ergebnisLink, "geändert");
+			ManagedExecutorService mes = getExecutor();
+			if (mes == null) {
+				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+						"Fehler", "Hintergrund-Ausführung nicht verfügbar (ManagedExecutorService)."));
+				return;
 			}
 
-		} catch (Exception e) {
-			FacesContext.getCurrentInstance().addMessage(null,
-					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Aufruf ChatGPT " + e.getMessage()));
+			// Aufruf-Parameter im Request-Thread festhalten.
+			final String frageFinal = frage;
+			final String model = ConfigManager.getConfigValue(vereinnr, "ki.model.korrektur");
+			final JSONObject schemaFinal = schema;
+
+			aenderungMeldungen.clear();
+			aenderungFertig = false;
+			aenderungLaeuft = true;
+			mes.execute(() -> aendereImHintergrund(frageFinal, model, schemaFinal));
+		} else {
+			this.berichtTextNeu = parsenSpielbericht(null);
 		}
-		this.berichtTextNeu = parsenSpielbericht(antwort);
+	}
+
+	/**
+	 * Führt die eigentliche (lange) KI-Änderung im Hintergrund aus. Läuft NICHT im
+	 * Request-Thread – daher kein FacesContext; Meldungen werden gesammelt und
+	 * später vom Status-Poll ({@link #pruefeAenderung()}) als Growl angezeigt.
+	 */
+	private void aendereImHintergrund(String frage, String model, JSONObject schema) {
+		String antwort = null;
+		try {
+			KiProvider ki = KiProviderFactory.create(vereinnr, frage, model, "none", 0.5, 0.5, 0.5, schema);
+			antwort = ki.getResponse();
+			dbService.saveLogData(vereinnr, ergebnisLink, "KI", "KI-Bericht geändert", "", frage);
+			anzahlKi = dbService.anzahlKI(vereinnr, ergebnisLink, "geändert");
+			aenderungMeldungen.add(new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich",
+					"Neue Textversion erstellt"));
+		} catch (java.io.IOException e) {
+			aenderungMeldungen.add(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
+					"Die KI-Änderung hat zu lange gedauert und wurde abgebrochen. Bitte erneut versuchen."));
+		} catch (Exception e) {
+			aenderungMeldungen.add(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
+					"Aufruf ChatGPT " + (e.getMessage() == null ? e.toString() : e.getMessage())));
+		} finally {
+			this.berichtTextNeu = parsenSpielbericht(antwort);
+			aenderungFertig = true;
+			aenderungLaeuft = false;
+		}
+	}
+
+	/**
+	 * Status-Poll: prüft, ob die Hintergrund-Änderung fertig ist. Wenn ja, werden
+	 * die gesammelten Meldungen als Growl übernommen und dem Client per
+	 * Callback-Param signalisiert, dass der Poll gestoppt werden kann.
+	 */
+	public void pruefeAenderung() {
+		boolean fertig = !aenderungLaeuft && aenderungFertig;
+		if (fertig) {
+			FacesContext ctx = FacesContext.getCurrentInstance();
+			synchronized (aenderungMeldungen) {
+				for (FacesMessage m : aenderungMeldungen) {
+					ctx.addMessage(null, m);
+				}
+				aenderungMeldungen.clear();
+			}
+			aenderungFertig = false; // konsumiert
+			// Editor-Inhalt separat als Callback-Param liefern: p:textEditor (Quill)
+			// übernimmt einen neuen Wert bei AJAX-Update nicht, daher wird er im
+			// oncomplete-Handler per Quill-API gesetzt.
+			String txt = (berichtTextNeu != null && berichtTextNeu.getText() != null) ? berichtTextNeu.getText() : "";
+			PrimeFaces.current().ajax().addCallbackParam("neuText", txt);
+		}
+		PrimeFaces.current().ajax().addCallbackParam("fertig", fertig);
+	}
+
+	public boolean isAenderungLaeuft() {
+		return aenderungLaeuft;
+	}
+
+	/** Lazy-Lookup des ManagedExecutorService (transient wegen Serializable). */
+	private ManagedExecutorService getExecutor() {
+		if (executor == null) {
+			try {
+				executor = (ManagedExecutorService) new InitialContext()
+						.lookup("java:comp/DefaultManagedExecutorService");
+			} catch (Exception e) {
+				System.err.println("ManagedExecutorService nicht gefunden: " + e.getMessage());
+				return null;
+			}
+		}
+		return executor;
 	}
 
 	/**

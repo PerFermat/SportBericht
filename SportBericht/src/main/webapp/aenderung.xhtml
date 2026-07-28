@@ -117,11 +117,16 @@
 
 				<br />
 				<div class="button-leiste">
-					<p:commandButton value="Neue Textversion generieren"
-						action="#{aenderungBean.generieren}" update="@form, :growl"
-						disabled="#{aenderungBean.berichtMannschaft eq null}">
-						<f:param name="prompt" value="false" />
-					</p:commandButton>
+					<h:panelGroup id="aendGenWrap">
+						<p:commandButton
+							value="#{aenderungBean.aenderungLaeuft ? 'KI generiert …' : 'Neue Textversion generieren'}"
+							action="#{aenderungBean.generieren}"
+							disabled="#{aenderungBean.aenderungLaeuft or aenderungBean.berichtMannschaft eq null}"
+							update="aendGenWrap aendHinweis aendErgebnis fehlerPanelOK :growl"
+							oncomplete="PF('aendPoll').start()">
+							<f:param name="prompt" value="false" />
+						</p:commandButton>
+					</h:panelGroup>
 					<!-- Zurück-Button -->
 					<p:commandButton value="Zurück" action="bericht.xhtml"
 						actionListener="#{aenderungBean.zurueck}" immediate="true">
@@ -137,7 +142,14 @@
 						<f:param name="gruppeUrl" value="#{aenderungBean.gruppeUrl}" />
 					</p:commandButton>
 				</div>
-				<div class="textbereich">
+				<h:panelGroup id="aendHinweis" layout="block">
+					<h:panelGroup layout="block" styleClass="ki-generierung-hinweis"
+						rendered="#{aenderungBean.aenderungLaeuft}">
+						<i class="pi pi-spin pi-spinner" />&#160; Neue Textversion wird
+						generiert … du kannst in der Zwischenzeit normal weiterarbeiten.
+					</h:panelGroup>
+				</h:panelGroup>
+				<h:panelGroup id="aendErgebnis" layout="block" styleClass="textbereich">
 					<!-- Anzeige, wenn Ergebnislink vorhanden und mit http beginnt -->
 
 					<h4>Generierter Bericht:
@@ -167,7 +179,7 @@
 							style="font-size: 1.5em;">>
 							</h:inputText>
 					</h:panelGroup>
-					<p:textEditor id="bereichsTextNeu"
+					<p:textEditor id="bereichsTextNeu" widgetVar="editorNeuWv"
 						value="#{aenderungBean.berichtTextNeu.text}"
 						styleClass="bericht-editor"
 						modules="{toolbar: [['bold','italic','underline','strike'], [{'list':'ordered'},{'list':'bullet'}], ['link','clean']]}">
@@ -178,7 +190,7 @@
 					<!-- Optional: Anzeige der Spielergebnisse -->
 					<h:outputText value="#{aenderungBean.spielErgebnis}" escape="false"
 						style="display:inline; white-space:normal;" />
-				</div>
+				</h:panelGroup>
 				<div class="bereich bereich-horizontal-ab-500 hintergrund-sekundaer">
 
 					<!-- Speichern-Button -->
@@ -229,11 +241,23 @@
 		</div>
 		<!-- Polling zur UI-Aktualisierung -->
 		<p:growl id="growl" showDetail="true" life="6000" />
-		<p:poll interval="5" listener="#{aenderungBean.updBearbeitung}" />
+		<p:poll interval="5" process="@this"
+			listener="#{aenderungBean.updBearbeitung}" />
+
+		<!-- Status-Poll der asynchronen KI-Änderung ("Neue Textversion generieren").
+		     process="@this", damit das Editor-Feld nicht dekodiert/überschrieben wird.
+		     Die Ausgabe-Panels werden per AJAX aktualisiert; der Quill-Editor übernimmt
+		     einen neuen Wert bei AJAX-Update nicht, daher wird sein Inhalt im
+		     oncomplete-Handler per Quill-API (args.neuText) gesetzt. -->
+		<p:poll widgetVar="aendPoll" interval="3" autoStart="false"
+			process="@this" listener="#{aenderungBean.pruefeAenderung}"
+			update="aendGenWrap aendHinweis aendErgebnis fehlerPanelOK :growl"
+			oncomplete="if (args &amp;&amp; args.fertig) { PF('aendPoll').stop(); if (window.PF &amp;&amp; PF('editorNeuWv') &amp;&amp; PF('editorNeuWv').editor) { PF('editorNeuWv').editor.clipboard.dangerouslyPasteHTML(args.neuText || ''); } }" />
 	</h:form>
 	<h:form prependId="false">
 		<p:growl id="growl" showDetail="true" life="6000" />
-		<p:poll interval="5" listener="#{aenderungBean.updBearbeitung}" />
+		<p:poll interval="5" process="@this"
+			listener="#{aenderungBean.updBearbeitung}" />
 	</h:form>
 </h:body>
 </html>
