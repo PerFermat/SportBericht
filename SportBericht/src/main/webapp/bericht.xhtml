@@ -146,10 +146,15 @@
 							action="#{berichtBean.pruefeRechtschreibung}"
 							actionListener="#{berichtBean.speichern}"
 							update=":berichtForm, :logForm, :fehlerPanel, :errorForm" />
-						<p:commandButton value="Bericht mit KI verbessern"
-							action="#{berichtBean.verbessernKI}"
-							actionListener="#{berichtBean.speichern}"
-							update=":berichtForm, :logForm, :fehlerPanel, :errorForm" />
+						<h:panelGroup id="kiKorrekturWrap">
+							<p:commandButton
+								value="#{berichtBean.korrekturLaeuft ? 'KI prüft …' : 'Bericht mit KI verbessern'}"
+								action="#{berichtBean.verbessernKI}"
+								actionListener="#{berichtBean.speichern}"
+								disabled="#{berichtBean.korrekturLaeuft}"
+								update="kiKorrekturWrap :errorForm :growl"
+								oncomplete="PF('korrPoll').start()" />
+						</h:panelGroup>
 						<p:commandButton value="Bericht mit KI ändern"
 							action="aenderung.xhtml"
 							actionListener="#{berichtBean.speichern}">
@@ -391,6 +396,13 @@
 						anonymisierten Bericht an ChatGPT mit der Bitte um Korrektur.
 					</p>
 				</h:panelGroup>
+				<h:panelGroup id="kiKorrekturHinweis" layout="block"
+					styleClass="ki-generierung-hinweis"
+					rendered="#{berichtBean.korrekturLaeuft and !berichtBean.spielplan}">
+					<i class="pi pi-spin pi-spinner" />&#160; Der Bericht wird von der
+					KI geprüft … bitte einen Moment. Du kannst in der Zwischenzeit normal
+					weiterarbeiten.
+				</h:panelGroup>
 				<h:panelGroup id="fehlerPanel"
 					rendered="#{not empty berichtBean.fehlerListe and !berichtBean.spielplan}">
 					<p:panel header="Gefundene Fehler" toggleable="true"
@@ -502,10 +514,17 @@
 		</h:panelGroup>
 
 
-		<p:growl id="growl" showDetail="true" life="6000" />
+		<p:growl id="growl" showDetail="true" life="6000" autoUpdate="true" />
 
 		<!-- Polling zur UI-Aktualisierung -->
 		<p:poll interval="5" listener="#{berichtBean.updBearbeitung}" />
+
+		<!-- Status-Poll der asynchronen KI-Korrektur ("Bericht mit KI verbessern"):
+		     aktualisiert Ergebnis + Button + Growl, sobald die Prüfung fertig ist. -->
+		<p:poll widgetVar="korrPoll" interval="3" autoStart="false"
+			listener="#{berichtBean.pruefeKorrektur}"
+			update=":berichtForm:kiKorrekturWrap :errorForm :growl"
+			oncomplete="if (args &amp;&amp; args.fertig) PF('korrPoll').stop()" />
 	</h:form>
 </h:body>
 </html>

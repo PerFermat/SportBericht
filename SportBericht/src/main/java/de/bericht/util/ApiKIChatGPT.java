@@ -84,7 +84,7 @@ public class ApiKIChatGPT implements KiProvider {
 
 		connection.setDoOutput(true);
 		connection.setConnectTimeout(30000);
-		connection.setReadTimeout(60000);
+		connection.setReadTimeout(120000);
 
 		// ---------------------------------------------
 		// 4) JSON Payload aufbauen

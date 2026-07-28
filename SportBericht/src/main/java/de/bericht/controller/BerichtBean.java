@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -48,7 +49,10 @@ import de.bericht.util.IgnorierteWoerte;
 import de.bericht.util.LoginCookieDaten;
 import de.bericht.util.NamensSpeicher;
 import de.bericht.util.SpielDetail;
+import javax.naming.InitialContext;
+import org.primefaces.PrimeFaces;
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.concurrent.ManagedExecutorService;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.event.ActionEvent;
@@ -95,6 +99,15 @@ public class BerichtBean implements Serializable {
 	private byte[] bildDaten;
 	private String bildUnterschrift;
 	private List<Fehler> fehlerListe = new ArrayList<>();
+
+	/** Asynchrone KI-Korrektur ("Bericht mit KI verbessern"): läuft sie gerade? */
+	private volatile boolean korrekturLaeuft = false;
+	/** Ergebnis liegt vor, wurde aber noch nicht in der Oberfläche angezeigt. */
+	private volatile boolean korrekturFertig = false;
+	/** Im Hintergrund-Thread gesammelte Meldungen, die der Poll als Growl anzeigt. */
+	private final List<FacesMessage> korrekturMeldungen = Collections.synchronizedList(new ArrayList<>());
+	/** Managed Executor (transient, weil nicht serialisierbar) – per JNDI nachgeladen. */
+	private transient ManagedExecutorService executor;
 
 	private DatabaseService dbService = new DatabaseService();
 	IgnorierteWoerte ignorieren = new IgnorierteWoerte();
@@ -462,6 +475,9 @@ public class BerichtBean implements Serializable {
 
 		int anzahlKi = dbService.anzahlKI(vereinnr, ergebnisLink, "korrigiert");
 		if (anzahlKi <= 5 && !text.isEmpty()) {
+			if (korrekturLaeuft) {
+				return; // Läuft bereits – Doppelklick ignorieren
+			}
 			// temperatur, frequencyPenalty , presencePenalty für Rechtschreibprüfung sind
 			// optimalerweise alle 0
 
@@ -482,21 +498,108 @@ public class BerichtBean implements Serializable {
 															new JSONArray().put("Falsch").put("Begründung der Änderung")
 																	.put("Korrekturvorschlag")))))
 					.put("required", new JSONArray().put("Korrekturen"));
-			KiProvider ki = KiProviderFactory.create(vereinnr, frage.toString(),
-					ConfigManager.getConfigValue(vereinnr, "ki.model.korrektur"), "none", 0.0, 0.0, 0.0, schema);
-			String reintext = frage.toString().replaceAll("(?i)</p>", "\n").replaceAll("(?i)<br\\s*/?>", "\n")
-					.replaceAll("<[^>]+>", "");
-			kiRueckgabe = " \n ## Frage: \n " + reintext + "\n ## Antwort: \n" + "'''json \n" + ki.getResponse()
-					+ "\n '''";
-			fehlerListe = parseFehlerListe(ki.getResponse(), kiSaetze);
-			dbService.saveLogData(vereinnr, ergebnisLink, "KI", "KI-Bericht korrigiert", "");
+
+			ManagedExecutorService mes = getExecutor();
+			if (mes == null) {
+				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+						"Fehler", "Hintergrund-Ausführung nicht verfügbar (ManagedExecutorService)."));
+				return;
+			}
+
+			// Aufruf-Parameter im Request-Thread festhalten (im Hintergrund-Thread ist
+			// kein FacesContext / keine ConfigManager-Auflösung nötig).
+			final String frageStr = frage.toString();
+			final String model = ConfigManager.getConfigValue(vereinnr, "ki.model.korrektur");
+			final JSONObject schemaFinal = schema;
+
+			korrekturMeldungen.clear();
+			fehlerListe = new ArrayList<>(); // alte Ergebnisse während des Laufs ausblenden
+			korrekturFertig = false;
+			korrekturLaeuft = true;
+			mes.execute(() -> korrigiereImHintergrund(frageStr, model, schemaFinal));
 		} else {
 			Fehler fehler = new Fehler("", "", "Keine Prüfung mehr möglich", false);
 			fehlerListe.add(fehler);
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler", "Zu viele KI-Aufrufe"));
+			pruefKI = dbService.isKI(vereinnr, ergebnisLink);
 		}
-		pruefKI = dbService.isKI(vereinnr, ergebnisLink);
+	}
+
+	/**
+	 * Führt die eigentliche (lange) KI-Korrektur im Hintergrund aus. Läuft NICHT im
+	 * Request-Thread – daher kein FacesContext; Meldungen werden gesammelt und
+	 * später vom Status-Poll ({@link #pruefeKorrektur()}) als Growl angezeigt.
+	 */
+	private void korrigiereImHintergrund(String frage, String model, JSONObject schema) {
+		try {
+			KiProvider ki = KiProviderFactory.create(vereinnr, frage, model, "none", 0.0, 0.0, 0.0, schema);
+			String antwort = ki.getResponse();
+			String reintext = frage.replaceAll("(?i)</p>", "\n").replaceAll("(?i)<br\\s*/?>", "\n")
+					.replaceAll("<[^>]+>", "");
+			kiRueckgabe = " \n ## Frage: \n " + reintext + "\n ## Antwort: \n" + "'''json \n" + antwort + "\n '''";
+			fehlerListe = parseFehlerListe(antwort, kiSaetze);
+			dbService.saveLogData(vereinnr, ergebnisLink, "KI", "KI-Bericht korrigiert", "");
+			korrekturMeldungen.add(new FacesMessage(FacesMessage.SEVERITY_INFO, "Erfolgreich", "KI-Prüfung abgeschlossen"));
+		} catch (IOException e) {
+			List<Fehler> fehler = new ArrayList<>();
+			fehler.add(new Fehler("", "", "KI-Prüfung nicht möglich (Zeitüberschreitung)", false));
+			fehlerListe = fehler;
+			korrekturMeldungen.add(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
+					"Die KI-Prüfung hat zu lange gedauert und wurde abgebrochen. Bitte versuchen Sie es erneut."));
+		} catch (Exception e) {
+			List<Fehler> fehler = new ArrayList<>();
+			fehler.add(new Fehler("", "", "KI-Prüfung fehlgeschlagen", false));
+			fehlerListe = fehler;
+			korrekturMeldungen.add(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fehler",
+					"KI-Prüfung fehlgeschlagen: " + (e.getMessage() == null ? e.toString() : e.getMessage())));
+		} finally {
+			try {
+				pruefKI = dbService.isKI(vereinnr, ergebnisLink);
+			} catch (Exception ignore) {
+				// pruefKI bleibt im vorherigen Zustand
+			}
+			korrekturFertig = true;
+			korrekturLaeuft = false;
+		}
+	}
+
+	/**
+	 * Status-Poll: prüft, ob die Hintergrund-Korrektur fertig ist. Wenn ja, werden
+	 * die gesammelten Meldungen als Growl übernommen und dem Client per
+	 * Callback-Param signalisiert, dass der Poll gestoppt werden kann.
+	 */
+	public void pruefeKorrektur() {
+		boolean fertig = !korrekturLaeuft && korrekturFertig;
+		if (fertig) {
+			FacesContext ctx = FacesContext.getCurrentInstance();
+			synchronized (korrekturMeldungen) {
+				for (FacesMessage m : korrekturMeldungen) {
+					ctx.addMessage(null, m);
+				}
+				korrekturMeldungen.clear();
+			}
+			korrekturFertig = false; // konsumiert
+		}
+		PrimeFaces.current().ajax().addCallbackParam("fertig", fertig);
+	}
+
+	public boolean isKorrekturLaeuft() {
+		return korrekturLaeuft;
+	}
+
+	/** Lazy-Lookup des ManagedExecutorService (transient wegen Serializable). */
+	private ManagedExecutorService getExecutor() {
+		if (executor == null) {
+			try {
+				executor = (ManagedExecutorService) new InitialContext()
+						.lookup("java:comp/DefaultManagedExecutorService");
+			} catch (Exception e) {
+				System.err.println("ManagedExecutorService nicht gefunden: " + e.getMessage());
+				return null;
+			}
+		}
+		return executor;
 	}
 
 	public List<Fehler> parseFehlerListe(String berichtTextOrg, List<String> kiSaetze) {
