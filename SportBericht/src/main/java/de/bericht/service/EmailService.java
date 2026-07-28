@@ -46,7 +46,7 @@ public class EmailService {
 			if (is != null) {
 				config.load(is);
 			} else {
-				System.err.println("mail.properties konnte nicht gefunden werden!");
+				System.err.println("config.properties konnte nicht gefunden werden!");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

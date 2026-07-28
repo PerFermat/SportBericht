@@ -13,6 +13,10 @@
 # Logs
 *.log
 
+# Lokale Konfiguration mit Zugangsdaten (DB/Mail) – nur lokal, nie committen
+config.properties
+src/main/resources/config.properties
+
 # OS
 .DS_Store
 Thumbs.db
