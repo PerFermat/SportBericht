@@ -52,7 +52,7 @@
             <path>/</path>
             <http-only>true</http-only>
             <secure>true</secure>
-        </cookie-config>        
+ 		</cookie-config>
         <tracking-mode>COOKIE</tracking-mode>
     </session-config>
 

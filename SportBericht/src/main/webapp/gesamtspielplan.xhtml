@@ -56,16 +56,12 @@
 			</p:selectOneMenu>
 		</span>
 		<div class="button-leiste">
-			<p:commandButton value="PDF herunterladen"
-				actionListener="#{gesamtspielplanBean.prepareDownloadPdf}"
-				process="@this" immediate="true" ajax="false">
-				<p:fileDownload value="#{gesamtspielplanBean.downloadPdf}" />
-			</p:commandButton>
-			<p:commandButton value="Excel herunterladen"
-				actionListener="#{gesamtspielplanBean.prepareDownloadExcel}"
-				process="@this" immediate="true" ajax="false">
-				<p:fileDownload value="#{gesamtspielplanBean.downloadExcel}" />
-			</p:commandButton>
+			<!-- Direkte GET-Downloads (kein JSF-Postback/Session) – funktionieren
+			     dadurch auch im Cross-Site-iframe auf dem Handy. -->
+			<p:linkButton value="PDF herunterladen"
+				href="#{gesamtspielplanBean.exportPdfUrl}" target="_blank" />
+			<p:linkButton value="Excel herunterladen"
+				href="#{gesamtspielplanBean.exportExcelUrl}" target="_blank" />
 		</div>
 	</h:form>
 

@@ -1,8 +1,9 @@
 package de.bericht.controller;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,8 +34,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.primefaces.model.DefaultStreamedContent;
-import org.primefaces.model.StreamedContent;
 
 import com.lowagie.text.Chunk;
 import com.lowagie.text.Document;
@@ -74,7 +73,7 @@ public class GesamtspielplanBean implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private static final DateTimeFormatter DATUM_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-	private static String verein_prefix;
+	private String verein_prefix;
 
 	private final List<SpaltenDefinition> aktiveSpaltenDefinitionen = new ArrayList<>();
 	private final List<ConfigSpalteModel> configSpalten = new ArrayList<>();
@@ -86,6 +85,8 @@ public class GesamtspielplanBean implements Serializable {
 	private final ConfigManager configManager = ConfigManager.getInstance();
 	private final DatabaseService databaseService = new DatabaseService();
 	private String vereinnr;
+	/** Ursprünglicher URL-Parameter (Ort, z. B. "hattenhofen") für den Export-Link. */
+	private String vParam;
 	private String halbserie;
 	private String ruecksprung;
 	private final List<ConfigRundeModel> configRunden = new ArrayList<>();
@@ -94,8 +95,6 @@ public class GesamtspielplanBean implements Serializable {
 	private final List<String> datumsListe = new ArrayList<>();
 	private final Map<String, String> wochentagByDatum = new LinkedHashMap<>();
 	private final Map<String, Map<String, List<GesamtspielplanEintrag>>> spieleByDatumUndSpalte = new LinkedHashMap<>();
-	private StreamedContent downloadPdf;
-	private StreamedContent downloadExcel;
 	private final List<String> betreuerNamen = new ArrayList<>();
 	private GesamtspielplanEintrag selectedEintrag;
 	private String selectedBetreuer;
@@ -122,6 +121,11 @@ public class GesamtspielplanBean implements Serializable {
 
 		if (vereinnr == null || vereinnr.isBlank()) {
 			vereinnr = request.getParameter("vereinnr");
+		}
+		// Ursprünglichen Bezeichner (Ort bevorzugt) für den Export-Link merken.
+		vParam = request.getParameter("v");
+		if (vParam == null || vParam.isBlank()) {
+			vParam = request.getParameter("vereinnr");
 		}
 		lesenCookieParameter();
 		if (vereinnr == null || vereinnr.isBlank()) {
@@ -661,7 +665,7 @@ public class GesamtspielplanBean implements Serializable {
 		return selectedVerfuegbarkeitEintrag;
 	}
 
-	private StreamedContent buildPdfDownload() {
+	public byte[] erzeugePdfBytes() {
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			Document document = new Document(PageSize.A4.rotate(), 10, 10, 10, 10);
 			PdfWriter.getInstance(document, out);
@@ -702,19 +706,14 @@ public class GesamtspielplanBean implements Serializable {
 
 			document.add(table);
 			document.close();
-			LocalDate heute = LocalDate.now();
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-			String datum = heute.format(formatter);
-
-			return DefaultStreamedContent.builder().name("gesamtspielplan-" + datum + ".pdf")
-					.contentType("application/pdf").stream(() -> new ByteArrayInputStream(out.toByteArray())).build();
+			return out.toByteArray();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 
-	private StreamedContent buildExcelDownload() {
+	public byte[] erzeugeExcelBytes() {
 		try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			Sheet sheet = workbook.createSheet("Gesamtspielplan");
 
@@ -932,13 +931,7 @@ public class GesamtspielplanBean implements Serializable {
 			}
 
 			workbook.write(out);
-			LocalDate heute = LocalDate.now();
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-			String datum = heute.format(formatter);
-
-			return DefaultStreamedContent.builder().name("gesamtspielplan-" + datum + ".xlsx")
-					.contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-					.stream(() -> new ByteArrayInputStream(out.toByteArray())).build();
+			return out.toByteArray();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1753,20 +1746,36 @@ public class GesamtspielplanBean implements Serializable {
 		return datumsListe;
 	}
 
-	public StreamedContent getDownloadPdf() {
-		return downloadPdf;
+	/**
+	 * Befüllt die Bean für den serverseitigen Export (PDF/Excel) OHNE FacesContext,
+	 * damit der Export über einen einfachen GET-Servlet-Aufruf (ohne Session/Cookie)
+	 * funktioniert – z. B. im Cross-Site-iframe auf dem Handy.
+	 */
+	public void initFuerExport(String vereinnr, String halbserie) {
+		this.vereinnr = vereinnr;
+		this.verein_prefix = ConfigManager.getSpielplanVerein(vereinnr);
+		ladePersistierteGesamtspielplanKonfiguration();
+		ladeAuswahlwerte();
+		setzeAnzeigeDefaultsWennLeer();
+		this.halbserie = (halbserie != null && !halbserie.isBlank()) ? halbserie : defaultRundeName();
+		ladeGesamtspielplan();
 	}
 
-	public StreamedContent getDownloadExcel() {
-		return downloadExcel;
+	public String getExportPdfUrl() {
+		return baueExportUrl("pdf");
 	}
 
-	public void prepareDownloadPdf() {
-		downloadPdf = buildPdfDownload();
+	public String getExportExcelUrl() {
+		return baueExportUrl("excel");
 	}
 
-	public void prepareDownloadExcel() {
-		downloadExcel = buildExcelDownload();
+	/** GET-URL des Export-Servlets (ohne Session/Cookie nutzbar, iframe-tauglich). */
+	private String baueExportUrl(String format) {
+		String ctx = FacesContext.getCurrentInstance().getExternalContext().getRequestContextPath();
+		String bezeichner = (vParam != null && !vParam.isBlank()) ? vParam : vereinnr;
+		String v = URLEncoder.encode(bezeichner == null ? "" : bezeichner, StandardCharsets.UTF_8);
+		String hs = URLEncoder.encode(halbserie == null ? "" : halbserie, StandardCharsets.UTF_8);
+		return ctx + "/gesamtspielplan-export?format=" + format + "&v=" + v + "&halbserie=" + hs;
 	}
 
 	private record BasisSpalte(String key, String liga, String mannschaft) {
