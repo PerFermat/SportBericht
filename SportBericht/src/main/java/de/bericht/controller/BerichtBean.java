@@ -20,6 +20,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -846,14 +847,14 @@ public class BerichtBean implements Serializable {
 		String altBericht = berichtText;
 		String altUeberschrift = ueberschrift;
 
-		berichtText = berichtText.replaceFirst(falsch, korrekt);
+		berichtText = ersetzeErstesVorkommen(berichtText, falsch, korrekt);
 
 		if (ergebnisLink != null && !ergebnisLink.isEmpty() && ergebnisLink.startsWith("http")) {
 		} else {
-			ueberschrift = ueberschrift.replaceFirst(falsch, korrekt);
+			ueberschrift = ersetzeErstesVorkommen(ueberschrift, falsch, korrekt);
 		}
 
-		if (altBericht.equals(berichtText) && altUeberschrift.equals(ueberschrift)) {
+		if (Objects.equals(altBericht, berichtText) && Objects.equals(altUeberschrift, ueberschrift)) {
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_WARN, "Fehler", "Bericht wurde nicht geändert"));
 		} else {
@@ -863,6 +864,19 @@ public class BerichtBean implements Serializable {
 		}
 
 		return;
+	}
+
+	// Ersetzt das erste Vorkommen rein literal (kein Regex). Mit replaceFirst
+	// scheitern sonst Fehlertexte mit Klammern o. ä. bzw. Vorschläge mit $ oder \.
+	private static String ersetzeErstesVorkommen(String text, String falsch, String korrekt) {
+		if (text == null || falsch == null || falsch.isEmpty()) {
+			return text;
+		}
+		int pos = text.indexOf(falsch);
+		if (pos < 0) {
+			return text;
+		}
+		return text.substring(0, pos) + (korrekt != null ? korrekt : "") + text.substring(pos + falsch.length());
 	}
 
 	// Gibt den Bild-Link zurück, damit h:graphicImage das Bild anzeigen kann.
